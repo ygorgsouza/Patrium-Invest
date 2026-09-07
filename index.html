@@ -2044,38 +2044,24 @@ async function fetchRealPrice(ticker){
     return { price:item.regularMarketPrice, name:item.shortName||item.longName||null, sector:item.sector||null };
   }catch(e){ return { error: 'network' }; }
 }
-const BRAPI_SANDBOX_TICKERS = ['PETR4','VALE3','MGLU3','ITUB4'];
 async function atualizarTodosPrecos(){
   const tickers = [...new Set(DATA.transactions.map(t=>t.ticker.toUpperCase()))];
   if(tickers.length===0){ addToast('Nenhuma ação registada ainda.'); return; }
-  const hasToken = !!DATA.settings.brapiToken;
   addToast('A atualizar preços via brapi.dev…');
-  let sucesso=0, falhaSemToken=0, falhaOutro=0;
+  let sucesso=0, falha=0;
   for(const tk of tickers){
     const result = await fetchRealPrice(tk);
     if(result && !result.error){
       recordPriceSnapshot(tk, result.price, 'API (brapi.dev)');
       if(result.sector) DATA.sectors = Object.assign(DATA.sectors||{}, {[tk]:result.sector});
       sucesso++;
-    } else if(!hasToken && !BRAPI_SANDBOX_TICKERS.includes(tk)){
-      falhaSemToken++;
     } else {
-      falhaOutro++;
+      falha++;
     }
   }
   await Store.save(DATA);
-  // Mensagem honesta: sem token, a brapi.dev só permite os 4 tickers de teste —
-  // isso NÃO é um "ativo não encontrado", é uma limitação da API gratuita.
-  // Nunca escondemos essa diferença atrás de uma mensagem genérica.
-  if(sucesso>0 && falhaSemToken===0 && falhaOutro===0){
-    addToast(`${sucesso} preço(s) atualizado(s) via brapi.dev.`);
-  } else if(falhaSemToken>0){
-    addToast(`${sucesso} preço(s) atualizado(s). ${falhaSemToken} ativo(s) não foram atualizados porque, sem um token brapi.dev, a API gratuita só permite consultar PETR4, VALE3, MGLU3 e ITUB4. Adicione o seu token gratuito em "Backup e dados" para atualizar todos os ativos com um clique.`);
-  } else if(sucesso>0){
-    addToast(`${sucesso} preço(s) atualizado(s). ${falhaOutro} não encontrado(s) na brapi.dev — informe manualmente na página do ativo.`);
-  } else {
-    addToast('Não foi possível obter preços agora. Se o problema persistir para ativos fora de PETR4/VALE3/MGLU3/ITUB4, confirme se o seu token brapi.dev (em "Backup e dados") ainda é válido.');
-  }
+  if(sucesso>0) addToast(`${sucesso} preço(s) atualizado(s) via brapi.dev.` + (falha>0?` ${falha} não encontrado(s) — informe manualmente na página do ativo.`:''));
+  else addToast('Não foi possível obter preços agora. Informe os preços manualmente na página de cada ativo.');
   renderAll();
 }
 
