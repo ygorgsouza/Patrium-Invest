@@ -122,7 +122,7 @@ header.top{
   position:absolute; inset:0;
   -webkit-mask-image:var(--patrium-logo-mask); mask-image:var(--patrium-logo-mask);
   -webkit-mask-size:100% 100%; mask-size:100% 100%; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
-  background:linear-gradient(115deg, transparent 42%, rgba(255,255,255,.5) 48%, rgba(255,238,198,.8) 50%, rgba(255,255,255,.5) 52%, transparent 58%);
+  background:linear-gradient(115deg, transparent 40%, rgba(255,255,255,.58) 47%, rgba(255,238,198,.88) 50%, rgba(255,255,255,.58) 53%, transparent 60%);
   background-size:320% 320%; background-position:-130% -130%;
   mix-blend-mode:screen; opacity:0; pointer-events:none;
   animation:patriumSheen 9s ease-in-out infinite;
@@ -135,9 +135,6 @@ header.top{
   100%{ background-position:-130% -130%; opacity:0; }
 }
 [data-theme="light"] .patrium-logo-sheen{ mix-blend-mode:overlay; opacity:0; background:linear-gradient(115deg, transparent 44%, rgba(255,255,255,.7) 49%, rgba(255,255,255,.95) 50%, rgba(255,255,255,.7) 51%, transparent 56%); }
-@media (hover:hover){
-  .patrium-logo:hover .patrium-logo-sheen{ animation-duration:3.2s; filter:brightness(1.18); }
-}
 @media (prefers-reduced-motion: reduce){ .patrium-logo-sheen{ animation:none; opacity:0; } }
 
 /* Entrada especial — só na tela de boas-vindas. Afeta apenas o contentor
@@ -1120,19 +1117,20 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
 
 <!-- ===================== MODAL: CONFERIR PATRIMÔNIO REAL ===================== -->
 <div class="modal-overlay" id="modalConferir">
-  <div class="modal">
+  <div class="modal wide">
     <div class="modal-head"><h3>Conferir patrimônio real</h3><button class="icon-btn" data-close="modalConferir">✕</button></div>
     <div class="modal-body">
-      <p class="section-hint">Informe o valor real do seu patrimônio hoje (somando o saldo de todas as suas contas/apps de investimento). O Patrium compara com o valor calculado — a diferença NÃO vira rendimento automaticamente, fica só registada para você investigar.</p>
-      <div class="field"><label>Patrimônio calculado pelo Patrium</label><input type="text" id="conferirCalculado" disabled></div>
-      <div class="field"><label>Patrimônio real informado por você (R$)</label><input type="number" step="0.01" id="conferirInformado"></div>
-      <div class="field"><label>Data</label><input type="date" id="conferirData"></div>
-      <div class="field"><label>Observação (opcional — ex.: "taxa de custódia não lançada")</label><input type="text" id="conferirObs"></div>
-      <div class="card card-tight" id="conferirDiffPreview" style="display:none; margin-top:6px;"></div>
+      <p class="section-hint">Informe o saldo real de cada lugar onde tem dinheiro aplicado — renda fixa (qualquer % do CDI), ações, FIIs, cripto, o que for. Ao registar, o Patrium recalcula o patrimônio total e o rendimento de cada posição a partir do valor que você informou aqui, não do valor calculado.</p>
+      <div class="field" style="max-width:220px;"><label>Data desta conferência</label><input type="date" id="conferirDataGeral"></div>
+      <div id="conferirListaWrap"></div>
+      <div class="card card-tight" id="conferirDiffPreview" style="margin-top:14px;">
+        <div class="flex-between"><span class="stat-label">Patrimônio calculado (antes)</span><strong class="mono" id="conferirTotalCalculado">—</strong></div>
+        <div class="flex-between" style="margin-top:6px;"><span class="stat-label">Patrimônio com os saldos que você está a informar</span><strong class="mono" id="conferirTotalNovo" style="color:var(--accent);">—</strong></div>
+      </div>
     </div>
     <div class="modal-foot">
       <button class="btn" data-close="modalConferir">Cancelar</button>
-      <button class="btn btn-primary" id="btnSalvarConferencia">Registar conferência</button>
+      <button class="btn btn-primary" id="btnSalvarConferencia">Registar todos os saldos informados</button>
     </div>
   </div>
 </div>
@@ -1204,6 +1202,17 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
         <button class="btn btn-block" id="btnCarregarDemo">↻ Carregar / restaurar dados de demonstração</button>
         <button class="btn btn-block btn-danger" id="btnLimparDemo">Remover dados de demonstração</button>
         <button class="btn btn-block btn-danger" id="btnApagarTudo">Apagar todos os dados</button>
+        <hr class="line">
+        <h4 style="margin:0 0 2px;">Atualização automática de preços</h4>
+        <p class="small text-faint" style="margin:0 0 8px;">Sem token, a brapi.dev (fonte de preços do Patrium) só permite atualizar 4 ações de teste (PETR4, VALE3, MGLU3, ITUB4) — é uma limitação da própria API gratuita, não do Patrium. Para atualizar <strong>qualquer</strong> ativo da sua carteira (incluindo FIIs como HGLG11), crie uma conta gratuita na brapi.dev (15.000 requisições/mês grátis, sem cartão) e cole aqui o seu token pessoal.</p>
+        <div class="field" style="margin-bottom:6px;">
+          <label>Token brapi.dev (opcional)</label>
+          <input type="text" id="brapiTokenInput" placeholder="Cole aqui o seu token...">
+        </div>
+        <div class="flex gap-8">
+          <button class="btn btn-sm" id="btnSalvarBrapiToken">Guardar token</button>
+          <a class="btn btn-sm" href="https://brapi.dev/dashboard" target="_blank" rel="noopener">Criar conta gratuita ↗</a>
+        </div>
       </div>
     </div>
     <div class="modal-foot"><button class="btn" data-close="modalBackup">Fechar</button></div>
@@ -1272,6 +1281,12 @@ function fmtDate(iso){
   return d+'/'+m+'/'+y;
 }
 function fmtDateShort(iso){ const [y,m,d]=iso.split('-'); return d+'/'+m; }
+function fmtDateTimeShort(iso){
+  const d = new Date(iso);
+  const dd = String(d.getDate()).padStart(2,'0'), mm = String(d.getMonth()+1).padStart(2,'0');
+  const hh = String(d.getHours()).padStart(2,'0'), mi = String(d.getMinutes()).padStart(2,'0');
+  return `${dd}/${mm} às ${hh}:${mi}`;
+}
 function monthLabel(iso){
   const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
   const [y,m] = iso.split('-');
@@ -1557,6 +1572,8 @@ function computePositions(){
     const priceInfo = DATA.prices[p.ticker];
     p.curPrice = priceInfo ? priceInfo.price : p.avgPrice; // sem preço informado, assume o próprio custo médio (resultado 0) em vez de inventar
     p.hasRealPrice = !!priceInfo;
+    p.priceUpdatedAt = priceInfo ? priceInfo.updatedAt : null;
+    p.priceSource = priceInfo ? priceInfo.source : null;
     p.valorCalculado = round2(p.qty * p.curPrice);
     p.marketValue = p.valorCalculado;
     p.hasAdjustment = false;
@@ -2017,30 +2034,48 @@ function recordPriceSnapshot(ticker, price, source){
 }
 async function fetchRealPrice(ticker){
   try{
-    const resp = await fetch(`https://brapi.dev/api/quote/${encodeURIComponent(ticker)}`, {signal: AbortSignal.timeout(6000)});
-    if(!resp.ok) return null;
+    const url = `https://patrium-invest.ygor-gssouza.workers.dev/quote?ticker=${encodeURIComponent(ticker)}`;
+    const opts = { signal: AbortSignal.timeout(6000) };
+    const resp = await fetch(url, opts);
+    if(!resp.ok) return { error: resp.status };
     const json = await resp.json();
     const item = json && json.results && json.results[0];
-    if(!item || typeof item.regularMarketPrice !== 'number') return null;
+    if(!item || typeof item.regularMarketPrice !== 'number') return { error: 'not_found' };
     return { price:item.regularMarketPrice, name:item.shortName||item.longName||null, sector:item.sector||null };
-  }catch(e){ return null; }
+  }catch(e){ return { error: 'network' }; }
 }
+const BRAPI_SANDBOX_TICKERS = ['PETR4','VALE3','MGLU3','ITUB4'];
 async function atualizarTodosPrecos(){
   const tickers = [...new Set(DATA.transactions.map(t=>t.ticker.toUpperCase()))];
   if(tickers.length===0){ addToast('Nenhuma ação registada ainda.'); return; }
+  const hasToken = !!DATA.settings.brapiToken;
   addToast('A atualizar preços via brapi.dev…');
-  let sucesso=0, falha=0;
+  let sucesso=0, falhaSemToken=0, falhaOutro=0;
   for(const tk of tickers){
     const result = await fetchRealPrice(tk);
-    if(result!==null){
+    if(result && !result.error){
       recordPriceSnapshot(tk, result.price, 'API (brapi.dev)');
       if(result.sector) DATA.sectors = Object.assign(DATA.sectors||{}, {[tk]:result.sector});
       sucesso++;
-    } else falha++;
+    } else if(!hasToken && !BRAPI_SANDBOX_TICKERS.includes(tk)){
+      falhaSemToken++;
+    } else {
+      falhaOutro++;
+    }
   }
   await Store.save(DATA);
-  if(sucesso>0) addToast(`${sucesso} preço(s) atualizado(s) via brapi.dev.` + (falha>0?` ${falha} não encontrado(s) — informe manualmente na página da empresa.`:''));
-  else addToast('Não foi possível obter preços reais agora (brapi.dev indisponível ou ticker não encontrado). Informe os preços manualmente na página de cada empresa — nunca inventamos um valor.');
+  // Mensagem honesta: sem token, a brapi.dev só permite os 4 tickers de teste —
+  // isso NÃO é um "ativo não encontrado", é uma limitação da API gratuita.
+  // Nunca escondemos essa diferença atrás de uma mensagem genérica.
+  if(sucesso>0 && falhaSemToken===0 && falhaOutro===0){
+    addToast(`${sucesso} preço(s) atualizado(s) via brapi.dev.`);
+  } else if(falhaSemToken>0){
+    addToast(`${sucesso} preço(s) atualizado(s). ${falhaSemToken} ativo(s) não foram atualizados porque, sem um token brapi.dev, a API gratuita só permite consultar PETR4, VALE3, MGLU3 e ITUB4. Adicione o seu token gratuito em "Backup e dados" para atualizar todos os ativos com um clique.`);
+  } else if(sucesso>0){
+    addToast(`${sucesso} preço(s) atualizado(s). ${falhaOutro} não encontrado(s) na brapi.dev — informe manualmente na página do ativo.`);
+  } else {
+    addToast('Não foi possível obter preços agora. Se o problema persistir para ativos fora de PETR4/VALE3/MGLU3/ITUB4, confirme se o seu token brapi.dev (em "Backup e dados") ainda é válido.');
+  }
   renderAll();
 }
 
@@ -2413,7 +2448,7 @@ function renderAcoes(){
       <td><div class="ticker-cell"><div class="ticker-logo" style="color:${p.hasRealPrice?(p.unrealizedPL>=0?'var(--positive)':'var(--negative)'):'var(--text-faint)'};">${p.ticker.slice(0,4)}</div><strong>${p.ticker}</strong></div></td>
       <td class="mono">${fmtNum(p.qty)}</td>
       <td class="mono">${fmtMoney(p.avgPrice)}</td>
-      <td class="mono">${p.hasRealPrice?fmtMoney(p.curPrice):'<span class="text-faint">— informar</span>'}</td>
+      <td class="mono">${p.hasRealPrice?fmtMoney(p.curPrice):'<span class="text-faint">— informar</span>'}${p.hasRealPrice?`<div class="small text-faint" style="font-weight:400; margin-top:2px;">${p.priceSource==='API (brapi.dev)'?'Auto':'Manual'} · ${fmtDateTimeShort(p.priceUpdatedAt)}</div>`:''}</td>
       <td class="mono">${fmtMoney(p.investedBasis)}</td>
       <td class="mono">${fmtMoney(p.marketValue)}</td>
       <td class="mono" style="color:${p.unrealizedPL>=0?'var(--positive)':'var(--negative)'}">${fmtMoneySigned(p.unrealizedPL)}</td>
@@ -2991,14 +3026,17 @@ async function salvarPrecoManual(ticker){
   renderAll();
   abrirModalEmpresa(ticker);
 }
+function registarSaldoRealPosicao(ticker, v, date){
+  const pos = computePositions().find(p=>p.ticker===ticker);
+  const valorCalculado = pos ? pos.valorCalculado : 0;
+  DATA.positionAdjustments.push({ id:uid(), ticker, date, valorCalculado:round2(valorCalculado), valorReal:round2(v), ajuste:round2(v-valorCalculado), note:'' });
+}
 async function salvarSaldoRealPosicao(ticker){
   const v = parseFloat(document.getElementById('empresaSaldoReal').value);
   const date = document.getElementById('empresaSaldoRealData').value;
   if(isNaN(v) || v<0){ addToast('Informe um saldo real válido.'); return; }
   if(!date){ addToast('Informe a data.'); return; }
-  const pos = computePositions().find(p=>p.ticker===ticker);
-  const valorCalculado = pos ? pos.valorCalculado : 0;
-  DATA.positionAdjustments.push({ id:uid(), ticker, date, valorCalculado:round2(valorCalculado), valorReal:round2(v), ajuste:round2(v-valorCalculado), note:'' });
+  registarSaldoRealPosicao(ticker, v, date);
   await Store.save(DATA);
   addToast('Saldo real registado. ✓');
   renderAll();
@@ -3061,7 +3099,16 @@ document.getElementById('themeToggle').addEventListener('click', async ()=>{
 });
 
 // Backup modal
-document.getElementById('backupToggle').addEventListener('click', ()=> openModal('modalBackup'));
+document.getElementById('backupToggle').addEventListener('click', ()=>{
+  document.getElementById('brapiTokenInput').value = DATA.settings.brapiToken || '';
+  openModal('modalBackup');
+});
+document.getElementById('btnSalvarBrapiToken').addEventListener('click', async ()=>{
+  const v = document.getElementById('brapiTokenInput').value.trim();
+  DATA.settings.brapiToken = v || null;
+  await Store.save(DATA);
+  addToast(v ? 'Token guardado — agora pode atualizar qualquer ativo em "Atualizar preços".' : 'Token removido.');
+});
 document.getElementById('btnExportJson').addEventListener('click', ()=>{
   const blob = new Blob([JSON.stringify(DATA, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
@@ -3505,13 +3552,16 @@ document.getElementById('btnNovoSaldoRf').addEventListener('click', ()=>{
   document.getElementById('saldoRfAporte').value='0'; document.getElementById('saldoRfValor').value='';
   openModal('modalSaldoRf');
 });
+function registarSaldoRealRf(productId, aporte, saldo, date){
+  DATA.rf.entries.push({ id:uid(), date, productId, aporte:round2(aporte||0), saldo: (saldo!==null && saldo!=='') ? round2(parseFloat(saldo)) : null, note:'' });
+}
 document.getElementById('btnSalvarSaldoRf').addEventListener('click', async ()=>{
   const productId = document.getElementById('saldoRfProduto').value;
   const date = document.getElementById('saldoRfData').value;
   const aporte = parseFloat(document.getElementById('saldoRfAporte').value)||0;
   const saldoStr = document.getElementById('saldoRfValor').value;
   if(!date || (aporte<=0 && saldoStr==='')){ addToast('Informe pelo menos um aporte ou um saldo.'); return; }
-  DATA.rf.entries.push({ id:uid(), date, productId, aporte:round2(aporte), saldo: saldoStr!=='' ? round2(parseFloat(saldoStr)) : null, note:'' });
+  registarSaldoRealRf(productId, aporte, saldoStr, date);
   await Store.save(DATA);
   showSaveSuccess('modalSaldoRf', 'Renda fixa atualizada!', ()=>{
     renderAll();
@@ -3576,35 +3626,69 @@ document.getElementById('btnExcluirProdutoRf').addEventListener('click', ()=>{
     });
 });
 
-/* ---- Conferir patrimônio real ---- */
+/* ---- Conferir patrimônio real: agora uma lista completa e acionável,
+   uma linha por lugar onde há dinheiro aplicado (cada produto de RF,
+   qualquer % do CDI; cada posição de ações/FIIs/ETFs/cripto). Ao registar,
+   usa a MESMA fonte de verdade que já existia por posição (RF: entrada de
+   saldo; RV: positionAdjustment) — nunca um cálculo paralelo — então o
+   patrimônio total e o rendimento de cada aplicação atualizam de verdade,
+   não é só um registo passivo de diferença. */
+function renderConferirLista(){
+  const rf = computeRfProducts();
+  const rv = computePositions().filter(p=>p.qty>0.0000001);
+  const rows = [];
+  rf.forEach(p=>{
+    rows.push(`<div class="flex-between" style="flex-wrap:wrap; gap:10px; padding:10px 0; border-bottom:1px solid var(--line-soft);">
+      <div style="min-width:180px;"><strong>${escapeHtml(p.name)}</strong><div class="small text-faint">Renda fixa · calculado: ${fmtMoney(p.saldoAtual)}</div></div>
+      <input type="number" step="0.01" class="conferir-input" data-kind="rf" data-id="${p.id}" placeholder="${p.saldoAtual.toFixed(2)}" style="max-width:180px;">
+    </div>`);
+  });
+  rv.forEach(p=>{
+    rows.push(`<div class="flex-between" style="flex-wrap:wrap; gap:10px; padding:10px 0; border-bottom:1px solid var(--line-soft);">
+      <div style="min-width:180px;"><strong>${p.ticker}</strong><div class="small text-faint">${p.hasRealPrice?'Ações/FIIs':'Ações/FIIs (sem preço)'} · calculado: ${fmtMoney(p.valorCalculado)}</div></div>
+      <input type="number" step="0.01" class="conferir-input" data-kind="rv" data-id="${p.ticker}" placeholder="${p.valorCalculado.toFixed(2)}" style="max-width:180px;">
+    </div>`);
+  });
+  document.getElementById('conferirListaWrap').innerHTML = rows.length ? rows.join('') : '<p class="text-soft small">Nenhuma posição registada ainda — cadastre um investimento primeiro.</p>';
+  document.querySelectorAll('.conferir-input').forEach(inp=> inp.addEventListener('input', atualizarPreviewConferir));
+  atualizarPreviewConferir();
+}
+function atualizarPreviewConferir(){
+  const calculado = computePatrimonio().patrimonio;
+  let novo = calculado;
+  document.querySelectorAll('.conferir-input').forEach(inp=>{
+    const v = parseFloat(inp.value);
+    if(isNaN(v)) return;
+    const placeholder = parseFloat(inp.placeholder)||0;
+    novo += (v - placeholder);
+  });
+  document.getElementById('conferirTotalCalculado').textContent = fmtMoney(calculado);
+  document.getElementById('conferirTotalNovo').textContent = fmtMoney(novo);
+}
 document.getElementById('btnConferirPatrimonio').addEventListener('click', ()=>{
-  document.getElementById('conferirCalculado').value = fmtMoney(computePatrimonio().patrimonio);
-  document.getElementById('conferirInformado').value = '';
-  document.getElementById('conferirData').value = todayISO();
-  document.getElementById('conferirObs').value = '';
-  document.getElementById('conferirDiffPreview').style.display = 'none';
+  document.getElementById('conferirDataGeral').value = todayISO();
+  renderConferirLista();
   openModal('modalConferir');
 });
-document.getElementById('conferirInformado').addEventListener('input', ()=>{
-  const informado = parseFloat(document.getElementById('conferirInformado').value);
-  const box = document.getElementById('conferirDiffPreview');
-  if(isNaN(informado)){ box.style.display='none'; return; }
-  const calculado = computePatrimonio().patrimonio;
-  const diff = round2(informado - calculado);
-  box.style.display = 'block';
-  box.innerHTML = `<div class="flex-between"><span class="small text-soft">Diferença</span><span class="mono" style="font-weight:700; color:${Math.abs(diff)<1?'var(--positive)':'var(--negative)'}">${fmtMoneySigned(diff)}</span></div>
-    <p class="small text-faint" style="margin:8px 0 0;">${Math.abs(diff)<1 ? 'Praticamente conciliado — parabéns pela organização.' : 'Motivos comuns: preço desatualizado de alguma ação, saldo RF não atualizado recentemente, taxas/custódia não lançadas, ou algum lançamento faltando/duplicado.'}</p>`;
-});
 document.getElementById('btnSalvarConferencia').addEventListener('click', async ()=>{
-  const informado = parseFloat(document.getElementById('conferirInformado').value);
-  const date = document.getElementById('conferirData').value;
-  if(!date || isNaN(informado)){ addToast('Preencha data e o valor real do patrimônio.'); return; }
-  const calculado = computePatrimonio().patrimonio;
-  DATA.reconciliations.push({ id:uid(), date, patrimonioInformado:round2(informado), patrimonioCalculado:round2(calculado), diferenca:round2(informado-calculado), note: document.getElementById('conferirObs').value||'' });
+  const date = document.getElementById('conferirDataGeral').value;
+  if(!date){ addToast('Informe a data.'); return; }
+  const calculadoAntes = computePatrimonio().patrimonio;
+  let registados = 0;
+  document.querySelectorAll('.conferir-input').forEach(inp=>{
+    const v = parseFloat(inp.value);
+    if(isNaN(v) || v<0) return;
+    if(inp.dataset.kind==='rf') registarSaldoRealRf(inp.dataset.id, 0, String(v), date);
+    else registarSaldoRealPosicao(inp.dataset.id, v, date);
+    registados++;
+  });
+  if(registados===0){ addToast('Informe pelo menos um saldo real diferente do calculado.'); return; }
+  const calculadoDepois = computePatrimonio().patrimonio;
+  DATA.reconciliations.push({ id:uid(), date, patrimonioInformado:round2(calculadoDepois), patrimonioCalculado:round2(calculadoAntes), diferenca:round2(calculadoDepois-calculadoAntes), note:`${registados} posição(ões) atualizada(s) manualmente` });
   await Store.save(DATA);
   renderAll();
   closeModal('modalConferir');
-  addToast('Conferência registada.');
+  addToast(`${registados} saldo(s) real(is) registado(s) — patrimônio total e rendimentos atualizados. ✓`);
 });
 document.getElementById('btnSalvarCaixa').addEventListener('click', async ()=>{
   const date = document.getElementById('caixaData').value;
