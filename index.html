@@ -456,6 +456,7 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
       <span class="tab-indicator" id="tabIndicator"></span>
       <button class="tab-btn active" data-tab="dashboard"><span class="tab-ico">◆</span>Dashboard</button>
       <button class="tab-btn" data-tab="acoes"><span class="tab-ico">📈</span>Ações</button>
+      <button class="tab-btn" data-tab="operacoes"><span class="tab-ico">🧾</span>Operações</button>
       <button class="tab-btn" data-tab="rendafixa"><span class="tab-ico">🏦</span>Renda Fixa</button>
       <button class="tab-btn" data-tab="dividendos"><span class="tab-ico">💰</span>Dividendos</button>
       <button class="tab-btn" data-tab="historico"><span class="tab-ico">📜</span>Histórico</button>
@@ -637,6 +638,40 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
         <h3 style="margin:0 0 14px; font-size:15px; display:flex; align-items:center; gap:8px;"><span style="font-size:17px;">📉</span> Piores posições</h3>
         <div id="rankPiores"></div>
       </div>
+    </div>
+  </section>
+
+  <!-- ===================== OPERAÇÕES ===================== -->
+  <section class="tab-panel" id="tab-operacoes">
+    <div class="flex-between" style="flex-wrap:wrap; gap:12px; margin-bottom:12px;">
+      <div>
+        <h2 class="section-title">Operações</h2>
+        <p class="section-hint mb-0">Histórico financeiro completo — compras e vendas, dividendos, aportes e retiradas de caixa, e aportes em renda fixa. Edite ou elimine qualquer movimento; a carteira recalcula automaticamente.</p>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="field-row">
+        <div class="field" style="margin-bottom:0;"><label>Buscar ativo/produto</label><input type="text" id="opFiltroTicker" placeholder="Ex.: PETR4"></div>
+        <div class="field" style="margin-bottom:0;"><label>Tipo</label>
+          <select id="opFiltroTipo">
+            <option value="">Todos</option>
+            <option value="compra">Compra</option><option value="venda">Venda</option>
+            <option value="dividendo">Dividendo</option>
+            <option value="aporte_caixa">Aporte de caixa</option><option value="retirada">Retirada</option>
+            <option value="aporte_rf">Aporte RF</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:0;"><label>De</label><input type="date" id="opFiltroDe"></div>
+        <div class="field" style="margin-bottom:0;"><label>Até</label><input type="date" id="opFiltroAte"></div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="data" id="tabelaOperacoes">
+        <thead><tr>
+          <th>Data</th><th>Ativo/Produto</th><th>Tipo</th><th>Entrada/Saída</th><th>Valor</th><th>Detalhe</th><th>Observação</th><th>Ações</th>
+        </tr></thead>
+        <tbody id="operacoesTbody"></tbody>
+      </table>
     </div>
   </section>
 
@@ -1167,6 +1202,82 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
       <button class="btn btn-danger" id="btnExcluirProdutoRf" style="margin-right:auto;">Excluir produto</button>
       <button class="btn" data-close="modalEditarRf">Cancelar</button>
       <button class="btn btn-primary" id="btnSalvarEdicaoRf">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: EDITAR OPERAÇÃO ===================== -->
+<div class="modal-overlay" id="modalEditarOperacao">
+  <div class="modal">
+    <div class="modal-head"><h3>Editar operação</h3><button class="icon-btn" data-close="modalEditarOperacao">✕</button></div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field"><label>Data</label><input type="date" id="editOpData"></div>
+        <div class="field"><label>Tipo</label><select id="editOpTipo"><option value="compra">Compra</option><option value="venda">Venda</option></select></div>
+      </div>
+      <div class="field"><label>Ativo / Ticker</label><input type="text" id="editOpTicker" style="text-transform:uppercase;"></div>
+      <div class="field-row">
+        <div class="field"><label>Quantidade</label><input type="number" step="0.000001" id="editOpQtd"></div>
+        <div class="field"><label>Preço por unidade (R$)</label><input type="number" step="0.01" id="editOpPreco"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Taxas (R$)</label><input type="number" step="0.01" id="editOpTaxas"></div>
+        <div class="field"><label>Origem do dinheiro</label>
+          <select id="editOpFunding">
+            <option value="externo">Dinheiro novo (aporte)</option>
+            <option value="transferencia">Transferência interna</option>
+            <option value="preexistente">Já tinha essa posição</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Observação (opcional)</label><input type="text" id="editOpObs"></div>
+      <input type="hidden" id="editOpId">
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger" id="btnExcluirOperacao" style="margin-right:auto;">Eliminar operação</button>
+      <button class="btn" data-close="modalEditarOperacao">Cancelar</button>
+      <button class="btn btn-primary" id="btnSalvarEdicaoOperacao">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: EDITAR MOVIMENTO (dividendo/caixa/RF) =====================
+     Um único modal para os 3 tipos de movimento que a aba Operações passou
+     a consolidar e que ainda não tinham edição própria — os campos visíveis
+     mudam conforme o tipo, mas cada "Guardar" grava sempre na estrutura
+     original (DATA.dividends / DATA.cashMovements / DATA.rf.entries). -->
+<div class="modal-overlay" id="modalEditarMovimento">
+  <div class="modal">
+    <div class="modal-head"><h3 id="editMovTitulo">Editar movimento</h3><button class="icon-btn" data-close="modalEditarMovimento">✕</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Data</label><input type="date" id="editMovData"></div>
+
+      <div id="editMovDividendoFields">
+        <div class="field"><label>Ativo / Ticker</label><input type="text" id="editMovTicker" style="text-transform:uppercase;"></div>
+        <div class="field-row">
+          <div class="field"><label>Quantidade</label><input type="number" step="0.000001" id="editMovQtd"></div>
+          <div class="field"><label>Valor por unidade (R$)</label><input type="number" step="0.01" id="editMovPorAcao"></div>
+        </div>
+      </div>
+
+      <div id="editMovCaixaFields">
+        <div class="field"><label>Tipo</label><select id="editMovCaixaTipo"><option value="aporte_caixa">Aporte de caixa</option><option value="retirada">Retirada</option></select></div>
+        <div class="field"><label>Valor (R$)</label><input type="number" step="0.01" id="editMovValor"></div>
+      </div>
+
+      <div id="editMovRfFields">
+        <div class="field"><label>Produto</label><input type="text" id="editMovRfProduto" disabled></div>
+        <div class="field"><label>Valor do aporte (R$)</label><input type="number" step="0.01" id="editMovAporte"></div>
+      </div>
+
+      <div class="field"><label>Observação (opcional)</label><input type="text" id="editMovObs"></div>
+      <input type="hidden" id="editMovId">
+      <input type="hidden" id="editMovSourceType">
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger" id="btnExcluirMovimento" style="margin-right:auto;">Eliminar</button>
+      <button class="btn" data-close="modalEditarMovimento">Cancelar</button>
+      <button class="btn btn-primary" id="btnSalvarEdicaoMovimento">Guardar</button>
     </div>
   </div>
 </div>
@@ -2229,6 +2340,7 @@ function deferChartRender(canvasId, renderFn){
 function renderAll(){
   renderDashboard();
   renderAcoes();
+  renderOperacoes();
   renderRendaFixa();
   renderDividendos();
   renderHistorico(currentHistPeriod);
@@ -2450,6 +2562,268 @@ function renderAcoes(){
   document.getElementById('rankMelhores').innerHTML = rankings.melhores.length ? rankings.melhores.slice(0,5).map((p,i)=>rankRow(i+1,p,true)).join('') : '<p class="text-soft small">Nenhuma posição no verde ainda.</p>';
   document.getElementById('rankPiores').innerHTML = rankings.piores.length ? rankings.piores.slice(0,5).map((p,i)=>rankRow(i+1,p,false)).join('') : '<p class="text-soft small">Nenhuma posição no vermelho — carteira saudável. 🎉</p>';
 }
+
+/* ---- Operações: listar/editar/eliminar diretamente em DATA.transactions ----
+   Usa exatamente a mesma estrutura e as mesmas funções de gravação
+   (Store.save) e recálculo (renderAll -> computePositions/computePatrimonio
+   etc.) já existentes — nenhuma estrutura de dados paralela. */
+const FUNDING_LABEL = { externo:'Aporte novo', transferencia:'Transferência', preexistente:'Pré-existente' };
+/* ---- Operações: histórico financeiro consolidado ----
+   Função pura de leitura — nunca cria uma estrutura paralela nem persiste
+   nada. Percorre as estruturas já existentes (transactions, dividends,
+   cashMovements, rf.entries) e devolve uma lista unificada só para exibição
+   na aba Operações. Cada item aponta de volta para o registo original
+   (sourceType + id) para que editar/eliminar sempre atue na estrutura de
+   origem — nunca nesta lista derivada.
+   Decisão de auditoria: DATA.positionAdjustments e DATA.reconciliations
+   NÃO entram aqui — são calibrações de valor (quanto vale algo hoje), não
+   movimentações de dinheiro entrando ou saindo. Um rf.entry com aporte=0
+   (só um saldo informado, sem aporte) também não entra pelo mesmo motivo:
+   não representa dinheiro a mover-se, é uma checagem de saldo. */
+function getHistoricoFinanceiro(){
+  const rfProductName = {};
+  DATA.rf.products.forEach(p=> rfProductName[p.id] = p.name || [p.instituicao,p.tipo].filter(Boolean).join(' — ') || 'Produto RF');
+  const items = [];
+  DATA.transactions.forEach(t=>{
+    const isCompra = t.type==='compra';
+    items.push({
+      id:t.id, date:t.date, tipo:isCompra?'compra':'venda', direction:isCompra?'entrada':'saida',
+      ativo:t.ticker, valor: round2(t.qty*t.price + (t.fees||0)),
+      detalhe: `${fmtNum(t.qty)} un. × ${fmtMoney(t.price)}` + (t.fees?` + ${fmtMoney(t.fees)} taxas`:'') + (t.funding?` · ${FUNDING_LABEL[t.funding]||t.funding}`:''),
+      note: t.note||'', sourceType:'transaction'
+    });
+  });
+  DATA.dividends.forEach(d=>{
+    items.push({
+      id:d.id, date:d.date, tipo:'dividendo', direction:'entrada',
+      ativo:d.ticker, valor: round2(d.total),
+      detalhe: `${fmtNum(d.qty)} un. × ${fmtMoney(d.perShare)}`,
+      note: d.note||'', sourceType:'dividend'
+    });
+  });
+  DATA.cashMovements.forEach(m=>{
+    const isAporte = m.type==='aporte_caixa';
+    items.push({
+      id:m.id, date:m.date, tipo:isAporte?'aporte_caixa':'retirada', direction:isAporte?'entrada':'saida',
+      ativo:'Caixa', valor: round2(m.amount),
+      detalhe: isAporte?'Aporte de caixa':'Retirada de caixa',
+      note: m.note||'', sourceType:'cashMovement'
+    });
+  });
+  DATA.rf.entries.forEach(e=>{
+    if(!(e.aporte>0)) return; // saldo-only: calibração, não é movimentação (ver nota acima)
+    items.push({
+      id:e.id, date:e.date, tipo:'aporte_rf', direction:'entrada',
+      ativo: rfProductName[e.productId] || 'Renda Fixa', valor: round2(e.aporte),
+      detalhe: 'Aporte em renda fixa',
+      note: e.note||'', sourceType:'rfEntry'
+    });
+  });
+  return items;
+}
+const TIPO_LABEL = { compra:'Compra', venda:'Venda', dividendo:'Dividendo', aporte_caixa:'Aporte de caixa', retirada:'Retirada', aporte_rf:'Aporte RF' };
+function renderOperacoes(){
+  const busca = (document.getElementById('opFiltroTicker').value||'').trim().toUpperCase();
+  const tipo = document.getElementById('opFiltroTipo').value;
+  const de = document.getElementById('opFiltroDe').value;
+  const ate = document.getElementById('opFiltroAte').value;
+  let ops = getHistoricoFinanceiro();
+  if(busca) ops = ops.filter(o=>o.ativo.toUpperCase().includes(busca));
+  if(tipo) ops = ops.filter(o=>o.tipo===tipo);
+  if(de) ops = ops.filter(o=>o.date>=de);
+  if(ate) ops = ops.filter(o=>o.date<=ate);
+  ops.sort((a,b)=> b.date.localeCompare(a.date) || b.id.localeCompare(a.id)); // mais recente primeiro
+
+  document.getElementById('operacoesTbody').innerHTML = ops.length ? ops.map(o=>{
+    return `<tr>
+      <td>${fmtDate(o.date)}</td>
+      <td><strong>${escapeHtml(o.ativo)}</strong></td>
+      <td><span class="text-faint small">${TIPO_LABEL[o.tipo]||o.tipo}</span></td>
+      <td><span class="rentab-chip ${o.direction==='entrada'?'pos':'neg'}">${o.direction==='entrada'?'▲ Entrada':'▼ Saída'}</span></td>
+      <td class="mono" style="font-weight:700;">${fmtMoney(o.valor)}</td>
+      <td class="small text-faint">${escapeHtml(o.detalhe)}</td>
+      <td>${o.note ? escapeHtml(o.note) : '<span class="text-faint">—</span>'}</td>
+      <td><div class="flex gap-6">
+        <button class="icon-btn btn-sm" style="width:28px;height:28px; flex:none;" onclick="abrirEdicaoMovimento('${o.sourceType}','${o.id}')" title="Editar">✎</button>
+        <button class="icon-btn btn-sm" style="width:28px;height:28px; flex:none;" onclick="excluirMovimento('${o.sourceType}','${o.id}')" title="Eliminar">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="8"><div class="empty"><div class="empty-icon">🧾</div><h3>Nenhum movimento encontrado</h3><p>${getHistoricoFinanceiro().length? 'Nenhum movimento corresponde aos filtros escolhidos.' : 'Ainda não há compras, vendas, dividendos, aportes ou retiradas registados.'}</p></div></td></tr>`;
+}
+function abrirEdicaoOperacao(id){
+  const t = DATA.transactions.find(x=>x.id===id);
+  if(!t) return;
+  document.getElementById('editOpId').value = t.id;
+  document.getElementById('editOpData').value = t.date;
+  document.getElementById('editOpTipo').value = t.type;
+  document.getElementById('editOpTicker').value = t.ticker;
+  document.getElementById('editOpQtd').value = t.qty;
+  document.getElementById('editOpPreco').value = t.price;
+  document.getElementById('editOpTaxas').value = t.fees||0;
+  document.getElementById('editOpFunding').value = t.funding||'externo';
+  document.getElementById('editOpObs').value = t.note||'';
+  openModal('modalEditarOperacao');
+}
+document.getElementById('btnSalvarEdicaoOperacao').addEventListener('click', async ()=>{
+  const id = document.getElementById('editOpId').value;
+  const t = DATA.transactions.find(x=>x.id===id);
+  if(!t) return;
+  const date = document.getElementById('editOpData').value;
+  const ticker = document.getElementById('editOpTicker').value.trim().toUpperCase();
+  const type = document.getElementById('editOpTipo').value;
+  const qty = parseFloat(document.getElementById('editOpQtd').value);
+  const price = parseFloat(document.getElementById('editOpPreco').value);
+  const fees = parseFloat(document.getElementById('editOpTaxas').value)||0;
+  if(!date || !ticker || !(qty>0) || !(price>0)){ addToast('Preencha data, ativo, quantidade e preço corretamente.'); return; }
+  // Guarda os valores antigos para poder reverter se a alteração deixar a
+  // posição com quantidade negativa — nunca gravamos um estado inconsistente.
+  const backup = { ...t };
+  t.date = date; t.ticker = ticker; t.type = type; t.qty = round2(qty); t.price = round2(price); t.fees = round2(fees);
+  t.funding = document.getElementById('editOpFunding').value;
+  const obs = document.getElementById('editOpObs').value.trim();
+  if(obs) t.note = obs; else delete t.note;
+  const posDepois = computePositions().find(p=>p.ticker===ticker);
+  if(posDepois && posDepois.qty < -0.0000001){
+    Object.assign(t, backup);
+    addToast(`Esta alteração deixaria ${ticker} com quantidade negativa (vendas maiores que as compras). Nada foi guardado.`);
+    return;
+  }
+  await Store.save(DATA);
+  renderAll();
+  closeModal('modalEditarOperacao');
+  addToast('Operação atualizada. ✓');
+});
+function excluirOperacao(id){
+  const t = DATA.transactions.find(x=>x.id===id);
+  if(!t) return;
+  askConfirm('Eliminar operação', `Eliminar esta ${t.type==='compra'?'compra':'venda'} de ${t.ticker} (${fmtDate(t.date)})? Isto vai recalcular a posição, o custo médio, o patrimônio e todas as métricas dependentes desse ativo — só esta operação é removida, as demais ficam intactas.`, async ()=>{
+    DATA.transactions = DATA.transactions.filter(x=>x.id!==id);
+    const posDepois = computePositions().find(p=>p.ticker===t.ticker);
+    await Store.save(DATA);
+    renderAll();
+    if(posDepois && posDepois.qty < -0.0000001){
+      addToast(`Operação eliminada. Atenção: ${t.ticker} ficou com quantidade negativa — reveja as operações restantes desse ativo.`);
+    } else {
+      addToast('Operação eliminada.');
+    }
+  });
+}
+document.getElementById('btnExcluirOperacao').addEventListener('click', ()=>{
+  const id = document.getElementById('editOpId').value;
+  closeModal('modalEditarOperacao');
+  excluirOperacao(id);
+});
+
+/* ---- Editar/eliminar dividendo, movimento de caixa e aporte RF ----
+   Cada tipo grava sempre no seu registo original — nunca em
+   DATA.transactions. O roteamento por sourceType é a única "cola" nova;
+   a leitura/gravação em si usa exatamente os arrays já existentes. */
+function abrirEdicaoMovimento(sourceType, id){
+  if(sourceType==='transaction'){ abrirEdicaoOperacao(id); return; }
+  document.getElementById('editMovId').value = id;
+  document.getElementById('editMovSourceType').value = sourceType;
+  document.getElementById('editMovDividendoFields').classList.add('hidden');
+  document.getElementById('editMovCaixaFields').classList.add('hidden');
+  document.getElementById('editMovRfFields').classList.add('hidden');
+  if(sourceType==='dividend'){
+    const d = DATA.dividends.find(x=>x.id===id); if(!d) return;
+    document.getElementById('editMovTitulo').textContent = 'Editar dividendo';
+    document.getElementById('editMovData').value = d.date;
+    document.getElementById('editMovTicker').value = d.ticker;
+    document.getElementById('editMovQtd').value = d.qty;
+    document.getElementById('editMovPorAcao').value = d.perShare;
+    document.getElementById('editMovObs').value = d.note||'';
+    document.getElementById('editMovDividendoFields').classList.remove('hidden');
+  } else if(sourceType==='cashMovement'){
+    const m = DATA.cashMovements.find(x=>x.id===id); if(!m) return;
+    document.getElementById('editMovTitulo').textContent = 'Editar movimento de caixa';
+    document.getElementById('editMovData').value = m.date;
+    document.getElementById('editMovCaixaTipo').value = m.type;
+    document.getElementById('editMovValor').value = m.amount;
+    document.getElementById('editMovObs').value = m.note||'';
+    document.getElementById('editMovCaixaFields').classList.remove('hidden');
+  } else if(sourceType==='rfEntry'){
+    const e = DATA.rf.entries.find(x=>x.id===id); if(!e) return;
+    const prod = DATA.rf.products.find(p=>p.id===e.productId);
+    document.getElementById('editMovTitulo').textContent = 'Editar aporte de renda fixa';
+    document.getElementById('editMovData').value = e.date;
+    document.getElementById('editMovRfProduto').value = prod ? (prod.name || prod.instituicao || 'Produto RF') : 'Produto RF';
+    document.getElementById('editMovAporte').value = e.aporte;
+    document.getElementById('editMovObs').value = e.note||'';
+    document.getElementById('editMovRfFields').classList.remove('hidden');
+  }
+  openModal('modalEditarMovimento');
+}
+document.getElementById('btnSalvarEdicaoMovimento').addEventListener('click', async ()=>{
+  const id = document.getElementById('editMovId').value;
+  const sourceType = document.getElementById('editMovSourceType').value;
+  const date = document.getElementById('editMovData').value;
+  const obs = document.getElementById('editMovObs').value.trim();
+  if(!date){ addToast('Informe a data.'); return; }
+  if(sourceType==='dividend'){
+    const d = DATA.dividends.find(x=>x.id===id); if(!d) return;
+    const ticker = document.getElementById('editMovTicker').value.trim().toUpperCase();
+    const qty = parseFloat(document.getElementById('editMovQtd').value);
+    const per = parseFloat(document.getElementById('editMovPorAcao').value);
+    if(!ticker || !(qty>0) || !(per>0)){ addToast('Preencha ativo, quantidade e valor por unidade.'); return; }
+    d.date = date; d.ticker = ticker; d.qty = round2(qty); d.perShare = round2(per); d.total = round2(qty*per);
+    if(obs) d.note = obs; else delete d.note;
+  } else if(sourceType==='cashMovement'){
+    const m = DATA.cashMovements.find(x=>x.id===id); if(!m) return;
+    const valor = parseFloat(document.getElementById('editMovValor').value);
+    if(!(valor>0)){ addToast('Informe um valor válido.'); return; }
+    m.date = date; m.type = document.getElementById('editMovCaixaTipo').value; m.amount = round2(valor);
+    m.note = obs;
+  } else if(sourceType==='rfEntry'){
+    const e = DATA.rf.entries.find(x=>x.id===id); if(!e) return;
+    const aporte = parseFloat(document.getElementById('editMovAporte').value);
+    if(!(aporte>0)){ addToast('Informe um valor de aporte válido.'); return; }
+    e.date = date; e.aporte = round2(aporte);
+    if(obs) e.note = obs; else delete e.note;
+  } else { return; }
+  await Store.save(DATA);
+  renderAll();
+  closeModal('modalEditarMovimento');
+  addToast('Movimento atualizado. ✓');
+});
+document.getElementById('btnExcluirMovimento').addEventListener('click', ()=>{
+  const id = document.getElementById('editMovId').value;
+  const sourceType = document.getElementById('editMovSourceType').value;
+  closeModal('modalEditarMovimento');
+  excluirMovimento(sourceType, id);
+});
+function excluirMovimento(sourceType, id){
+  if(sourceType==='transaction'){ excluirOperacao(id); return; }
+  if(sourceType==='dividend'){
+    const d = DATA.dividends.find(x=>x.id===id); if(!d) return;
+    askConfirm('Eliminar dividendo', `Eliminar este dividendo de ${d.ticker} (${fmtDate(d.date)}, ${fmtMoney(d.total)})? Isto vai recalcular os dividendos recebidos e as métricas dependentes.`, async ()=>{
+      DATA.dividends = DATA.dividends.filter(x=>x.id!==id);
+      await Store.save(DATA);
+      renderAll();
+      addToast('Dividendo eliminado.');
+    });
+  } else if(sourceType==='cashMovement'){
+    const m = DATA.cashMovements.find(x=>x.id===id); if(!m) return;
+    askConfirm('Eliminar movimento de caixa', `Eliminar este(a) ${m.type==='aporte_caixa'?'aporte':'retirada'} de caixa (${fmtDate(m.date)}, ${fmtMoney(m.amount)})? Isto vai recalcular o patrimônio e as métricas dependentes.`, async ()=>{
+      DATA.cashMovements = DATA.cashMovements.filter(x=>x.id!==id);
+      await Store.save(DATA);
+      renderAll();
+      addToast('Movimento de caixa eliminado.');
+    });
+  } else if(sourceType==='rfEntry'){
+    const e = DATA.rf.entries.find(x=>x.id===id); if(!e) return;
+    const prod = DATA.rf.products.find(p=>p.id===e.productId);
+    askConfirm('Eliminar aporte de renda fixa', `Eliminar este aporte de ${fmtMoney(e.aporte)} em ${prod?(prod.name||prod.instituicao):'renda fixa'} (${fmtDate(e.date)})? Isto vai recalcular o saldo e o rendimento deste produto.`, async ()=>{
+      DATA.rf.entries = DATA.rf.entries.filter(x=>x.id!==id);
+      await Store.save(DATA);
+      renderAll();
+      addToast('Aporte de renda fixa eliminado.');
+    });
+  }
+}
+['opFiltroTicker','opFiltroTipo','opFiltroDe','opFiltroAte'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', renderOperacoes);
+});
 function rankRow(i,p,pos){
   return `<div class="flex-between" style="padding:9px 0; border-bottom:1px solid var(--line-soft);">
     <span class="flex gap-8"><span class="text-faint mono small">${i}º</span><strong>${p.ticker}</strong></span>
