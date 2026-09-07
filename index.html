@@ -488,6 +488,17 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
       </div>
     </div>
 
+    <!-- Resultado do mês/ano e retiradas — reaproveita computePeriodoAnalise() e
+         computeCaixa(), já validados; nenhum cálculo novo aqui. -->
+    <div class="card" style="margin-bottom:20px;">
+      <h3 style="margin:0 0 14px; font-size:15px;">Como estou indo agora</h3>
+      <div class="grid grid-3">
+        <div><div class="stat-label" style="margin-bottom:2px;">Resultado do mês</div><div class="mono" id="dashResultadoMes" style="font-weight:700; font-size:18px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Resultado do ano</div><div class="mono" id="dashResultadoAno" style="font-weight:700; font-size:18px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Retiradas acumuladas</div><div class="mono" id="dashRetiradasAcum" style="font-weight:700; font-size:18px;">—</div></div>
+      </div>
+    </div>
+
     <!-- Renda Fixa x Renda Variável — bloco único, não dois cards separados -->
     <div class="card" style="margin-bottom:20px;">
       <div class="flex-between" style="margin-bottom:18px;">
@@ -659,6 +670,8 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
             <option value="dividendo">Dividendo</option>
             <option value="aporte_caixa">Aporte de caixa</option><option value="retirada">Retirada</option>
             <option value="aporte_rf">Aporte RF</option>
+            <option value="resgate_rf">Resgate RF</option>
+            <option value="saldo_rf">Saldo RF (informativo)</option>
           </select>
         </div>
         <div class="field" style="margin-bottom:0;"><label>De</label><input type="date" id="opFiltroDe"></div>
@@ -804,6 +817,55 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
   <section class="tab-panel" id="tab-analises">
     <h2 class="section-title">Análises por período</h2>
     <p class="section-hint">Selecione um intervalo para ver os números consolidados nesse período — separando sempre dinheiro novo de resultado real.</p>
+
+    <!-- 4.15 Diagnóstico Patrium — frases dinâmicas, só as que têm dado real por trás -->
+    <div class="card" id="diagnosticoCard" style="margin-bottom:20px; background:linear-gradient(160deg, var(--surface-2), var(--surface));">
+      <h3 style="margin:0 0 4px; font-size:15px;">Diagnóstico Patrium</h3>
+      <p class="section-hint" style="margin-bottom:14px;">Leituras automáticas geradas a partir dos seus dados reais.</p>
+      <div id="diagnosticoLista"></div>
+    </div>
+
+    <!-- Comparação de períodos -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="flex-between" style="flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+        <h3 style="margin:0; font-size:15px;">Comparação de períodos</h3>
+        <select id="compPeriodoFiltro" style="max-width:220px;">
+          <option value="mes">Este mês × mês anterior</option>
+          <option value="ano">Este ano × ano anterior</option>
+          <option value="3m">Últimos 3 meses</option>
+          <option value="6m" selected>Últimos 6 meses</option>
+          <option value="12m">Últimos 12 meses</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Métrica</th><th id="compPeriodoAtualHead">Período atual</th><th id="compPeriodoAnteriorHead">Período anterior</th><th>Variação</th></tr></thead>
+          <tbody id="compPeriodoTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 4.1 Resumo de performance — visão fixa, independente do período selecionado abaixo -->
+    <div class="card" style="margin-bottom:20px;">
+      <h3 style="margin:0 0 14px; font-size:15px;">Resumo de performance</h3>
+      <div class="grid grid-4" style="margin-bottom:18px;">
+        <div><div class="stat-label" style="margin-bottom:2px;">Patrimônio atual</div><div class="mono" id="rpPatrimonio" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Total investido</div><div class="mono" id="rpInvestido" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Lucro/prejuízo</div><div class="mono" id="rpLucro" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Rentabilidade acumulada</div><div class="mono" id="rpRentabAcum" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Rentabilidade no mês atual</div><div class="mono" id="rpRentabMes" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Rentabilidade no ano</div><div class="mono" id="rpRentabAno" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Rentabilidade média mensal</div><div class="mono" id="rpRentabMedia" style="font-weight:700; font-size:16px;">—</div></div>
+      </div>
+      <hr class="line">
+      <div class="grid grid-4" style="margin-top:14px;">
+        <div><div class="stat-label" style="margin-bottom:2px;">Melhor mês</div><div class="mono" id="rpMelhorMes" style="font-weight:700; font-size:14.5px; color:var(--positive);">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Pior mês</div><div class="mono" id="rpPiorMes" style="font-weight:700; font-size:14.5px; color:var(--negative);">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Maior ganho mensal</div><div class="mono" id="rpMaiorGanho" style="font-weight:700; font-size:14.5px; color:var(--positive);">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Maior perda mensal</div><div class="mono" id="rpMaiorPerda" style="font-weight:700; font-size:14.5px; color:var(--negative);">—</div></div>
+      </div>
+    </div>
+
     <div class="period-picker" id="anaPeriodPicker" style="margin-bottom:14px;"></div>
 
     <!-- Insight principal: "estou a ganhar ou a perder neste período?" -->
@@ -816,6 +878,55 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
       <div><p class="stat-label" style="margin-bottom:6px;">Aportes (dinheiro novo)</p><p class="mono" id="anaAportes" style="font-size:19px; font-weight:700;">—</p></div>
       <div><p class="stat-label" style="margin-bottom:6px;">Dividendos</p><p class="mono" id="anaDividendos" style="font-size:19px; font-weight:700;">—</p></div>
       <div><p class="stat-label" style="margin-bottom:6px;">Rentabilidade</p><p class="mono" id="anaRentab" style="font-size:19px; font-weight:700;">—</p></div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <div class="flex-between" style="flex-wrap:wrap; gap:10px; margin-bottom:4px;">
+        <div>
+          <h3 style="margin:0 0 4px; font-size:15px;">Resultado mensal</h3>
+          <p class="section-hint mb-0">Quanto você ganhou ou perdeu em cada mês — separando sempre aporte/resgate de rendimento. Nunca um aporte é contado como lucro, nem um resgate como prejuízo. "Aportes" negativo indica que houve mais resgate que aporte novo naquele mês.</p>
+        </div>
+        <select id="resMensalFiltro" style="max-width:140px;">
+          <option value="6">Últimos 6 meses</option>
+          <option value="12" selected>Últimos 12 meses</option>
+          <option value="24">Últimos 24 meses</option>
+          <option value="0">Tudo</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table class="data" id="tabelaResultadoMensal">
+          <thead><tr><th>Mês</th><th>Patrimônio inicial</th><th>Aportes</th><th>Retiradas</th><th>Rendimento</th><th>Patrimônio final</th><th>Rentabilidade</th></tr></thead>
+          <tbody id="resultadoMensalTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 4.3 Gráfico de rentabilidade mensal -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="flex-between" style="flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+        <h3 style="margin:0; font-size:15px;">Rentabilidade mensal</h3>
+        <div class="seg" id="rentabMensalPicker">
+          <button type="button" data-meses="6">6 meses</button>
+          <button type="button" data-meses="12" class="active">12 meses</button>
+          <button type="button" data-meses="0">Tudo</button>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="chartRentabMensal"></canvas></div>
+    </div>
+
+    <!-- 4.4 Evolução do patrimônio — mesma série do período selecionado acima
+         (computePeriodoAnalise), e aportado × patrimônio (computeAportesVsPatrimonio,
+         a mesma função que já alimenta o gráfico equivalente no Dashboard). -->
+    <div class="grid grid-2" style="margin-bottom:20px;">
+      <div class="card">
+        <h3 style="margin:0 0 12px; font-size:15px;">Evolução do patrimônio</h3>
+        <div class="chart-box"><canvas id="chartEvolucaoAnalises"></canvas></div>
+      </div>
+      <div class="card">
+        <h3 style="margin:0 0 4px; font-size:15px;">Aportado × Patrimônio</h3>
+        <p class="section-hint" style="margin-bottom:12px;">A diferença entre as duas barras é o quanto veio de valorização, não de dinheiro novo.</p>
+        <div class="chart-box"><canvas id="chartAportadoPatrimonioAnalises"></canvas></div>
+      </div>
     </div>
 
     <div class="grid grid-2" style="margin-bottom:20px;">
@@ -834,9 +945,159 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
       <p class="section-hint" style="margin-bottom:16px;">Sua consistência ao longo do tempo — todo o histórico, não só o período selecionado acima.</p>
       <div class="grid grid-4">
         <div><div class="stat-label">Média mensal</div><div class="mono" id="aportesMedia" style="font-weight:700; font-size:16px;">—</div></div>
-        <div><div class="stat-label">Maior aporte</div><div class="mono" id="aportesMaior" style="font-weight:700; font-size:16px; color:var(--positive);">—</div></div>
-        <div><div class="stat-label">Menor aporte</div><div class="mono" id="aportesMenor" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label">Melhor mês de aportes</div><div class="mono" id="aportesMaior" style="font-weight:700; font-size:16px; color:var(--positive);">—</div></div>
+        <div><div class="stat-label">Pior mês de aportes</div><div class="mono" id="aportesMenor" style="font-weight:700; font-size:16px;">—</div></div>
         <div><div class="stat-label">Total histórico</div><div class="mono" id="aportesTotalHist" style="font-weight:700; font-size:16px;">—</div></div>
+      </div>
+      <hr class="line">
+      <p class="stat-label" style="margin-bottom:10px;">Por operação individual de aporte</p>
+      <div class="grid grid-4">
+        <div><div class="stat-label">Número de aportes</div><div class="mono" id="aportesNumero" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label">Aporte médio</div><div class="mono" id="aportesMediaEvento" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label">Maior aporte</div><div class="mono" id="aportesMaiorEvento" style="font-weight:700; font-size:16px; color:var(--positive);">—</div></div>
+        <div><div class="stat-label">Menor aporte</div><div class="mono" id="aportesMenorEvento" style="font-weight:700; font-size:16px;">—</div></div>
+      </div>
+    </div>
+
+    <!-- 4.6 Análise de Renda Variável -->
+    <div class="card" style="margin-bottom:20px;">
+      <h3 style="margin:0 0 4px; font-size:15px;">Análise de Renda Variável</h3>
+      <p class="section-hint" style="margin-bottom:16px;">Ações, ETFs, FIIs e demais ativos de renda variável — todo o histórico.</p>
+      <div class="grid grid-4" style="margin-bottom:18px;">
+        <div><div class="stat-label" style="margin-bottom:2px;">Total investido</div><div class="mono" id="rvaInvestido" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Valor atual</div><div class="mono" id="rvaValorAtual" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Lucro/prejuízo</div><div class="mono" id="rvaLucro" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Rentabilidade</div><div class="mono" id="rvaRentab" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Número de ativos</div><div class="mono" id="rvaNumAtivos" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Maior posição</div><div class="mono" id="rvaMaiorPosicao" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Menor posição</div><div class="mono" id="rvaMenorPosicao" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Top 3 ativos juntos</div><div class="mono" id="rvaTop3" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Top 5 ativos juntos</div><div class="mono" id="rvaTop5" style="font-weight:700; font-size:16px;">—</div></div>
+      </div>
+      <hr class="line">
+      <div class="grid grid-2" style="margin-top:16px; gap:20px;">
+        <div>
+          <p class="stat-label" style="margin-bottom:10px;">Concentração por ativo</p>
+          <div id="rvaConcentracaoAtivo"></div>
+        </div>
+        <div>
+          <p class="stat-label" style="margin-bottom:10px;">Concentração por setor</p>
+          <div id="rvaConcentracaoSetor"></div>
+        </div>
+      </div>
+      <hr class="line">
+      <div class="grid grid-2" style="margin-top:16px; gap:20px;">
+        <div>
+          <p class="stat-label" style="margin-bottom:10px;">Mais contribuíram para o lucro (R$)</p>
+          <div id="rvaTopGanhoRs"></div>
+        </div>
+        <div>
+          <p class="stat-label" style="margin-bottom:10px;">Mais contribuíram para a perda (R$)</p>
+          <div id="rvaTopPerdaRs"></div>
+        </div>
+        <div>
+          <p class="stat-label" style="margin-bottom:10px;">Melhor rentabilidade (%)</p>
+          <div id="rvaTopRentabMelhor"></div>
+        </div>
+        <div>
+          <p class="stat-label" style="margin-bottom:10px;">Pior rentabilidade (%)</p>
+          <div id="rvaTopRentabPior"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4.12 Melhor e pior desempenho — quadro combinado (ativo + rentabilidade
+         + resultado + dividendos juntos), diferente das listas de único
+         critério do bloco 4.6. Ordenado por rentabilidade. -->
+    <div class="card" style="margin-bottom:20px;">
+      <h3 style="margin:0 0 4px; font-size:15px;">Melhor e pior desempenho</h3>
+      <p class="section-hint" style="margin-bottom:16px;">O quadro completo dos seus 5 melhores e 5 piores ativos — rentabilidade, resultado e dividendos lado a lado.</p>
+      <div class="grid grid-2" style="gap:20px;">
+        <div>
+          <p class="stat-label" style="margin-bottom:10px; color:var(--positive);">Melhores</p>
+          <div class="table-wrap"><table class="data">
+            <thead><tr><th>Ativo</th><th>Rentabilidade</th><th>Resultado</th><th>Dividendos</th></tr></thead>
+            <tbody id="desempenhoMelhoresTbody"></tbody>
+          </table></div>
+        </div>
+        <div>
+          <p class="stat-label" style="margin-bottom:10px; color:var(--negative);">Piores</p>
+          <div class="table-wrap"><table class="data">
+            <thead><tr><th>Ativo</th><th>Rentabilidade</th><th>Resultado</th></tr></thead>
+            <tbody id="desempenhoPioresTbody"></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4.14 Saúde da carteira — 7 dimensões avaliadas automaticamente,
+         cada uma com critério fixo e documentado (ver computeSaudeCarteira()).
+         Nunca uma recomendação — só uma leitura factual dos dados. -->
+    <div class="card" style="margin-bottom:20px;">
+      <h3 style="margin:0 0 4px; font-size:15px;">Saúde da carteira</h3>
+      <p class="section-hint" style="margin-bottom:16px;">Uma leitura automática com base só nos seus dados — nunca uma recomendação de investimento.</p>
+      <div id="saudeCarteiraLista"></div>
+    </div>
+
+    <!-- 4.7 Análise de Renda Fixa -->
+    <div class="card" style="margin-bottom:20px;">
+      <h3 style="margin:0 0 4px; font-size:15px;">Análise de Renda Fixa</h3>
+      <p class="section-hint" style="margin-bottom:16px;">CDBs, Tesouro Direto, LCIs/LCAs e demais produtos — participa do patrimônio total, não é tratada à parte.</p>
+      <div class="grid grid-4" style="margin-bottom:18px;">
+        <div><div class="stat-label" style="margin-bottom:2px;">Total aplicado</div><div class="mono" id="rfaAplicado" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Saldo atual</div><div class="mono" id="rfaSaldo" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Rendimentos</div><div class="mono" id="rfaRendimento" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Rentabilidade</div><div class="mono" id="rfaRentab" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Quantidade de produtos</div><div class="mono" id="rfaNumProdutos" style="font-weight:700; font-size:16px;">—</div></div>
+      </div>
+      <hr class="line">
+      <div class="grid grid-3" style="margin-top:16px; gap:20px;">
+        <div>
+          <p class="stat-label" style="margin-bottom:10px;">Por instituição</p>
+          <div id="rfaPorInstituicao"></div>
+        </div>
+        <div>
+          <p class="stat-label" style="margin-bottom:10px;">Por tipo de produto</p>
+          <div id="rfaPorTipo"></div>
+        </div>
+        <div>
+          <p class="stat-label" style="margin-bottom:10px;">Por indexador</p>
+          <div id="rfaPorIndexador"></div>
+        </div>
+      </div>
+      <hr class="line">
+      <div class="grid grid-2" style="margin-top:16px; gap:20px;">
+        <div>
+          <p class="stat-label" style="margin-bottom:10px;">Por liquidez</p>
+          <div id="rfaPorLiquidez"></div>
+        </div>
+        <div>
+          <p class="stat-label" style="margin-bottom:10px;">Próximos vencimentos</p>
+          <div id="rfaVencimentos"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4.8 Dividendos — só o que ainda não existe na aba Dividendos
+         (que já tem mês/ano/total, gráfico por mês e por empresa, histórico
+         completo). Aqui: média mensal, maior pagamento e dividend yield,
+         que não existiam em lugar nenhum do produto. -->
+    <div class="card" style="margin-bottom:20px;">
+      <h3 style="margin:0 0 4px; font-size:15px;">Dividendos — indicadores adicionais</h3>
+      <p class="section-hint" style="margin-bottom:16px;">Complementa a aba Dividendos, que já mostra o histórico completo e os gráficos por mês/empresa.</p>
+      <div class="grid grid-4" style="margin-bottom:18px;">
+        <div><div class="stat-label" style="margin-bottom:2px;">Média mensal</div><div class="mono" id="divaMediaMensal" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Maior pagamento</div><div class="mono" id="divaMaiorPagamento" style="font-weight:700; font-size:16px; color:var(--positive);">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Dividend yield sobre custo</div><div class="mono" id="divaDyCusto" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Dividend yield sobre valor atual</div><div class="mono" id="divaDyAtual" style="font-weight:700; font-size:16px;">—</div></div>
+      </div>
+      <hr class="line">
+      <p class="stat-label" style="margin:16px 0 10px;">Dividend yield por ativo</p>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Ativo</th><th>Dividendos recebidos</th><th>DY sobre custo</th><th>DY sobre valor atual</th></tr></thead>
+          <tbody id="divaTbodyYield"></tbody>
+        </table>
       </div>
     </div>
   </section>
@@ -873,6 +1134,19 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
         <div class="stat-card card-tight"><p class="stat-label">% em Renda Fixa</p><p class="stat-value" id="riscoPctRf" style="font-size:17px;">—</p></div>
         <div class="stat-card card-tight"><p class="stat-label">% em Renda Variável</p><p class="stat-value" id="riscoPctRv" style="font-size:17px;">—</p></div>
         <div class="stat-card card-tight"><p class="stat-label">Nº de empresas na carteira</p><p class="stat-value" id="riscoNumEmpresas" style="font-size:17px;">—</p></div>
+      </div>
+    </div>
+
+    <!-- 4.10 Alocação por tipo de ativo — Ações/ETFs/FIIs/Outros/Caixa,
+         classificado pelo catálogo já usado no cadastro (RV_CATALOG), já que
+         essa categoria não é guardada por posição — nunca inventamos a
+         classificação de um ativo fora do catálogo, ele entra em "Outros". -->
+    <div class="card" style="margin-top:20px;">
+      <h3 style="margin:0 0 4px; font-size:15px;">Alocação por tipo de ativo</h3>
+      <p class="section-hint" style="margin-bottom:16px;">Sobre o patrimônio total — inclui Renda Fixa e Caixa, não só a Renda Variável.</p>
+      <div class="grid grid-2" style="gap:20px;">
+        <div class="chart-box short"><canvas id="chartAlocacaoTipo"></canvas></div>
+        <div id="alocacaoTipoLista"></div>
       </div>
     </div>
   </section>
@@ -1139,9 +1413,10 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
       <div class="field"><label>Data</label><input type="date" id="saldoRfData"></div>
       <div class="field-row">
         <div class="field"><label>Novo aporte nesta data (R$)</label><input type="number" step="0.01" id="saldoRfAporte" value="0"></div>
-        <div class="field"><label>Saldo real na data (R$)</label><input type="number" step="0.01" id="saldoRfValor"></div>
+        <div class="field"><label>Resgate nesta data (R$)</label><input type="number" step="0.01" id="saldoRfResgate" value="0"></div>
       </div>
-      <p class="helper">Deixe "novo aporte" em 0 se estiver apenas a atualizar o saldo.</p>
+      <div class="field"><label>Saldo real na data (R$)</label><input type="number" step="0.01" id="saldoRfValor"></div>
+      <p class="helper">Preencha só um dos dois — aporte OU resgate. Deixe ambos em 0 se estiver apenas a atualizar o saldo.</p>
     </div>
     <div class="modal-foot">
       <button class="btn" data-close="modalSaldoRf">Cancelar</button>
@@ -1267,7 +1542,17 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
 
       <div id="editMovRfFields">
         <div class="field"><label>Produto</label><input type="text" id="editMovRfProduto" disabled></div>
-        <div class="field"><label>Valor do aporte (R$)</label><input type="number" step="0.01" id="editMovAporte"></div>
+        <div class="field"><label>Tipo</label>
+          <select id="editMovRfTipo">
+            <option value="aporte">Aporte em Renda Fixa</option>
+            <option value="resgate">Resgate de Renda Fixa</option>
+            <option value="saldo">Só atualizar saldo (sem aporte/resgate)</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field" id="editMovRfValorWrap"><label>Valor do aporte/resgate (R$)</label><input type="number" step="0.01" id="editMovAporte"></div>
+          <div class="field"><label>Saldo informado (R$, opcional)</label><input type="number" step="0.01" id="editMovRfSaldo"></div>
+        </div>
       </div>
 
       <div class="field"><label>Observação (opcional)</label><input type="text" id="editMovObs"></div>
@@ -1756,6 +2041,22 @@ function computeRfTotals(){
   const rendimento = prods.reduce((s,p)=>s+p.rendimento,0);
   return { capital, saldo, rendimento, rentabPct: capital>0 ? (rendimento/capital)*100 : 0 };
 }
+/* 4.7 Análise de Renda Fixa — agrupa o que computeRfProducts() já calcula
+   por produto (nenhum cálculo novo de saldo/rendimento), só soma por
+   instituição/tipo/indexador/liquidez. */
+function computeRfDistribuicao(campo, rotuloVazio){
+  const prods = computeRfProducts();
+  const totalSaldo = prods.reduce((s,p)=>s+p.saldoAtual,0);
+  const map = {};
+  prods.forEach(p=>{
+    const chave = p[campo] || rotuloVazio;
+    map[chave] = (map[chave]||0) + p.saldoAtual;
+  });
+  return Object.entries(map).map(([chave,saldo])=>({ chave, saldo, peso: totalSaldo>0?(saldo/totalSaldo)*100:0 })).sort((a,b)=>b.saldo-a.saldo);
+}
+function computeRfVencimentos(){
+  return computeRfProducts().filter(p=>p.vencimento).sort((a,b)=>a.vencimento.localeCompare(b.vencimento));
+}
 
 function computePatrimonio(){
   const rf = computeRfTotals();
@@ -1955,6 +2256,41 @@ function computeMonthlyContributions(){
   const keys = Object.keys(map).sort();
   return keys.map(k=>({ month:k, rf:round2(map[k].rf), rv:round2(map[k].rv), total:round2(map[k].rf+map[k].rv) }));
 }
+/* Aportado acumulado × Patrimônio, mês a mês — usada pelo Dashboard e pela
+   Análises (4.4). Fonte única: reaproveita computeMonthlyContributions() e
+   computeDividendsByMonth(); recebe a linha do tempo já construída
+   (buildTimeline()) para nunca recalculá-la duas vezes na mesma renderização.
+   É a forma visual de separar "quanto veio de dinheiro novo" de "quanto veio
+   de valorização" — a diferença entre as duas barras de cada mês. */
+/* 4.5 Análise de aportes por operação individual — mesmas regras de "o que
+   conta como aporte" de computeMonthlyContributions() (compra externa, rf
+   entry com aporte>0, aporte de caixa), só que sem agregar por mês. */
+function computeAportesEventos(){
+  const eventos = [];
+  DATA.transactions.filter(t=>t.type==='compra' && t.funding==='externo').forEach(t=>{
+    eventos.push({ date:t.date, valor: round2(t.qty*t.price+(t.fees||0)) });
+  });
+  DATA.rf.entries.filter(e=>e.aporte>0).forEach(e=>{
+    eventos.push({ date:e.date, valor: round2(e.aporte) });
+  });
+  DATA.cashMovements.filter(m=>m.type==='aporte_caixa').forEach(m=>{
+    eventos.push({ date:m.date, valor: round2(m.amount) });
+  });
+  return eventos;
+}
+function computeAportesVsPatrimonio(fullSeries){
+  const monthly = computeMonthlyContributions();
+  const divMonthly = computeDividendsByMonth();
+  const monthKeys = [...new Set([...monthly.map(m=>m.month), ...divMonthly.map(m=>m.month)])].sort();
+  const aporteMap = Object.fromEntries(monthly.map(m=>[m.month, m.total]));
+  const cumApArr = []; let running=0;
+  monthKeys.forEach(k=>{ running += aporteMap[k]||0; cumApArr.push(round2(running)); });
+  const patrByMonth = monthKeys.map(k=>{
+    const lastDay = fullSeries.filter(p=>monthKey(p.date)<=k).pop();
+    return lastDay ? lastDay.patrimonio : 0;
+  });
+  return { monthKeys, cumApArr, patrByMonth };
+}
 
 function computeDividendsByMonth(){
   const map = {};
@@ -1964,6 +2300,26 @@ function computeDividendsByMonth(){
   });
   const keys = Object.keys(map).sort();
   return keys.map(k=>({month:k, total:round2(map[k])}));
+}
+/* 4.8 Dividendos — indicadores que ainda não existiam em lugar nenhum do
+   produto: média mensal e maior pagamento (a partir de computeDividendsByMonth()
+   e DATA.dividends direto, sem cálculo paralelo), e dividend yield — nunca
+   calculado antes. DY sobre custo usa o investedBasis de computePositions();
+   DY sobre valor atual usa o marketValue — ambos já validados alhures. */
+function computeDividendYields(){
+  const posicoes = computePositions();
+  const porTicker = {};
+  DATA.dividends.forEach(d=>{ porTicker[d.ticker] = (porTicker[d.ticker]||0) + d.total; });
+  return Object.entries(porTicker).map(([ticker, dividendos])=>{
+    const pos = posicoes.find(p=>p.ticker===ticker);
+    const custo = pos ? pos.investedBasis : 0;
+    const valorAtual = pos ? pos.marketValue : 0;
+    return {
+      ticker, dividendos: round2(dividendos),
+      dyCusto: custo>0 ? (dividendos/custo)*100 : null,
+      dyAtual: valorAtual>0 ? (dividendos/valorAtual)*100 : null
+    };
+  }).sort((a,b)=>b.dividendos-a.dividendos);
 }
 
 function projectScenario(aporteMensal, prazoAnos, taxaAnualPct, inicial){
@@ -2103,6 +2459,178 @@ function computeRankings(){
     piores: comDados.filter(p=>p.unrealizedPLPct<0).sort((a,b)=>a.unrealizedPLPct-b.unrealizedPLPct)
   };
 }
+/* 4.6 Análise de Renda Variável — concentração por ativo e ranking por
+   contribuição em R$ (distinto do ranking por %, que já existe em
+   computeRankings()). Mesma fonte: computePositions()/computeRvTotals(). */
+function computeConcentracaoAtivo(){
+  const posicoes = computePositions().filter(p=>p.qty>0.0000001);
+  const totalRv = computeRvTotals().marketValue;
+  return posicoes.map(p=>({ ...p, peso: totalRv>0 ? (p.marketValue/totalRv)*100 : 0 })).sort((a,b)=>b.peso-a.peso);
+}
+/* Concentração por setor — só existe quando pelo menos um ativo detido tem
+   setor conhecido (DATA.sectors, preenchido por "Atualizar preços" com
+   token). Sem isso, devolve null — nunca inventamos um setor. */
+function computeConcentracaoSetor(){
+  const posicoes = computePositions().filter(p=>p.qty>0.0000001);
+  const setores = DATA.sectors || {};
+  const comSetor = posicoes.filter(p=>setores[p.ticker]);
+  if(comSetor.length===0) return null;
+  const totalRv = computeRvTotals().marketValue;
+  const map = {};
+  posicoes.forEach(p=>{
+    const s = setores[p.ticker] || 'Sem setor identificado';
+    map[s] = (map[s]||0) + p.marketValue;
+  });
+  return Object.entries(map).map(([setor,valor])=>({ setor, valor, peso: totalRv>0?(valor/totalRv)*100:0 })).sort((a,b)=>b.valor-a.valor);
+}
+function computeContribuicaoRs(){
+  const comDados = computePositions().filter(p=>p.qty>0.0000001 && p.hasRealPrice);
+  return {
+    maisGanho: comDados.filter(p=>p.unrealizedPL>0).sort((a,b)=>b.unrealizedPL-a.unrealizedPL),
+    maisPerda: comDados.filter(p=>p.unrealizedPL<0).sort((a,b)=>a.unrealizedPL-b.unrealizedPL)
+  };
+}
+/* 4.12 Melhor/pior desempenho — quadro combinado (ativo, rentabilidade,
+   resultado, dividendos) na mesma linha, ordenado por rentabilidade %.
+   Reaproveita computeRankings() para a ordenação; p.unrealizedPL e
+   p.dividends já vêm prontos de computePositions(). */
+function computeDesempenhoConsolidado(){
+  const r = computeRankings();
+  return { melhores: r.melhores.slice(0,5), piores: r.piores.slice(0,5) };
+}
+/* 4.14 Saúde da carteira — 7 dimensões, cada uma com nível (boa/atencao/
+   critica/insuficiente) e o motivo exato do critério usado. Reaproveita
+   integralmente o que já foi calculado: computeConcentracaoAtivo() (4.6),
+   computeResultadoMensal() (4.2), computeAportesEventos() (4.5),
+   computeDividendsByMonth() (existente), computeAllocation(). Critérios
+   documentados e fixos — nunca uma opinião, sempre o mesmo cálculo
+   reproduzível a partir dos dados reais. */
+function computeSaudeCarteira(){
+  const dims = [];
+  const conc = computeConcentracaoAtivo();
+
+  // 1) Diversificação — número de ativos distintos em RV.
+  if(conc.length===0) dims.push({ dimensao:'Diversificação', nivel:'insuficiente', motivo:'Ainda sem ativos de renda variável na carteira.' });
+  else if(conc.length>=6) dims.push({ dimensao:'Diversificação', nivel:'boa', motivo:`${conc.length} ativos diferentes em carteira.` });
+  else if(conc.length>=3) dims.push({ dimensao:'Diversificação', nivel:'atencao', motivo:`Apenas ${conc.length} ativos diferentes em carteira.` });
+  else dims.push({ dimensao:'Diversificação', nivel:'critica', motivo:`Só ${conc.length} ativo(s) em carteira — pouquíssima diversificação.` });
+
+  // 2) Concentração — peso do maior ativo individual sobre a RV.
+  if(conc.length===0) dims.push({ dimensao:'Concentração', nivel:'insuficiente', motivo:'Sem ativos de renda variável para avaliar.' });
+  else {
+    const maior = conc[0];
+    if(maior.peso<25) dims.push({ dimensao:'Concentração', nivel:'boa', motivo:`Maior posição (${maior.ticker}) é ${fmtNum(maior.peso.toFixed(0))}% da renda variável.` });
+    else if(maior.peso<40) dims.push({ dimensao:'Concentração', nivel:'atencao', motivo:`${maior.ticker} representa ${fmtNum(maior.peso.toFixed(0))}% da renda variável.` });
+    else dims.push({ dimensao:'Concentração', nivel:'critica', motivo:`${maior.ticker} representa ${fmtNum(maior.peso.toFixed(0))}% da renda variável — concentração elevada num único ativo.` });
+  }
+
+  // 3) Distribuição RF/RV — informativo: se há exposição às duas classes.
+  const alloc = computeAllocation();
+  if(alloc.total<=0) dims.push({ dimensao:'Distribuição RF/RV', nivel:'insuficiente', motivo:'Ainda sem patrimônio para distribuir.' });
+  else if(alloc.rfPct>0 && alloc.rvPct>0) dims.push({ dimensao:'Distribuição RF/RV', nivel:'boa', motivo:`${fmtNum(alloc.rfPct.toFixed(0))}% em Renda Fixa, ${fmtNum(alloc.rvPct.toFixed(0))}% em Renda Variável — exposto às duas classes.` });
+  else dims.push({ dimensao:'Distribuição RF/RV', nivel:'atencao', motivo:`100% concentrado numa única classe (${alloc.rfPct>0?'Renda Fixa':'Renda Variável'}) — nenhuma exposição à outra.` });
+
+  // 4) Evolução patrimonial — últimos 3 meses com dados válidos.
+  const meses3 = computeResultadoMensal(3).filter(m=>!m.dadosInsuficientes);
+  if(meses3.length<3) dims.push({ dimensao:'Evolução patrimonial', nivel:'insuficiente', motivo:'Menos de 3 meses de histórico para avaliar a tendência.' });
+  else {
+    const positivos = meses3.filter(m=>m.ganhosPeriodo>=0).length;
+    if(positivos===3) dims.push({ dimensao:'Evolução patrimonial', nivel:'boa', motivo:'Resultado positivo ou neutro nos últimos 3 meses.' });
+    else if(positivos>=1) dims.push({ dimensao:'Evolução patrimonial', nivel:'atencao', motivo:`${3-positivos} dos últimos 3 meses tiveram resultado negativo.` });
+    else dims.push({ dimensao:'Evolução patrimonial', nivel:'critica', motivo:'Resultado negativo em cada um dos últimos 3 meses.' });
+  }
+
+  // 5) Regularidade dos aportes — em quantos dos últimos 6 meses houve aporte.
+  const eventos = computeAportesEventos();
+  if(eventos.length===0) dims.push({ dimensao:'Regularidade dos aportes', nivel:'insuficiente', motivo:'Ainda sem aportes registados.' });
+  else {
+    const hoje = new Date(todayISO()+'T12:00:00');
+    const mesesComAporte = new Set();
+    eventos.forEach(e=> mesesComAporte.add(monthKey(e.date)));
+    let meses6 = [];
+    for(let i=0;i<6;i++){ const d=new Date(hoje.getFullYear(), hoje.getMonth()-i, 1); meses6.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`); }
+    const primeiroMes = eventos.map(e=>monthKey(e.date)).sort()[0];
+    meses6 = meses6.filter(mk=>mk>=primeiroMes);
+    if(meses6.length<2) dims.push({ dimensao:'Regularidade dos aportes', nivel:'insuficiente', motivo:'Menos de 2 meses de histórico de aportes.' });
+    else {
+      const comAporte = meses6.filter(mk=>mesesComAporte.has(mk)).length;
+      const pct = comAporte/meses6.length;
+      if(pct>=0.8) dims.push({ dimensao:'Regularidade dos aportes', nivel:'boa', motivo:`Aportou em ${comAporte} dos últimos ${meses6.length} meses.` });
+      else if(pct>=0.4) dims.push({ dimensao:'Regularidade dos aportes', nivel:'atencao', motivo:`Aportou em apenas ${comAporte} dos últimos ${meses6.length} meses.` });
+      else dims.push({ dimensao:'Regularidade dos aportes', nivel:'critica', motivo:`Aportou em só ${comAporte} dos últimos ${meses6.length} meses — aportes bem irregulares.` });
+    }
+  }
+
+  // 6) Dependência de poucos ativos — top 3 juntos sobre a RV.
+  if(conc.length===0) dims.push({ dimensao:'Dependência de poucos ativos', nivel:'insuficiente', motivo:'Sem ativos de renda variável para avaliar.' });
+  else {
+    const top3Pct = conc.slice(0,3).reduce((s,p)=>s+p.peso,0);
+    if(top3Pct<50) dims.push({ dimensao:'Dependência de poucos ativos', nivel:'boa', motivo:`Os 3 maiores ativos juntos são ${fmtNum(top3Pct.toFixed(0))}% da renda variável.` });
+    else if(top3Pct<75) dims.push({ dimensao:'Dependência de poucos ativos', nivel:'atencao', motivo:`Os 3 maiores ativos juntos são ${fmtNum(top3Pct.toFixed(0))}% da renda variável.` });
+    else dims.push({ dimensao:'Dependência de poucos ativos', nivel:'critica', motivo:`Os 3 maiores ativos juntos somam ${fmtNum(top3Pct.toFixed(0))}% da renda variável — forte dependência de poucos ativos.` });
+  }
+
+  // 7) Evolução dos dividendos — últimos 3 meses vs os 3 anteriores.
+  const divPorMes = computeDividendsByMonth();
+  if(divPorMes.length<6) dims.push({ dimensao:'Evolução dos dividendos', nivel:'insuficiente', motivo:'Menos de 6 meses de histórico de dividendos para comparar.' });
+  else {
+    const recentes = divPorMes.slice(-3).reduce((s,m)=>s+m.total,0);
+    const anteriores = divPorMes.slice(-6,-3).reduce((s,m)=>s+m.total,0);
+    if(anteriores<=0) dims.push({ dimensao:'Evolução dos dividendos', nivel:'insuficiente', motivo:'Sem dividendos no período anterior para comparar.' });
+    else {
+      const variacao = ((recentes-anteriores)/anteriores)*100;
+      if(variacao>=-5) dims.push({ dimensao:'Evolução dos dividendos', nivel:'boa', motivo:`Dividendos dos últimos 3 meses ${variacao>=0?'cresceram':'ficaram estáveis'} ${fmtNum(Math.abs(variacao).toFixed(0))}% em relação aos 3 meses anteriores.` });
+      else if(variacao>=-30) dims.push({ dimensao:'Evolução dos dividendos', nivel:'atencao', motivo:`Dividendos caíram ${fmtNum(Math.abs(variacao).toFixed(0))}% nos últimos 3 meses em relação aos 3 anteriores.` });
+      else dims.push({ dimensao:'Evolução dos dividendos', nivel:'critica', motivo:`Dividendos caíram ${fmtNum(Math.abs(variacao).toFixed(0))}% nos últimos 3 meses em relação aos 3 anteriores.` });
+    }
+  }
+
+  return dims;
+}
+/* 4.15 Diagnóstico Patrium — frases dinâmicas calculadas a partir de dados
+   já validados (computePeriodoAnalise, computeConcentracaoAtivo,
+   computeMonthlyContributions, computeDividendsByMonth). Cada frase só
+   entra na lista se houver dado real por trás dela — nunca preenchemos
+   com uma frase genérica quando falta histórico. */
+function computeDiagnostico(){
+  const frases = [];
+
+  const res6m = computePeriodoAnalise('6m');
+  if(res6m.patrInicial>0){
+    const crescimentoTotal = round2(res6m.patrFinal - res6m.patrInicial);
+    const crescimentoPct = (crescimentoTotal/res6m.patrInicial)*100;
+    frases.push(`Seu patrimônio ${crescimentoPct>=0?'cresceu':'caiu'} ${fmtNum(Math.abs(crescimentoPct).toFixed(1))}% nos últimos 6 meses.`);
+    if(crescimentoTotal>0 && res6m.aportesPeriodo>0){
+      const pctAportes = Math.max(0, Math.min(100, (res6m.aportesPeriodo/crescimentoTotal)*100));
+      frases.push(`Os aportes representam ${fmtNum(pctAportes.toFixed(0))}% do crescimento do patrimônio nesse período — o restante veio de valorização e rendimentos.`);
+    }
+  }
+
+  const conc = computeConcentracaoAtivo();
+  if(conc.length>0) frases.push(`${escapeHtml(conc[0].ticker)} representa ${fmtNum(conc[0].peso.toFixed(0))}% da sua renda variável.`);
+
+  const monthly = computeMonthlyContributions();
+  if(monthly.length>=6){
+    const recentes = monthly.slice(-3).reduce((s,m)=>s+m.total,0)/3;
+    const anteriores = monthly.slice(-6,-3).reduce((s,m)=>s+m.total,0)/3;
+    if(anteriores>0){
+      const variacao = ((recentes-anteriores)/anteriores)*100;
+      if(Math.abs(variacao)>=1) frases.push(`Seu aporte médio mensal ${variacao>=0?'aumentou':'diminuiu'} ${fmtNum(Math.abs(variacao).toFixed(0))}% nos últimos 3 meses em relação aos 3 meses anteriores.`);
+    }
+  }
+
+  const divPorMes = computeDividendsByMonth();
+  if(divPorMes.length>=6){
+    const recentes = divPorMes.slice(-3).reduce((s,m)=>s+m.total,0);
+    const anteriores = divPorMes.slice(-6,-3).reduce((s,m)=>s+m.total,0);
+    if(anteriores>0){
+      const variacao = ((recentes-anteriores)/anteriores)*100;
+      frases.push(`Os dividendos recebidos ${variacao>=0?'cresceram':'caíram'} ${fmtNum(Math.abs(variacao).toFixed(0))}% nos últimos 3 meses em relação aos 3 anteriores.`);
+    }
+  }
+
+  return frases;
+}
 function computeAllocation(){
   const rf = computeRfTotals();
   const rv = computeRvTotals();
@@ -2121,6 +2649,32 @@ function computeAllocation(){
     rvPct: total>0 ? (rvComCaixa/total)*100 : 0,
     byTicker: positions.map(p=>({ticker:p.ticker, value:p.marketValue, pct: rv.marketValue>0 ? (p.marketValue/rv.marketValue)*100 : 0}))
   };
+}
+/* 4.10 Alocação por tipo de ativo — Ações/ETFs/FIIs/Outros (dentro da RV),
+   mais Renda Fixa e Caixa como fatias próprias, tudo sobre o patrimônio
+   total (computePatrimonio(), a mesma fonte usada em todo o produto).
+   A categoria de cada ticker vem do RV_CATALOG já usado no cadastro — a
+   única lista de classificação que existe; não inventamos categoria para
+   um ticker que não está nela, ele entra em "Outro ativo". */
+function tickerCategoria(ticker){
+  for(const cat of ['acao','fii','etf','bdr','fundo','cripto','previdencia']){
+    if((RV_CATALOG[cat]||[]).includes(ticker)) return cat;
+  }
+  return 'outros';
+}
+function computeAlocacaoPorTipo(){
+  const patr = computePatrimonio();
+  const total = patr.patrimonio;
+  const positions = computePositions().filter(p=>p.qty>0.0000001);
+  const map = {};
+  positions.forEach(p=>{
+    const cat = CAT_LABEL[tickerCategoria(p.ticker)];
+    map[cat] = (map[cat]||0) + p.marketValue;
+  });
+  const items = Object.entries(map).map(([categoria,valor])=>({ categoria, valor:round2(valor), peso: total>0?(valor/total)*100:0 }));
+  if(patr.rf.saldo>0.005) items.push({ categoria:'Renda Fixa', valor:round2(patr.rf.saldo), peso: total>0?(patr.rf.saldo/total)*100:0 });
+  if(Math.abs(patr.caixa.saldo)>0.005) items.push({ categoria:'Caixa', valor:round2(patr.caixa.saldo), peso: total>0?(patr.caixa.saldo/total)*100:0 });
+  return items.sort((a,b)=>b.valor-a.valor);
 }
 
 /* ===================== PRICES (integração externa) =====================
@@ -2463,6 +3017,12 @@ function renderDashboard(){
   document.getElementById('dashRvDividendos').textContent = fmtMoney(patr.rv.dividends);
   document.getElementById('dashRvRentab').textContent = fmtPct(patr.rv.rentabPct);
 
+  const resMes = computePeriodoAnalise('mes');
+  const elMes = document.getElementById('dashResultadoMes'); elMes.textContent = fmtMoneySigned(resMes.ganhosPeriodo); elMes.style.color = resMes.ganhosPeriodo>=0?'var(--positive)':'var(--negative)';
+  const resAno = computePeriodoAnalise('ano');
+  const elAno = document.getElementById('dashResultadoAno'); elAno.textContent = fmtMoneySigned(resAno.ganhosPeriodo); elAno.style.color = resAno.ganhosPeriodo>=0?'var(--positive)':'var(--negative)';
+  document.getElementById('dashRetiradasAcum').textContent = fmtMoney(patr.caixa.retiradas);
+
   const c = chartColors();
   deferChartRender('chartAlocacaoTopo', ()=> renderDoughnut('chartAlocacaoTopo', ['Renda Fixa','Renda Variável'], [alloc.rfTotal, alloc.rvTotal], [c.rf, c.rv]));
 
@@ -2482,23 +3042,8 @@ function renderDashboard(){
     document.getElementById('dashPatrimonioChartLegenda').innerHTML = '';
   }
 
-  const monthly = computeMonthlyContributions();
-  const divMonthly = computeDividendsByMonth();
-  const monthKeys = [...new Set([...monthly.map(m=>m.month), ...divMonthly.map(m=>m.month)])].sort();
-  const aporteMap = Object.fromEntries(monthly.map(m=>[m.month, m.total]));
-  let acumAportes = 0, acumGanho = 0;
-  const aportesLine = [], patrLine = [];
-  monthKeys.forEach(k=>{
-    acumAportes += aporteMap[k]||0;
-  });
-  // série simplificada: aportes acumulados vs patrimônio no fim de cada mês
-  const cumApArr = []; let running=0;
-  monthKeys.forEach(k=>{ running += aporteMap[k]||0; cumApArr.push(round2(running)); });
-  const patrByMonth = monthKeys.map(k=>{
-    const lastDay = series.filter(p=>monthKey(p.date)<=k).pop();
-    return lastDay ? lastDay.patrimonio : 0;
-  });
-  deferChartRender('chartAportesGanhos', ()=> renderBarChart('chartAportesGanhos', monthKeys.map(monthLabel), [
+  const { cumApArr, patrByMonth, monthKeys: apMonthKeys } = computeAportesVsPatrimonio(series);
+  deferChartRender('chartAportesGanhos', ()=> renderBarChart('chartAportesGanhos', apMonthKeys.map(monthLabel), [
     {label:'Aportado (acum.)', data:cumApArr, backgroundColor:c.rf+'AA', borderRadius:5, borderSkipped:false},
     {label:'Patrimônio', data:patrByMonth, backgroundColor:c.accent+'AA', borderRadius:5, borderSkipped:false}
   ]));
@@ -2611,17 +3156,39 @@ function getHistoricoFinanceiro(){
     });
   });
   DATA.rf.entries.forEach(e=>{
-    if(!(e.aporte>0)) return; // saldo-only: calibração, não é movimentação (ver nota acima)
-    items.push({
-      id:e.id, date:e.date, tipo:'aporte_rf', direction:'entrada',
-      ativo: rfProductName[e.productId] || 'Renda Fixa', valor: round2(e.aporte),
-      detalhe: 'Aporte em renda fixa',
-      note: e.note||'', sourceType:'rfEntry'
-    });
+    const temAporte = e.aporte>0;
+    const temResgate = e.aporte<0;
+    const temSaldo = e.saldo!==null && e.saldo!==undefined;
+    const nomeProduto = rfProductName[e.productId] || 'Renda Fixa';
+    if(temAporte){
+      items.push({
+        id:e.id, date:e.date, tipo:'aporte_rf', direction:'entrada',
+        ativo: nomeProduto, valor: round2(e.aporte),
+        detalhe: 'Aporte em renda fixa' + (temSaldo?` · saldo informado: ${fmtMoney(e.saldo)}`:''),
+        note: e.note||'', sourceType:'rfEntry'
+      });
+    } else if(temResgate){
+      items.push({
+        id:e.id, date:e.date, tipo:'resgate_rf', direction:'saida',
+        ativo: nomeProduto, valor: round2(Math.abs(e.aporte)),
+        detalhe: 'Resgate de renda fixa' + (temSaldo?` · saldo informado: ${fmtMoney(e.saldo)}`:''),
+        note: e.note||'', sourceType:'rfEntry'
+      });
+    } else if(temSaldo){
+      // Registo de saldo puro (sem aporte/resgate naquela data) — não é
+      // uma movimentação de dinheiro, é uma calibração/checagem de valor.
+      // Mostrado como "neutro", nunca forçado em Entrada ou Saída.
+      items.push({
+        id:e.id, date:e.date, tipo:'saldo_rf', direction:'neutro',
+        ativo: nomeProduto, valor: round2(e.saldo),
+        detalhe: 'Saldo informado (sem aporte/resgate nesta data)',
+        note: e.note||'', sourceType:'rfEntry'
+      });
+    }
   });
   return items;
 }
-const TIPO_LABEL = { compra:'Compra', venda:'Venda', dividendo:'Dividendo', aporte_caixa:'Aporte de caixa', retirada:'Retirada', aporte_rf:'Aporte RF' };
+const TIPO_LABEL = { compra:'Compra', venda:'Venda', dividendo:'Dividendo', aporte_caixa:'Aporte de caixa', retirada:'Retirada', aporte_rf:'Aporte RF', resgate_rf:'Resgate RF', saldo_rf:'Saldo RF' };
 function renderOperacoes(){
   const busca = (document.getElementById('opFiltroTicker').value||'').trim().toUpperCase();
   const tipo = document.getElementById('opFiltroTipo').value;
@@ -2639,7 +3206,9 @@ function renderOperacoes(){
       <td>${fmtDate(o.date)}</td>
       <td><strong>${escapeHtml(o.ativo)}</strong></td>
       <td><span class="text-faint small">${TIPO_LABEL[o.tipo]||o.tipo}</span></td>
-      <td><span class="rentab-chip ${o.direction==='entrada'?'pos':'neg'}">${o.direction==='entrada'?'▲ Entrada':'▼ Saída'}</span></td>
+      <td>${o.direction==='neutro'
+        ? '<span class="rentab-chip" style="background:var(--surface-3); color:var(--text-soft);">● Informativo</span>'
+        : `<span class="rentab-chip ${o.direction==='entrada'?'pos':'neg'}">${o.direction==='entrada'?'▲ Entrada':'▼ Saída'}</span>`}</td>
       <td class="mono" style="font-weight:700;">${fmtMoney(o.valor)}</td>
       <td class="small text-faint">${escapeHtml(o.detalhe)}</td>
       <td>${o.note ? escapeHtml(o.note) : '<span class="text-faint">—</span>'}</td>
@@ -2745,15 +3314,24 @@ function abrirEdicaoMovimento(sourceType, id){
   } else if(sourceType==='rfEntry'){
     const e = DATA.rf.entries.find(x=>x.id===id); if(!e) return;
     const prod = DATA.rf.products.find(p=>p.id===e.productId);
-    document.getElementById('editMovTitulo').textContent = 'Editar aporte de renda fixa';
+    document.getElementById('editMovTitulo').textContent = 'Editar movimento de renda fixa';
     document.getElementById('editMovData').value = e.date;
     document.getElementById('editMovRfProduto').value = prod ? (prod.name || prod.instituicao || 'Produto RF') : 'Produto RF';
-    document.getElementById('editMovAporte').value = e.aporte;
+    const tipoAtual = e.aporte>0 ? 'aporte' : (e.aporte<0 ? 'resgate' : 'saldo');
+    document.getElementById('editMovRfTipo').value = tipoAtual;
+    document.getElementById('editMovAporte').value = e.aporte ? Math.abs(e.aporte) : '';
+    document.getElementById('editMovRfSaldo').value = (e.saldo!==null && e.saldo!==undefined) ? e.saldo : '';
     document.getElementById('editMovObs').value = e.note||'';
     document.getElementById('editMovRfFields').classList.remove('hidden');
+    atualizarCamposRfMovimento();
   }
   openModal('modalEditarMovimento');
 }
+function atualizarCamposRfMovimento(){
+  const tipo = document.getElementById('editMovRfTipo').value;
+  document.getElementById('editMovRfValorWrap').classList.toggle('hidden', tipo==='saldo');
+}
+document.getElementById('editMovRfTipo').addEventListener('change', atualizarCamposRfMovimento);
 document.getElementById('btnSalvarEdicaoMovimento').addEventListener('click', async ()=>{
   const id = document.getElementById('editMovId').value;
   const sourceType = document.getElementById('editMovSourceType').value;
@@ -2776,9 +3354,18 @@ document.getElementById('btnSalvarEdicaoMovimento').addEventListener('click', as
     m.note = obs;
   } else if(sourceType==='rfEntry'){
     const e = DATA.rf.entries.find(x=>x.id===id); if(!e) return;
-    const aporte = parseFloat(document.getElementById('editMovAporte').value);
-    if(!(aporte>0)){ addToast('Informe um valor de aporte válido.'); return; }
-    e.date = date; e.aporte = round2(aporte);
+    const tipo = document.getElementById('editMovRfTipo').value;
+    const saldoStr = document.getElementById('editMovRfSaldo').value;
+    if(tipo==='saldo'){
+      if(saldoStr===''){ addToast('Informe o saldo — ou escolha Aporte/Resgate se quer registar um valor.'); return; }
+      e.aporte = 0;
+    } else {
+      const valorAbs = parseFloat(document.getElementById('editMovAporte').value);
+      if(!(valorAbs>0)){ addToast('Informe um valor válido.'); return; }
+      e.aporte = round2(tipo==='resgate' ? -valorAbs : valorAbs);
+    }
+    e.saldo = saldoStr!=='' ? round2(parseFloat(saldoStr)) : null;
+    e.date = date;
     if(obs) e.note = obs; else delete e.note;
   } else { return; }
   await Store.save(DATA);
@@ -2813,11 +3400,13 @@ function excluirMovimento(sourceType, id){
   } else if(sourceType==='rfEntry'){
     const e = DATA.rf.entries.find(x=>x.id===id); if(!e) return;
     const prod = DATA.rf.products.find(p=>p.id===e.productId);
-    askConfirm('Eliminar aporte de renda fixa', `Eliminar este aporte de ${fmtMoney(e.aporte)} em ${prod?(prod.name||prod.instituicao):'renda fixa'} (${fmtDate(e.date)})? Isto vai recalcular o saldo e o rendimento deste produto.`, async ()=>{
+    const nomeProd = prod?(prod.name||prod.instituicao):'renda fixa';
+    const descricao = e.aporte>0 ? `este aporte de ${fmtMoney(e.aporte)}` : (e.aporte<0 ? `este resgate de ${fmtMoney(Math.abs(e.aporte))}` : `este registo de saldo (${fmtMoney(e.saldo)})`);
+    askConfirm('Eliminar movimento de renda fixa', `Eliminar ${descricao} em ${nomeProd} (${fmtDate(e.date)})? Isto vai recalcular o saldo e o rendimento deste produto.`, async ()=>{
       DATA.rf.entries = DATA.rf.entries.filter(x=>x.id!==id);
       await Store.save(DATA);
       renderAll();
-      addToast('Aporte de renda fixa eliminado.');
+      addToast('Movimento de renda fixa eliminado.');
     });
   }
 }
@@ -2830,6 +3419,16 @@ function rankRow(i,p,pos){
     <span class="rentab-chip ${pos?'pos':'neg'}"><span class="arrow">${pos?'▲':'▼'}</span>${fmtPct(p.unrealizedPLPct)}</span>
   </div>`;
 }
+/* Linha de ranking genérica — mesmo visual de rankRow(), mas aceita
+   qualquer valor já formatado (R$, %, peso) em vez de só rentabilidade.
+   Reaproveitada pelas listas de concentração e contribuição da 4.6. */
+function rankRowGeneric(i, ticker, valorTexto, positive){
+  return `<div class="flex-between" style="padding:9px 0; border-bottom:1px solid var(--line-soft);">
+    <span class="flex gap-8"><span class="text-faint mono small">${i}º</span><strong>${escapeHtml(ticker)}</strong></span>
+    <span class="mono small" style="font-weight:700; ${positive===true?'color:var(--positive);':positive===false?'color:var(--negative);':''}">${valorTexto}</span>
+  </div>`;
+}
+function listaVazia(msg){ return `<p class="text-soft small">${msg}</p>`; }
 
 function renderRendaFixa(){
   const totals = computeRfTotals();
@@ -2963,6 +3562,36 @@ function getPeriodRange(key){
   }
   return {start:null, end:today};
 }
+/* Comparação de períodos — devolve o par (atual, anterior) de igual
+   duração, usando meses de calendário para 3/6/12 meses (não os 90/182/365
+   dias aproximados de HIST_PERIODS, para o período "anterior" ficar exato
+   e sem sobreposição). Reaproveita getPeriodRange() para mês/ano. */
+function getComparisonRanges(key){
+  const today = todayISO();
+  if(key==='mes') return { atual:getPeriodRange('mes'), anterior:getPeriodRange('mes_anterior'), label:'Este mês × mês anterior' };
+  if(key==='ano') return { atual:getPeriodRange('ano'), anterior:getPeriodRange('ano_anterior'), label:'Este ano × ano anterior' };
+  const nMeses = {'3m':3,'6m':6,'12m':12}[key];
+  if(nMeses){
+    const hoje = new Date(today+'T12:00:00');
+    const inicioAtual = new Date(hoje.getFullYear(), hoje.getMonth()-nMeses+1, 1);
+    const atual = { start: inicioAtual.toISOString().slice(0,10), end: today };
+    const fimAnterior = new Date(inicioAtual.getTime()); fimAnterior.setDate(fimAnterior.getDate()-1);
+    const inicioAnterior = new Date(inicioAtual.getFullYear(), inicioAtual.getMonth()-nMeses, 1);
+    const anterior = { start: inicioAnterior.toISOString().slice(0,10), end: fimAnterior.toISOString().slice(0,10) };
+    return { atual, anterior, label:`Últimos ${nMeses} meses × ${nMeses} meses anteriores` };
+  }
+  return null;
+}
+function computeComparacaoPeriodos(key){
+  const ranges = getComparisonRanges(key);
+  if(!ranges) return null;
+  const full = buildTimeline();
+  const a = computeResultadoIntervalo(ranges.atual.start, ranges.atual.end, full);
+  const b = computeResultadoIntervalo(ranges.anterior.start, ranges.anterior.end, full);
+  const semDadosA = a.patrInicial===0 && a.patrFinal===0;
+  const semDadosB = b.patrInicial===0 && b.patrFinal===0;
+  return { label: ranges.label, atual:a, anterior:b, suficiente: !semDadosA && !semDadosB };
+}
 function filterSeriesByPeriod(series, key){
   if(!series.length) return series;
   if(key==='tudo') return series;
@@ -3032,10 +3661,15 @@ function renderHistorico(periodKey){
    limites. Resultado validado com os dados de demonstração: o número
    deixou de ser -R$ 3.799,80 e passou a refletir corretamente o ganho
    real do mês (aporte de R$ 3.800 contado uma única vez). */
-function computePeriodoAnalise(periodKey){
-  const full = buildTimeline();
-  const series = filterSeriesByPeriod(full, periodKey);
-  const { start, end } = getPeriodRange(periodKey);
+/* Núcleo do cálculo de resultado num intervalo — extraído de
+   computePeriodoAnalise() para ser reutilizável com QUALQUER intervalo de
+   datas (ex.: um mês específico do calendário para a tabela de Resultado
+   Mensal), não só com os períodos relativos de getPeriodRange(). A
+   matemática é exatamente a mesma, fonte única de verdade — nunca
+   duplicar este cálculo em outro lugar. */
+function computeResultadoIntervalo(start, end, fullOpt){
+  const full = fullOpt || buildTimeline();
+  const series = full.filter(p=> (!start||p.date>=start) && p.date<=end);
 
   const aportesRv = DATA.transactions.filter(t=>t.type==='compra' && t.funding==='externo' && (!start||t.date>=start) && t.date<=end).reduce((s,t)=>s+t.qty*t.price+(t.fees||0),0);
   const aportesRf = DATA.rf.entries.filter(e=>(!start||e.date>=start) && e.date<=end).reduce((s,e)=>s+(e.aporte||0),0);
@@ -3052,18 +3686,322 @@ function computePeriodoAnalise(periodKey){
   const patrFinal = series.length ? series[series.length-1].patrimonio : patrInicial;
   const ganhosPeriodo = round2((patrFinal-patrInicial) - aportesPeriodo);
   const rentabPeriodo = patrInicial>0 ? (ganhosPeriodo/patrInicial)*100 : (aportesPeriodo>0? (ganhosPeriodo/aportesPeriodo)*100 : 0);
-  return { series, start, end, aportesPeriodo, divsPeriodo, patrInicial, patrFinal, ganhosPeriodo, rentabPeriodo };
+  return { series, start, end, aportesPeriodo, retiradasPeriodo, divsPeriodo, patrInicial, patrFinal, ganhosPeriodo, rentabPeriodo };
 }
+function computePeriodoAnalise(periodKey){
+  const full = buildTimeline();
+  const { start, end } = getPeriodRange(periodKey);
+  return computeResultadoIntervalo(start, end, full);
+}
+/* Resultado mês a mês — mesma matemática de computeResultadoIntervalo,
+   só percorrendo o calendário mês a mês desde o primeiro evento registado
+   até o mês atual. "Dados insuficientes" só quando o mês está totalmente
+   fora do histórico conhecido (nunca inventamos uma rentabilidade). */
+function computeResultadoMensal(mesesLimit){
+  const full = buildTimeline();
+  if(!full.length) return [];
+  const firstD = new Date(full[0].date+'T12:00:00');
+  const lastD = new Date(todayISO()+'T12:00:00');
+  const meses = [];
+  const cursor = new Date(firstD.getFullYear(), firstD.getMonth(), 1);
+  const limite = new Date(lastD.getFullYear(), lastD.getMonth(), 1);
+  while(cursor<=limite){
+    meses.push(`${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,'0')}`);
+    cursor.setMonth(cursor.getMonth()+1);
+  }
+  const selecionados = mesesLimit ? meses.slice(-mesesLimit) : meses;
+  return selecionados.map(mk=>{
+    const [y,m] = mk.split('-').map(Number);
+    const start = `${mk}-01`;
+    const end = `${mk}-${String(new Date(y,m,0).getDate()).padStart(2,'0')}`;
+    const r = computeResultadoIntervalo(start, end, full);
+    const dadosInsuficientes = r.patrInicial===0 && r.patrFinal===0;
+    return { mesKey:mk, label:`${MESES_PT[m-1]} de ${y}`, ...r, dadosInsuficientes };
+  }).reverse(); // mais recente primeiro
+}
+const MESES_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+function renderResultadoMensal(){
+  const limitVal = parseInt(document.getElementById('resMensalFiltro').value,10);
+  const linhas = computeResultadoMensal(limitVal>0?limitVal:null);
+  document.getElementById('resultadoMensalTbody').innerHTML = linhas.length ? linhas.map(r=>{
+    if(r.dadosInsuficientes){
+      return `<tr><td>${r.label}</td><td colspan="6" class="text-faint">Dados insuficientes</td></tr>`;
+    }
+    return `<tr>
+      <td>${r.label}</td>
+      <td class="mono">${fmtMoney(r.patrInicial)}</td>
+      <td class="mono" style="color:${r.aportesPeriodo>=0?'var(--positive)':'var(--negative)'};">${fmtMoneySigned(r.aportesPeriodo)}</td>
+      <td class="mono" style="color:var(--negative);">${r.retiradasPeriodo>0?fmtMoney(r.retiradasPeriodo):fmtMoney(0)}</td>
+      <td class="mono" style="font-weight:700; color:${r.ganhosPeriodo>=0?'var(--positive)':'var(--negative)'};">${fmtMoneySigned(r.ganhosPeriodo)}</td>
+      <td class="mono" style="font-weight:700;">${fmtMoney(r.patrFinal)}</td>
+      <td class="mono" style="font-weight:700; color:${r.rentabPeriodo>=0?'var(--positive)':'var(--negative)'};">${fmtPct(r.rentabPeriodo)}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="7"><div class="empty"><div class="empty-icon">📅</div><h3>Ainda sem histórico mensal</h3><p>Registe pelo menos uma operação para começar a ver o resultado mês a mês.</p></div></td></tr>`;
+}
+document.getElementById('resMensalFiltro').addEventListener('change', renderResultadoMensal);
+
+/* 4.3 Gráfico de rentabilidade mensal — mesmos dados de computeResultadoMensal(),
+   nenhum cálculo novo. Cor por sinal: positivo/negativo/neutro (zero). */
+let rentabMensalFiltro = 12;
+function renderRentabMensal(){
+  const linhas = computeResultadoMensal(rentabMensalFiltro>0?rentabMensalFiltro:null).filter(l=>!l.dadosInsuficientes).slice().reverse(); // cronológico
+  const c = chartColors();
+  const corZero = getComputedStyle(document.documentElement).getPropertyValue('--text-faint').trim();
+  const cores = linhas.map(l=> l.rentabPeriodo>0 ? c.positive : (l.rentabPeriodo<0 ? c.negative : corZero));
+  deferChartRender('chartRentabMensal', ()=> renderBarChart('chartRentabMensal',
+    linhas.map(l=>{ const [y,m] = l.mesKey.split('-'); return MESES_PT[parseInt(m,10)-1].slice(0,3)+'/'+y.slice(2); }),
+    [{ label:'Rentabilidade', data:linhas.map(l=>round2(l.rentabPeriodo)), backgroundColor:cores, borderRadius:4, maxBarThickness:36 }],
+    { plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:(ctx)=> ' '+fmtPct(ctx.parsed.y) } } },
+      scales:{ y:{ ticks:{ color:c.text, callback:(v)=>v+'%' } } } }
+  ));
+}
+document.querySelectorAll('#rentabMensalPicker button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#rentabMensalPicker button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    rentabMensalFiltro = parseInt(btn.dataset.meses,10);
+    renderRentabMensal();
+  });
+});
 
 let currentAnaPeriod = '30d';
+/* 4.1 Resumo de performance — visão fixa (não depende do período
+   selecionado). Reaproveita computePatrimonio(), computePeriodoAnalise()
+   e computeResultadoMensal() — nenhuma matemática nova, só agregação do
+   que já foi calculado e validado alhures. */
+function computeResumoPerformance(){
+  const patr = computePatrimonio();
+  const mesAtual = computePeriodoAnalise('mes');
+  const anoAtual = computePeriodoAnalise('ano');
+  const meses = computeResultadoMensal(null).filter(m=>!m.dadosInsuficientes);
+  let melhorMes=null, piorMes=null, maiorGanho=null, maiorPerda=null, mediaMensal=null;
+  if(meses.length){
+    melhorMes = meses.reduce((a,b)=> b.rentabPeriodo>a.rentabPeriodo?b:a);
+    piorMes = meses.reduce((a,b)=> b.rentabPeriodo<a.rentabPeriodo?b:a);
+    maiorGanho = meses.reduce((a,b)=> b.ganhosPeriodo>a.ganhosPeriodo?b:a);
+    maiorPerda = meses.reduce((a,b)=> b.ganhosPeriodo<a.ganhosPeriodo?b:a);
+    mediaMensal = meses.reduce((s,m)=>s+m.rentabPeriodo,0)/meses.length;
+  }
+  return { patr, mesAtual, anoAtual, melhorMes, piorMes, maiorGanho, maiorPerda, mediaMensal, mesesValidos:meses.length };
+}
+/* Render do bloco 4.15 — Diagnóstico Patrium */
+function renderDiagnosticoPatrium(){
+  const frases = computeDiagnostico();
+  const card = document.getElementById('diagnosticoCard');
+  if(frases.length===0){
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = '';
+  document.getElementById('diagnosticoLista').innerHTML = frases.map(f=>`
+    <div class="flex gap-8" style="padding:8px 0; align-items:flex-start;">
+      <span style="flex:none;">💡</span><span style="flex:1;">${f}</span>
+    </div>`).join('');
+}
+/* Comparação de períodos — nunca mistura aporte/retirada/compra/venda com
+   valorização: cada linha vem de um campo já isolado de
+   computeResultadoIntervalo() (mesma função de todo o resto de Análises). */
+function renderComparacaoPeriodos(){
+  const key = document.getElementById('compPeriodoFiltro').value;
+  const comp = computeComparacaoPeriodos(key);
+  const tbody = document.getElementById('compPeriodoTbody');
+  if(!comp || !comp.suficiente){
+    document.getElementById('compPeriodoAtualHead').textContent = 'Período atual';
+    document.getElementById('compPeriodoAnteriorHead').textContent = 'Período anterior';
+    tbody.innerHTML = `<tr><td colspan="4"><div class="empty"><div class="empty-icon">📊</div><h3>Dados insuficientes</h3><p>Ainda não há histórico suficiente para comparar estes dois períodos.</p></div></td></tr>`;
+    return;
+  }
+  document.getElementById('compPeriodoAtualHead').textContent = comp.label.split(' × ')[0];
+  document.getElementById('compPeriodoAnteriorHead').textContent = comp.label.split(' × ')[1];
+  const variacaoPct = (atual, anterior)=>{
+    if(anterior===0) return null;
+    return ((atual-anterior)/Math.abs(anterior))*100;
+  };
+  const linha = (label, atual, anterior, isPP)=>{
+    const v = isPP ? (atual-anterior) : variacaoPct(atual, anterior);
+    const vTexto = v===null ? 'Dados insuficientes' : (isPP ? `${v>=0?'+':''}${fmtNum(v.toFixed(1))} p.p.` : `${v>=0?'+':''}${fmtNum(v.toFixed(1))}%`);
+    const cor = v===null ? 'var(--text-faint)' : (v>=0 ? 'var(--positive)' : 'var(--negative)');
+    return `<tr>
+      <td>${label}</td>
+      <td class="mono">${isPP?fmtPct(atual):fmtMoney(atual)}</td>
+      <td class="mono">${isPP?fmtPct(anterior):fmtMoney(anterior)}</td>
+      <td class="mono" style="font-weight:700; color:${cor};">${vTexto}</td>
+    </tr>`;
+  };
+  tbody.innerHTML = [
+    linha('Patrimônio', comp.atual.patrFinal, comp.anterior.patrFinal, false),
+    linha('Aportes', comp.atual.aportesPeriodo, comp.anterior.aportesPeriodo, false),
+    linha('Rentabilidade', comp.atual.rentabPeriodo, comp.anterior.rentabPeriodo, true),
+    linha('Dividendos', comp.atual.divsPeriodo, comp.anterior.divsPeriodo, false),
+    linha('Resultado', comp.atual.ganhosPeriodo, comp.anterior.ganhosPeriodo, false),
+  ].join('');
+}
+document.getElementById('compPeriodoFiltro').addEventListener('change', renderComparacaoPeriodos);
+function renderResumoPerformance(){
+  const r = computeResumoPerformance();
+  document.getElementById('rpPatrimonio').textContent = fmtMoney(r.patr.patrimonio);
+  document.getElementById('rpInvestido').textContent = fmtMoney(r.patr.aportesExternos);
+  const lucroEl = document.getElementById('rpLucro'); lucroEl.textContent = fmtMoneySigned(r.patr.ganhoTotal); lucroEl.style.color = r.patr.ganhoTotal>=0?'var(--positive)':'var(--negative)';
+  const rentAcEl = document.getElementById('rpRentabAcum'); rentAcEl.textContent = fmtPct(r.patr.rentabPct); rentAcEl.style.color = r.patr.rentabPct>=0?'var(--positive)':'var(--negative)';
+  const rentMesEl = document.getElementById('rpRentabMes'); rentMesEl.textContent = fmtPct(r.mesAtual.rentabPeriodo); rentMesEl.style.color = r.mesAtual.rentabPeriodo>=0?'var(--positive)':'var(--negative)';
+  const rentAnoEl = document.getElementById('rpRentabAno'); rentAnoEl.textContent = fmtPct(r.anoAtual.rentabPeriodo); rentAnoEl.style.color = r.anoAtual.rentabPeriodo>=0?'var(--positive)':'var(--negative)';
+  const mediaEl = document.getElementById('rpRentabMedia');
+  if(r.mediaMensal===null){ mediaEl.textContent = 'Dados insuficientes'; mediaEl.style.color = 'var(--text-faint)'; }
+  else { mediaEl.textContent = fmtPct(r.mediaMensal); mediaEl.style.color = r.mediaMensal>=0?'var(--positive)':'var(--negative)'; }
+  document.getElementById('rpMelhorMes').textContent = r.melhorMes ? `${r.melhorMes.label} (${fmtPct(r.melhorMes.rentabPeriodo)})` : 'Dados insuficientes';
+  document.getElementById('rpPiorMes').textContent = r.piorMes ? `${r.piorMes.label} (${fmtPct(r.piorMes.rentabPeriodo)})` : 'Dados insuficientes';
+  document.getElementById('rpMaiorGanho').textContent = r.maiorGanho ? `${r.maiorGanho.label} (${fmtMoneySigned(r.maiorGanho.ganhosPeriodo)})` : 'Dados insuficientes';
+  document.getElementById('rpMaiorPerda').textContent = r.maiorPerda ? `${r.maiorPerda.label} (${fmtMoneySigned(r.maiorPerda.ganhosPeriodo)})` : 'Dados insuficientes';
+}
+/* Render do bloco 4.6 — Análise de Renda Variável */
+function renderAnaliseRV(){
+  const rv = computeRvTotals();
+  document.getElementById('rvaInvestido').textContent = fmtMoney(rv.capital);
+  document.getElementById('rvaValorAtual').textContent = fmtMoney(rv.marketValue);
+  const lucroEl = document.getElementById('rvaLucro'); lucroEl.textContent = fmtMoneySigned(rv.unrealized); lucroEl.style.color = rv.unrealized>=0?'var(--positive)':'var(--negative)';
+  const rentEl = document.getElementById('rvaRentab'); rentEl.textContent = fmtPct(rv.rentabPct); rentEl.style.color = rv.rentabPct>=0?'var(--positive)':'var(--negative)';
+
+  const conc = computeConcentracaoAtivo();
+  document.getElementById('rvaNumAtivos').textContent = fmtNum(conc.length);
+  document.getElementById('rvaMaiorPosicao').textContent = conc.length ? `${conc[0].ticker} (${fmtNum(conc[0].peso.toFixed(1))}%)` : 'Dados insuficientes';
+  document.getElementById('rvaMenorPosicao').textContent = conc.length ? `${conc[conc.length-1].ticker} (${fmtNum(conc[conc.length-1].peso.toFixed(1))}%)` : 'Dados insuficientes';
+  // 4.11 Concentração — soma acumulada do topo, não só listado individualmente.
+  const top3Pct = conc.slice(0,3).reduce((s,p)=>s+p.peso,0);
+  const top5Pct = conc.slice(0,5).reduce((s,p)=>s+p.peso,0);
+  document.getElementById('rvaTop3').textContent = conc.length ? fmtNum(top3Pct.toFixed(1))+'%' : 'Dados insuficientes';
+  document.getElementById('rvaTop5').textContent = conc.length ? fmtNum(top5Pct.toFixed(1))+'%' : 'Dados insuficientes';
+
+  document.getElementById('rvaConcentracaoAtivo').innerHTML = conc.length
+    ? conc.slice(0,8).map((p,i)=>rankRowGeneric(i+1, p.ticker, fmtNum(p.peso.toFixed(1))+'%')).join('')
+    : listaVazia('Nenhum ativo em carteira ainda.');
+
+  const setores = computeConcentracaoSetor();
+  document.getElementById('rvaConcentracaoSetor').innerHTML = setores
+    ? setores.slice(0,8).map((s,i)=>rankRowGeneric(i+1, s.setor, fmtNum(s.peso.toFixed(1))+'%')).join('')
+    : listaVazia('Dados insuficientes — atualize os preços com um token da brapi.dev para identificar o setor de cada ativo.');
+
+  const contrib = computeContribuicaoRs();
+  document.getElementById('rvaTopGanhoRs').innerHTML = contrib.maisGanho.length
+    ? contrib.maisGanho.slice(0,5).map((p,i)=>rankRowGeneric(i+1, p.ticker, fmtMoneySigned(p.unrealizedPL), true)).join('')
+    : listaVazia('Nenhuma posição no verde ainda.');
+  document.getElementById('rvaTopPerdaRs').innerHTML = contrib.maisPerda.length
+    ? contrib.maisPerda.slice(0,5).map((p,i)=>rankRowGeneric(i+1, p.ticker, fmtMoneySigned(p.unrealizedPL), false)).join('')
+    : listaVazia('Nenhuma posição no vermelho — carteira saudável. 🎉');
+
+  const rankPct = computeRankings();
+  document.getElementById('rvaTopRentabMelhor').innerHTML = rankPct.melhores.length
+    ? rankPct.melhores.slice(0,5).map((p,i)=>rankRowGeneric(i+1, p.ticker, fmtPct(p.unrealizedPLPct), true)).join('')
+    : listaVazia('Nenhuma posição no verde ainda.');
+  document.getElementById('rvaTopRentabPior').innerHTML = rankPct.piores.length
+    ? rankPct.piores.slice(0,5).map((p,i)=>rankRowGeneric(i+1, p.ticker, fmtPct(p.unrealizedPLPct), false)).join('')
+    : listaVazia('Nenhuma posição no vermelho — carteira saudável. 🎉');
+
+  const desempenho = computeDesempenhoConsolidado();
+  document.getElementById('desempenhoMelhoresTbody').innerHTML = desempenho.melhores.length ? desempenho.melhores.map(p=>`<tr>
+    <td><strong>${p.ticker}</strong></td>
+    <td class="mono" style="color:var(--positive);">${fmtPct(p.unrealizedPLPct)}</td>
+    <td class="mono" style="color:var(--positive);">${fmtMoneySigned(p.unrealizedPL)}</td>
+    <td class="mono">${fmtMoney(p.dividends)}</td>
+  </tr>`).join('') : `<tr><td colspan="4" class="text-soft small">Nenhuma posição no verde ainda.</td></tr>`;
+  document.getElementById('desempenhoPioresTbody').innerHTML = desempenho.piores.length ? desempenho.piores.map(p=>`<tr>
+    <td><strong>${p.ticker}</strong></td>
+    <td class="mono" style="color:var(--negative);">${fmtPct(p.unrealizedPLPct)}</td>
+    <td class="mono" style="color:var(--negative);">${fmtMoneySigned(p.unrealizedPL)}</td>
+  </tr>`).join('') : `<tr><td colspan="3" class="text-soft small">Nenhuma posição no vermelho — carteira saudável. 🎉</td></tr>`;
+}
+/* Render do bloco 4.14 — Saúde da carteira */
+function renderSaudeCarteira(){
+  const dims = computeSaudeCarteira();
+  const iconeNivel = { boa:'🟢', atencao:'🟡', critica:'🔴', insuficiente:'⚪' };
+  const rotuloNivel = { boa:'Boa', atencao:'Atenção', critica:'Elevada atenção', insuficiente:'Dados insuficientes' };
+  document.getElementById('saudeCarteiraLista').innerHTML = dims.map(d=>`
+    <div class="flex-between" style="padding:12px 0; border-bottom:1px solid var(--line-soft); gap:12px; flex-wrap:wrap;">
+      <div style="min-width:220px;"><strong>${iconeNivel[d.nivel]} ${escapeHtml(d.dimensao)}</strong><div class="small text-faint" style="margin-top:2px;">${escapeHtml(d.motivo)}</div></div>
+      <span class="pill" style="background:${d.nivel==='boa'?'var(--positive-soft)':d.nivel==='atencao'?'var(--warning-soft)':d.nivel==='critica'?'var(--negative-soft)':'var(--surface-3)'}; color:${d.nivel==='boa'?'var(--positive)':d.nivel==='atencao'?'var(--warning)':d.nivel==='critica'?'var(--negative)':'var(--text-soft)'};">${rotuloNivel[d.nivel]}</span>
+    </div>`).join('');
+}
+/* Render do bloco 4.7 — Análise de Renda Fixa */
+function renderAnaliseRF(){
+  const rf = computeRfTotals();
+  document.getElementById('rfaAplicado').textContent = fmtMoney(rf.capital);
+  document.getElementById('rfaSaldo').textContent = fmtMoney(rf.saldo);
+  const rendEl = document.getElementById('rfaRendimento'); rendEl.textContent = fmtMoneySigned(rf.rendimento); rendEl.style.color = rf.rendimento>=0?'var(--positive)':'var(--negative)';
+  const rentEl = document.getElementById('rfaRentab'); rentEl.textContent = rf.capital>0 ? fmtPct(rf.rentabPct) : 'Dados insuficientes'; rentEl.style.color = rf.rentabPct>=0?'var(--positive)':'var(--negative)';
+  const prods = computeRfProducts();
+  document.getElementById('rfaNumProdutos').textContent = fmtNum(prods.length);
+
+  const renderDist = (elId, campo, rotuloVazio)=>{
+    const dist = computeRfDistribuicao(campo, rotuloVazio);
+    document.getElementById(elId).innerHTML = dist.length
+      ? dist.map((d,i)=>rankRowGeneric(i+1, d.chave, fmtMoney(d.saldo)+' ('+fmtNum(d.peso.toFixed(1))+'%)')).join('')
+      : listaVazia('Nenhum produto de renda fixa ainda.');
+  };
+  renderDist('rfaPorInstituicao', 'instituicao', 'Instituição não informada');
+  renderDist('rfaPorTipo', 'tipo', 'Tipo não informado');
+  renderDist('rfaPorIndexador', 'indexer', 'Indexador não informado');
+  renderDist('rfaPorLiquidez', 'liquidez', 'Liquidez não informada');
+
+  const venc = computeRfVencimentos();
+  document.getElementById('rfaVencimentos').innerHTML = venc.length
+    ? venc.slice(0,6).map((p,i)=>{
+        const dias = daysBetween(todayISO(), p.vencimento);
+        const cor = dias<0 ? 'var(--negative)' : (dias<=30 ? 'var(--warning)' : 'var(--text-soft)');
+        return rankRowGeneric(i+1, p.name||p.instituicao||'Produto RF', `<span style="color:${cor};">${fmtDate(p.vencimento)}${dias<0?' (vencido)':dias<=30?` (em ${dias}d)`:''}</span>`);
+      }).join('')
+    : listaVazia('Nenhum produto com vencimento definido.');
+}
+/* Render do bloco 4.8 — indicadores adicionais de Dividendos */
+function renderAnaliseDividendos(){
+  const byMonth = computeDividendsByMonth();
+  document.getElementById('divaMediaMensal').textContent = byMonth.length
+    ? fmtMoney(byMonth.reduce((s,m)=>s+m.total,0)/byMonth.length) : 'Dados insuficientes';
+  const maior = DATA.dividends.length ? DATA.dividends.reduce((a,b)=>b.total>a.total?b:a) : null;
+  document.getElementById('divaMaiorPagamento').textContent = maior ? `${fmtMoney(maior.total)} (${maior.ticker}, ${fmtDate(maior.date)})` : 'Dados insuficientes';
+
+  const rv = computeRvTotals();
+  const totalDiv = DATA.dividends.reduce((s,d)=>s+d.total,0);
+  document.getElementById('divaDyCusto').textContent = rv.capital>0 ? fmtPct((totalDiv/rv.capital)*100) : 'Dados insuficientes';
+  document.getElementById('divaDyAtual').textContent = rv.marketValue>0 ? fmtPct((totalDiv/rv.marketValue)*100) : 'Dados insuficientes';
+
+  const yields = computeDividendYields();
+  document.getElementById('divaTbodyYield').innerHTML = yields.length ? yields.map(y=>`<tr>
+    <td><strong>${escapeHtml(y.ticker)}</strong></td>
+    <td class="mono" style="color:var(--positive);">${fmtMoney(y.dividendos)}</td>
+    <td class="mono">${y.dyCusto!==null ? fmtPct(y.dyCusto) : 'Dados insuficientes'}</td>
+    <td class="mono">${y.dyAtual!==null ? fmtPct(y.dyAtual) : 'Dados insuficientes'}</td>
+  </tr>`).join('') : `<tr><td colspan="4"><div class="empty"><div class="empty-icon">💰</div><h3>Nenhum dividendo registado</h3><p>Registe os proventos que recebe na aba Dividendos.</p></div></td></tr>`;
+}
 function renderAnalises(periodKey){
+  renderDiagnosticoPatrium();
+  renderComparacaoPeriodos();
+  renderResumoPerformance();
+  renderRentabMensal();
+  renderAnaliseRV();
+  renderAnaliseRF();
+  renderAnaliseDividendos();
+  renderSaudeCarteira();
   initPeriodPicker('anaPeriodPicker', (k)=>{ currentAnaPeriod=k; renderAnalises(k); }, periodKey);
   const { series, aportesPeriodo, divsPeriodo, ganhosPeriodo, rentabPeriodo } = computePeriodoAnalise(periodKey);
+  renderResultadoMensal();
 
   document.getElementById('anaAportes').textContent = fmtMoney(aportesPeriodo);
   const gEl = document.getElementById('anaGanhos'); gEl.textContent = fmtMoneySigned(ganhosPeriodo); gEl.style.color = ganhosPeriodo>=0?'var(--positive)':'var(--negative)';
   document.getElementById('anaDividendos').textContent = fmtMoney(divsPeriodo);
   const rEl = document.getElementById('anaRentab'); rEl.textContent = fmtPct(rentabPeriodo); rEl.style.color = rentabPeriodo>=0?'var(--positive)':'var(--negative)';
+
+  const cAn = chartColors();
+  const evData = series.map(p=>p.patrimonio);
+  deferChartRender('chartEvolucaoAnalises', ()=> renderLineChart('chartEvolucaoAnalises', series.map(p=>fmtDateShort(p.date)), [{
+    label:'Patrimônio', data:evData, borderColor:cAn.accent, backgroundColor:cAn.accent+'1A', fill:true, tension:.3,
+    pointRadius:series.length<40?3:0, pointBackgroundColor:cAn.accent, pointBorderColor:cAn.accent, borderWidth:2.5
+  }], { plugins:{ legend:{display:false}, tooltip: moneyTooltipWithDelta(()=>evData) } }));
+
+  const full = buildTimeline();
+  const { monthKeys:apMk, cumApArr:apCum, patrByMonth:apPatr } = computeAportesVsPatrimonio(full);
+  deferChartRender('chartAportadoPatrimonioAnalises', ()=> renderBarChart('chartAportadoPatrimonioAnalises', apMk.map(monthLabel), [
+    {label:'Aportado (acum.)', data:apCum, backgroundColor:cAn.rf+'AA', borderRadius:5, borderSkipped:false},
+    {label:'Patrimônio', data:apPatr, backgroundColor:cAn.accent+'AA', borderRadius:5, borderSkipped:false}
+  ]));
 
   const monthly = computeMonthlyContributions();
   const c = chartColors();
@@ -3100,6 +4038,12 @@ function renderAnalises(periodKey){
     document.getElementById('aportesMenor').textContent = fmtMoney(Math.min(...totals));
     document.getElementById('aportesTotalHist').textContent = fmtMoney(totals.reduce((a,b)=>a+b,0));
   }
+  const eventos = computeAportesEventos();
+  const valores = eventos.map(e=>e.valor);
+  document.getElementById('aportesNumero').textContent = fmtNum(eventos.length);
+  document.getElementById('aportesMediaEvento').textContent = valores.length ? fmtMoney(valores.reduce((a,b)=>a+b,0)/valores.length) : 'Dados insuficientes';
+  document.getElementById('aportesMaiorEvento').textContent = valores.length ? fmtMoney(Math.max(...valores)) : 'Dados insuficientes';
+  document.getElementById('aportesMenorEvento').textContent = valores.length ? fmtMoney(Math.min(...valores)) : 'Dados insuficientes';
 }
 
 /* ---- Alocação ---- */
@@ -3129,6 +4073,13 @@ function renderAlocacao(){
   document.getElementById('riscoPctRf').textContent = fmtNum(alloc.rfPct.toFixed(1))+'%';
   document.getElementById('riscoPctRv').textContent = fmtNum(alloc.rvPct.toFixed(1))+'%';
   document.getElementById('riscoNumEmpresas').textContent = fmtNum(positions.length);
+
+  const porTipo = computeAlocacaoPorTipo();
+  const paletteTipo = [c.rv, c.rf, c.positive, c.negative, c.info, c.accent, c.emerald];
+  deferChartRender('chartAlocacaoTipo', ()=> renderDoughnut('chartAlocacaoTipo', porTipo.map(t=>t.categoria), porTipo.map(t=>t.valor), porTipo.map((_,i)=>paletteTipo[i%paletteTipo.length])));
+  document.getElementById('alocacaoTipoLista').innerHTML = porTipo.length
+    ? porTipo.map((t,i)=>rankRowGeneric(i+1, t.categoria, fmtMoney(t.valor)+' ('+fmtNum(t.peso.toFixed(1))+'%)')).join('')
+    : listaVazia('Ainda sem patrimônio para distribuir.');
 }
 
 /* ---- Calendário ---- */
@@ -3146,6 +4097,10 @@ function renderCalendario(){
     if(e.aporte) events.push({date:e.date, type:'Aporte RF', desc:prod?prod.name:'Renda Fixa', value:e.aporte, cls:'rf', icon:'🏦'});
     if(e.saldo!==null && e.saldo!==undefined) events.push({date:e.date, type:'Saldo informado', desc:prod?prod.name:'Renda Fixa', value:e.saldo, cls:'rf', icon:'✓'});
   });
+  DATA.cashMovements.filter(m=>monthKey(m.date)===mk).forEach(m=>{
+    const isAporte = m.type==='aporte_caixa';
+    events.push({date:m.date, type: isAporte?'Aporte de caixa':'Retirada', desc: m.note||'Caixa', value:m.amount, cls: isAporte?'pos':'neg', icon: isAporte?'💵':'🏧'});
+  });
   events.sort((a,b)=>a.date.localeCompare(b.date));
 
   // Resumo do mês: total aportado (RF+RV externo) e total em dividendos — o
@@ -3153,9 +4108,14 @@ function renderCalendario(){
   const aportadoMes = DATA.transactions.filter(t=>monthKey(t.date)===mk && t.type==='compra' && t.funding==='externo').reduce((s,t)=>s+t.qty*t.price+(t.fees||0),0)
     + DATA.rf.entries.filter(e=>monthKey(e.date)===mk).reduce((s,e)=>s+(e.aporte||0),0);
   const divMes = DATA.dividends.filter(d=>monthKey(d.date)===mk).reduce((s,d)=>s+d.total,0);
+  const lastDayMes = new Date(y, m+1, 0).getDate();
+  const resMes = computeResultadoIntervalo(mk+'-01', mk+'-'+String(lastDayMes).padStart(2,'0'));
+  const evolucaoTexto = (resMes.patrInicial===0 && resMes.patrFinal===0) ? 'Sem dados neste mês'
+    : `${fmtMoney(resMes.patrInicial)} → ${fmtMoney(resMes.patrFinal)} (${fmtMoneySigned(resMes.ganhosPeriodo)})`;
   document.getElementById('calResumoMes').innerHTML = `
     <div class="pill pill-rf" style="font-size:13px; padding:8px 14px;">🏦 Aportado no mês: <strong class="mono">${fmtMoney(aportadoMes)}</strong></div>
     <div class="pill pill-pos" style="font-size:13px; padding:8px 14px;">💰 Dividendos no mês: <strong class="mono">${fmtMoney(divMes)}</strong></div>
+    <div class="pill" style="font-size:13px; padding:8px 14px; background:var(--surface-3); color:var(--text-soft);">📈 Patrimônio: <strong class="mono" style="color:var(--text);">${evolucaoTexto}</strong></div>
     <div class="pill" style="font-size:13px; padding:8px 14px; background:var(--surface-3); color:var(--text-soft);">${events.length} evento${events.length===1?'':'s'} no total</div>
   `;
 
@@ -3173,7 +4133,7 @@ function renderCalendario(){
       </div>
       <div style="flex:1; min-width:0;">
       ${byDay[d].map(e=>`<div class="flex-between small" style="padding:7px 0; border-top:1px solid var(--line-soft);">
-        <span class="flex gap-8"><span style="font-size:14px;">${e.icon}</span><span class="pill ${e.cls==='rf'?'pill-rf':(e.cls==='rv'?'pill-rv':'pill-pos')}">${e.type}</span> ${escapeHtml(e.desc)}</span>
+        <span class="flex gap-8"><span style="font-size:14px;">${e.icon}</span><span class="pill ${e.cls==='rf'?'pill-rf':(e.cls==='rv'?'pill-rv':(e.cls==='neg'?'pill-neg':'pill-pos'))}">${e.type}</span> ${escapeHtml(e.desc)}</span>
         <span class="mono" style="font-weight:600;">${fmtMoney(e.value)}</span>
       </div>`).join('')}
       </div>
@@ -3305,6 +4265,8 @@ function renderAlertas(){
 function abrirModalEmpresa(ticker){
   const p = computePositions().find(x=>x.ticker===ticker);
   if(!p) return;
+  const rv = computeRvTotals();
+  const peso = rv.marketValue>0 ? (p.marketValue/rv.marketValue)*100 : 0;
   document.getElementById('empresaModalTitulo').textContent = ticker;
   const body = document.getElementById('empresaModalBody');
   const c = chartColors();
@@ -3320,6 +4282,7 @@ function abrirModalEmpresa(ticker){
         <div><p class="stat-label" style="margin-bottom:4px;">Quantidade</p><p class="mono" style="font-weight:700; font-size:15px;">${fmtNum(p.qty)}</p></div>
         <div><p class="stat-label" style="margin-bottom:4px;">Preço médio</p><p class="mono" style="font-weight:700; font-size:15px;">${fmtMoney(p.avgPrice)}</p></div>
         <div><p class="stat-label" style="margin-bottom:4px;">Preço atual</p><p class="mono" style="font-weight:700; font-size:15px;">${p.hasRealPrice?fmtMoney(p.curPrice):'—'}</p></div>
+        <div><p class="stat-label" style="margin-bottom:4px;">Peso na carteira</p><p class="mono" style="font-weight:700; font-size:15px;">${fmtNum(peso.toFixed(1))}%</p></div>
       </div>
     </div>
     <p class="small text-faint" style="margin:14px 0 16px;">${fonteTexto}</p>
@@ -3426,7 +4389,16 @@ function moveTabIndicator(btn){
   const navRect = nav.getBoundingClientRect();
   const btnRect = btn.getBoundingClientRect();
   ind.style.width = btnRect.width+'px';
-  ind.style.transform = `translateX(${btnRect.left - navRect.left - 6}px)`;
+  // Bug real (encontrado com um navegador de verdade, não simulado):
+  // getBoundingClientRect() já reflete a posição COM o scroll horizontal
+  // da barra de abas aplicado, mas translateX() posiciona o indicador no
+  // espaço de layout SEM scroll (ele é filho da própria área rolável, e
+  // rola junto com o conteúdo). Sem somar nav.scrollLeft de volta, o
+  // deslocamento do scroll era subtraído duas vezes — o preenchimento
+  // verde ficava "atrasado" em relação à aba realmente ativa sempre que
+  // era preciso rolar a barra para alcançá-la (ex.: clicar em "Alertas"
+  // fazia o preenchimento parecer estar em "Comparar").
+  ind.style.transform = `translateX(${btnRect.left - navRect.left + nav.scrollLeft - 6}px)`;
 }
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -3440,6 +4412,17 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
   });
 });
 window.addEventListener('resize', ()=>{
+  const active = document.querySelector('.tab-btn.active');
+  if(active) moveTabIndicator(active);
+});
+// Bug real encontrado: quando a aba clicada exige scroll horizontal na
+// barra (nav.tabs tem overflow-x:auto) para ficar visível, o indicador
+// verde nunca era recalculado depois desse scroll — ficava "preso" na
+// posição de antes, visualmente sobre a aba errada (ex.: clicar em
+// Alertas fazia o preenchimento verde parecer estar em "Comparar").
+// moveTabIndicator() já é barato (só getBoundingClientRect + transform),
+// então recalcular a cada scroll da barra é seguro.
+document.getElementById('tabsNav').addEventListener('scroll', ()=>{
   const active = document.querySelector('.tab-btn.active');
   if(active) moveTabIndicator(active);
 });
@@ -3909,7 +4892,7 @@ document.getElementById('btnNovoSaldoRf').addEventListener('click', ()=>{
   sel.innerHTML = DATA.rf.products.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
   if(!DATA.rf.products.length){ addToast('Registe primeiro um aporte de renda fixa em "Novo investimento".'); return; }
   document.getElementById('saldoRfData').value = todayISO();
-  document.getElementById('saldoRfAporte').value='0'; document.getElementById('saldoRfValor').value='';
+  document.getElementById('saldoRfAporte').value='0'; document.getElementById('saldoRfResgate').value='0'; document.getElementById('saldoRfValor').value='';
   openModal('modalSaldoRf');
 });
 function registarSaldoRealRf(productId, aporte, saldo, date){
@@ -3919,9 +4902,12 @@ document.getElementById('btnSalvarSaldoRf').addEventListener('click', async ()=>
   const productId = document.getElementById('saldoRfProduto').value;
   const date = document.getElementById('saldoRfData').value;
   const aporte = parseFloat(document.getElementById('saldoRfAporte').value)||0;
+  const resgate = parseFloat(document.getElementById('saldoRfResgate').value)||0;
   const saldoStr = document.getElementById('saldoRfValor').value;
-  if(!date || (aporte<=0 && saldoStr==='')){ addToast('Informe pelo menos um aporte ou um saldo.'); return; }
-  registarSaldoRealRf(productId, aporte, saldoStr, date);
+  if(aporte>0 && resgate>0){ addToast('Preencha só aporte OU resgate, não os dois ao mesmo tempo.'); return; }
+  const aporteLiquido = aporte - resgate; // resgate vira aporte negativo — mesma regra usada em todo o Patrium
+  if(!date || (aporteLiquido===0 && saldoStr==='')){ addToast('Informe pelo menos um aporte, um resgate ou um saldo.'); return; }
+  registarSaldoRealRf(productId, aporteLiquido, saldoStr, date);
   await Store.save(DATA);
   showSaveSuccess('modalSaldoRf', 'Renda fixa atualizada!', ()=>{
     renderAll();
