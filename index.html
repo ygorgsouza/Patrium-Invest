@@ -650,6 +650,20 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
         <div id="rankPiores"></div>
       </div>
     </div>
+
+    <!-- Metas por quantidade de ativos — nunca uma meta de valor. A quantidade
+         atual vem sempre da posição real; o valor em R$ é só uma estimativa
+         auxiliar que muda com o preço, sem nunca alterar a meta em si. -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="flex-between" style="flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+        <div>
+          <h3 style="margin:0 0 4px; font-size:15px;">Metas por quantidade</h3>
+          <p class="section-hint mb-0">Defina quantas ações, cotas ou unidades você quer ter de um ativo — a meta acompanha sua posição real automaticamente, nunca o valor em reais.</p>
+        </div>
+        <button class="btn btn-primary" id="btnNovaMetaQtd">+ Nova meta</button>
+      </div>
+      <div id="metasQtdLista"></div>
+    </div>
   </section>
 
   <!-- ===================== OPERAÇÕES ===================== -->
@@ -877,7 +891,26 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
       <div style="width:1px; height:44px; background:var(--line);" class="hide-mobile"></div>
       <div><p class="stat-label" style="margin-bottom:6px;">Aportes (dinheiro novo)</p><p class="mono" id="anaAportes" style="font-size:19px; font-weight:700;">—</p></div>
       <div><p class="stat-label" style="margin-bottom:6px;">Dividendos</p><p class="mono" id="anaDividendos" style="font-size:19px; font-weight:700;">—</p></div>
-      <div><p class="stat-label" style="margin-bottom:6px;">Rentabilidade</p><p class="mono" id="anaRentab" style="font-size:19px; font-weight:700;">—</p></div>
+      <div><p class="stat-label" style="margin-bottom:6px;">Rentabilidade (TWR)</p><p class="mono" id="anaRentab" style="font-size:19px; font-weight:700;">—</p></div>
+    </div>
+
+    <!-- De onde veio o crescimento? — decomposição sem duplicar dividendos -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="flex-between" style="flex-wrap:wrap; gap:10px; margin-bottom:16px;">
+        <div>
+          <h3 style="margin:0 0 4px; font-size:15px;">De onde veio o crescimento?</h3>
+          <p class="section-hint mb-0">Separa dinheiro novo (aportes) de desempenho real (valorização + dividendos) — nada é contado duas vezes.</p>
+        </div>
+        <select id="origemCrescimentoFiltro" style="max-width:180px;">
+          <option value="mes">Este mês</option>
+          <option value="3m">3 meses</option>
+          <option value="6m" selected>6 meses</option>
+          <option value="12m">12 meses</option>
+          <option value="ano">Este ano</option>
+          <option value="tudo">Desde o início</option>
+        </select>
+      </div>
+      <div id="origemCrescimentoConteudo"></div>
     </div>
 
     <div class="card" style="margin-bottom:20px;">
@@ -1044,10 +1077,11 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
       <h3 style="margin:0 0 4px; font-size:15px;">Análise de Renda Fixa</h3>
       <p class="section-hint" style="margin-bottom:16px;">CDBs, Tesouro Direto, LCIs/LCAs e demais produtos — participa do patrimônio total, não é tratada à parte.</p>
       <div class="grid grid-4" style="margin-bottom:18px;">
-        <div><div class="stat-label" style="margin-bottom:2px;">Total aplicado</div><div class="mono" id="rfaAplicado" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Aportes brutos</div><div class="mono" id="rfaAplicado" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Resgates</div><div class="mono" id="rfaResgates" style="font-weight:700; font-size:16px; color:var(--negative);">—</div></div>
         <div><div class="stat-label" style="margin-bottom:2px;">Saldo atual</div><div class="mono" id="rfaSaldo" style="font-weight:700; font-size:16px;">—</div></div>
-        <div><div class="stat-label" style="margin-bottom:2px;">Rendimentos</div><div class="mono" id="rfaRendimento" style="font-weight:700; font-size:16px;">—</div></div>
-        <div><div class="stat-label" style="margin-bottom:2px;">Rentabilidade</div><div class="mono" id="rfaRentab" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Rendimento acumulado</div><div class="mono" id="rfaRendimento" style="font-weight:700; font-size:16px;">—</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">Rentabilidade histórica</div><div class="mono" id="rfaRentab" style="font-weight:700; font-size:16px;">—</div></div>
         <div><div class="stat-label" style="margin-bottom:2px;">Quantidade de produtos</div><div class="mono" id="rfaNumProdutos" style="font-weight:700; font-size:16px;">—</div></div>
       </div>
       <hr class="line">
@@ -1306,6 +1340,13 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
           <div class="field"><label>Data</label><input type="date" id="rfDataAporte"></div>
           <div class="field"><label>Valor aportado (R$)</label><input type="number" step="0.01" id="rfValorAporte" placeholder="0,00"></div>
         </div>
+        <div class="field"><label>Qual é a origem deste dinheiro?</label>
+          <div class="seg" id="segFundingRf" style="flex-direction:column; gap:4px; border:none; background:none;">
+            <button type="button" class="active" data-val="externo" style="text-align:left; border:1px solid var(--line); border-radius:9px; margin-bottom:4px;">💰 Dinheiro novo — é um aporte que estou fazendo agora</button>
+            <button type="button" data-val="interno" style="text-align:left; border:1px solid var(--line); border-radius:9px;">🔄 Já estava no meu Caixa — não é dinheiro novo, só mudou de lugar</button>
+          </div>
+          <p class="helper" style="margin-top:6px;">Isto garante que o mesmo dinheiro nunca é contado duas vezes no seu patrimônio nem distorce a rentabilidade.</p>
+        </div>
         <div class="field"><label>Saldo atual da conta (R$) — opcional</label><input type="number" step="0.01" id="rfSaldoAtualInput" placeholder="opcional"></div>
         <p class="helper">O saldo atual é opcional aqui — pode registar só o aporte e atualizar o saldo depois em "Renda Fixa".</p>
         <div class="field"><label>Observação (opcional)</label><input type="text" id="rfObs"></div>
@@ -1415,8 +1456,14 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
         <div class="field"><label>Novo aporte nesta data (R$)</label><input type="number" step="0.01" id="saldoRfAporte" value="0"></div>
         <div class="field"><label>Resgate nesta data (R$)</label><input type="number" step="0.01" id="saldoRfResgate" value="0"></div>
       </div>
+      <div class="field"><label>Origem do aporte/resgate</label>
+        <select id="saldoRfFunding">
+          <option value="externo">Dinheiro externo (entrou/saiu do Patrium)</option>
+          <option value="interno">Transferência interna (já estava dentro do Patrium — ex.: veio de uma venda, ou o resgate foi para o caixa)</option>
+        </select>
+      </div>
       <div class="field"><label>Saldo real na data (R$)</label><input type="number" step="0.01" id="saldoRfValor"></div>
-      <p class="helper">Preencha só um dos dois — aporte OU resgate. Deixe ambos em 0 se estiver apenas a atualizar o saldo.</p>
+      <p class="helper">Preencha só um dos dois — aporte OU resgate. Deixe ambos em 0 se estiver apenas a atualizar o saldo. A origem só importa para XIRR/TWR: transferências internas nunca contam como dinheiro novo.</p>
     </div>
     <div class="modal-foot">
       <button class="btn" data-close="modalSaldoRf">Cancelar</button>
@@ -1553,6 +1600,12 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
           <div class="field" id="editMovRfValorWrap"><label>Valor do aporte/resgate (R$)</label><input type="number" step="0.01" id="editMovAporte"></div>
           <div class="field"><label>Saldo informado (R$, opcional)</label><input type="number" step="0.01" id="editMovRfSaldo"></div>
         </div>
+        <div class="field" id="editMovRfFundingWrap"><label>Origem</label>
+          <select id="editMovRfFunding">
+            <option value="externo">Dinheiro externo (entrou/saiu do Patrium)</option>
+            <option value="interno">Transferência interna (já estava dentro do Patrium)</option>
+          </select>
+        </div>
       </div>
 
       <div class="field"><label>Observação (opcional)</label><input type="text" id="editMovObs"></div>
@@ -1563,6 +1616,34 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
       <button class="btn btn-danger" id="btnExcluirMovimento" style="margin-right:auto;">Eliminar</button>
       <button class="btn" data-close="modalEditarMovimento">Cancelar</button>
       <button class="btn btn-primary" id="btnSalvarEdicaoMovimento">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: META POR QUANTIDADE ===================== -->
+<div class="modal-overlay" id="modalMetaQtd">
+  <div class="modal">
+    <div class="modal-head"><h3 id="metaQtdTitulo">Nova meta por quantidade</h3><button class="icon-btn" data-close="modalMetaQtd">✕</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Ativo / Ticker</label><input type="text" id="metaQtdTicker" style="text-transform:uppercase;" placeholder="Ex.: ITUB4"></div>
+      <div class="field-row">
+        <div class="field"><label>Quantidade desejada</label><input type="number" step="1" min="1" id="metaQtdAlvo"></div>
+        <div class="field"><label>Unidade</label>
+          <select id="metaQtdUnidade">
+            <option value="ações">Ações</option>
+            <option value="cotas">Cotas</option>
+            <option value="unidades">Unidades</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Observação (opcional)</label><input type="text" id="metaQtdObs"></div>
+      <p class="helper">A quantidade atual é calculada automaticamente a partir da sua posição real — a meta só guarda quanto você quer ter, nunca altera a posição.</p>
+      <input type="hidden" id="metaQtdId">
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger hidden" id="btnExcluirMetaQtd" style="margin-right:auto;">Eliminar meta</button>
+      <button class="btn" data-close="modalMetaQtd">Cancelar</button>
+      <button class="btn btn-primary" id="btnSalvarMetaQtd">Guardar</button>
     </div>
   </div>
 </div>
@@ -1770,7 +1851,7 @@ function showSaveSuccess(modalId, message, afterFn){
    funções por chamadas Supabase (ex.: supabase.from('patrium_data')...)
    sem precisar de tocar no resto do app. */
 const STORAGE_KEY = 'patrium_invest_v1';
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 5;
 const Store = {
   async load(){
     try{
@@ -1844,6 +1925,12 @@ function migrateData(data){
     (data.transactions||[]).forEach(t=>{ if(t.funding==='caixa') t.funding='transferencia'; });
     data.schemaVersion = 4;
   }
+  if(data.schemaVersion < 5){
+    // v4 -> v5: metas por quantidade de ativos — array novo, vazio por
+    // padrão, não altera nenhum dado existente.
+    data.quantityGoals = data.quantityGoals || []; // {id, ticker, targetQty, unit, note}
+    data.schemaVersion = 5;
+  }
   // ---- Reconciliação defensiva (roda sempre, independente de versão) ----
   // Garante uma invariante crítica para os gráficos: todo ticker com um preço
   // em cache (DATA.prices) tem pelo menos um snapshot correspondente. Sem
@@ -1854,6 +1941,7 @@ function migrateData(data){
   // auditoria proíbe. Isto NUNCA aplica um preço retroativamente: o snapshot
   // sintetizado aqui usa a data de hoje, nunca uma data passada.
   data.priceSnapshots = data.priceSnapshots || {};
+  data.quantityGoals = data.quantityGoals || [];
   Object.keys(data.prices||{}).forEach(tk=>{
     const p = data.prices[tk];
     const snaps = data.priceSnapshots[tk] = data.priceSnapshots[tk] || [];
@@ -1879,6 +1967,7 @@ function emptyData(){
     priceSnapshots: {},    // histórico append-only: { TICKER: [{date, price, source, timestamp}] } — nunca inventa dias sem snapshot
     reconciliations: [],   // {id, date, patrimonioInformado, patrimonioCalculado, diferenca, note} — conferência, nunca vira rendimento sozinha
     positionAdjustments: [], // {id, ticker, date, valorCalculado, valorReal, ajuste, note} — saldo real por posição de ação/FII/ETF/cripto
+    quantityGoals: [],       // {id, ticker, targetQty, unit:'ações'|'cotas', note} — meta de QUANTIDADE, nunca de valor; nunca altera a posição real
     settings: { allocationTarget: { rf:80, rv:20 }, theme:'dark' }
   };
 }
@@ -1910,6 +1999,20 @@ function computeCaixaUpTo(cutoffDate){
     if(t.type==='venda') events.push({date:t.date, delta: t.qty*t.price-(t.fees||0)});
     if(t.type==='compra' && t.funding!=='externo') events.push({date:t.date, delta:0, isDraw:true, amount:t.qty*t.price+(t.fees||0)});
   });
+  // RF interna (funding==='interno') também passa pelo caixa — sem isto, o
+  // Cenário 1 do relatório ("aplicar em RF usando dinheiro que já estava no
+  // Caixa") não reduzia o caixa, e um resgate interno de RF ("RF -> Caixa")
+  // não devolvia o dinheiro ao caixa. Lançamentos antigos sem `funding`
+  // continuam tratados como 'externo' (nunca tocam o caixa), preservando o
+  // comportamento anterior.
+  DATA.rf.entries.forEach(e=>{
+    if(cutoffDate && e.date>cutoffDate) return;
+    if(!e.aporte) return;
+    const funding = e.funding || 'externo';
+    if(funding!=='interno') return;
+    if(e.aporte>0) events.push({date:e.date, delta:0, isDraw:true, amount:e.aporte}); // aporte interno consome caixa
+    else events.push({date:e.date, delta:Math.abs(e.aporte)}); // resgate interno devolve ao caixa
+  });
   events.sort((a,b)=>a.date.localeCompare(b.date));
   let saldo = 0, comprasDoCaixa = 0;
   events.forEach(e=>{
@@ -1927,15 +2030,14 @@ function computeCaixa(){
   return { saldo: r.saldo, dividendsTotal, aportesCaixa, retiradas, comprasDoCaixa: r.comprasDoCaixa, vendasParaCaixa };
 }
 // Dinheiro que realmente saiu do bolso do usuário (exclui compras pagas com caixa/dividendos reinvestidos)
+// Reaproveita getFluxosExternos() — fonte única de fluxos externos, já
+// corrigida para respeitar RF funding==='interno' (nunca conta como
+// dinheiro novo). Antes desta correção, esta função ainda somava TODO
+// aporte de RF sem checar funding, divergindo de getFluxosExternos() e
+// mostrando "Dinheiro colocado por mim" inflado por transferências
+// internas para RF.
 function computeAportesExternos(){
-  const rfExterno = DATA.rf.entries.reduce((s,e)=>s+(e.aporte||0),0);
-  const rvExterno = DATA.transactions.filter(t=>t.type==='compra' && t.funding==='externo').reduce((s,t)=>s+t.qty*t.price+(t.fees||0),0);
-  const caixaManual = DATA.cashMovements.filter(m=>m.type==='aporte_caixa').reduce((s,m)=>s+m.amount,0);
-  const retiradas = DATA.cashMovements.filter(m=>m.type==='retirada').reduce((s,m)=>s+m.amount,0);
-  // retiradas são o oposto de um aporte (dinheiro saindo do "mundo externo <-> carteira"),
-  // por isso entram líquidas aqui — é o que faz a equação patrimônio = aportes líquidos +
-  // resultado fechar mesmo quando o usuário já retirou dinheiro da carteira.
-  return round2(rfExterno + rvExterno + caixaManual - retiradas);
+  return round2(getFluxosExternos(null, null).reduce((s,f)=>s+f.amount,0));
 }
 
 // Posição consolidada por ticker, a partir do histórico de transações (custo médio ponderado)
@@ -2030,16 +2132,27 @@ function computeRfProducts(){
     const entries = DATA.rf.entries.filter(e=>e.productId===prod.id).sort((a,b)=>a.date.localeCompare(b.date));
     const r = rfSaldoAtDate(entries, null) || {saldo:0, totalAportado:0, rendimento:0, lastSaldoDate:null};
     const aportesAteSaldo = r.lastSaldoDate ? entries.filter(e=>e.date<=r.lastSaldoDate).reduce((s,e)=>s+(e.aporte||0),0) : 0;
-    const rendimentoPct = aportesAteSaldo>0 ? (r.rendimento/aportesAteSaldo)*100 : 0;
-    return { ...prod, entries, totalAportado:r.totalAportado, saldoAtual:r.saldo, rendimento:r.rendimento, rendimentoPct, lastSaldoDate:r.lastSaldoDate };
+    // Rentabilidade histórica: SEMPRE sobre o total efetivamente aportado
+    // (aportesBrutos, só valores positivos) — nunca sobre o capital líquido
+    // (aportesAteSaldo, que pode zerar ou ficar negativo depois de um
+    // resgate). Sem isso, um resgate total faria a rentabilidade "sumir"
+    // (virar 0%) mesmo tendo havido rendimento real — o TESTE J do
+    // relatório final mostra esse cenário exato.
+    const aportesBrutos = round2(entries.filter(e=>e.aporte>0).reduce((s,e)=>s+e.aporte,0));
+    const resgatesBrutos = round2(entries.filter(e=>e.aporte<0).reduce((s,e)=>s+Math.abs(e.aporte),0));
+    const rendimentoPct = aportesBrutos>0 ? (r.rendimento/aportesBrutos)*100 : 0;
+    return { ...prod, entries, totalAportado:r.totalAportado, aportesBrutos, resgatesBrutos, capitalLiquido:round2(aportesBrutos-resgatesBrutos),
+      saldoAtual:r.saldo, rendimento:r.rendimento, rendimentoPct, lastSaldoDate:r.lastSaldoDate };
   });
 }
 function computeRfTotals(){
   const prods = computeRfProducts();
   const capital = prods.reduce((s,p)=>s+p.totalAportado,0);
+  const aportesBrutos = round2(prods.reduce((s,p)=>s+p.aportesBrutos,0));
+  const resgatesBrutos = round2(prods.reduce((s,p)=>s+p.resgatesBrutos,0));
   const saldo = prods.reduce((s,p)=>s+p.saldoAtual,0);
   const rendimento = prods.reduce((s,p)=>s+p.rendimento,0);
-  return { capital, saldo, rendimento, rentabPct: capital>0 ? (rendimento/capital)*100 : 0 };
+  return { capital, aportesBrutos, resgatesBrutos, saldo, rendimento, rentabPct: aportesBrutos>0 ? (rendimento/aportesBrutos)*100 : 0 };
 }
 /* 4.7 Análise de Renda Fixa — agrupa o que computeRfProducts() já calcula
    por produto (nenhum cálculo novo de saldo/rendimento), só soma por
@@ -2177,14 +2290,41 @@ function computeDrawdown(series){
    nas datas em que há um evento (compra/venda/dividendo/saldo/snapshot de
    preço) — ver priceAtDate(). Sem snapshots diários, o TWR entre dois
    eventos distantes é uma aproximação. */
-function computeXIRR(){
+/* Fonte única de verdade para "fluxos externos" — dinheiro que realmente
+   entrou ou saiu do patrimônio do Patrium, nunca dinheiro que só mudou de
+   componente internamente. Usada por XIRR, TWR (histórico completo) e
+   TWR por intervalo — nunca duplicar este filtro em outro lugar.
+   - Compra RV com funding==='externo' → entrada de dinheiro novo.
+   - Compra RV com funding==='transferencia'/'preexistente'/outro → NÃO é
+     fluxo externo (o dinheiro já estava dentro do Patrium).
+   - RF: e.aporte pode ser positivo (aporte) ou negativo (resgate). Só
+     conta como fluxo externo quando e.funding é 'externo' — o padrão
+     para lançamentos antigos sem o campo (retrocompatibilidade: antes
+     desta rodada, TODO lançamento de RF era tratado como externo, então
+     a ausência do campo preserva esse comportamento). Quando
+     funding==='interno' (ex.: dinheiro que veio de uma venda de ação e
+     foi reinvestido em RF, ou um resgate de RF que só foi parar no
+     caixa), o valor NÃO entra aqui — é transferência interna, não pode
+     inflar nem reduzir XIRR/TWR artificialmente.
+   - Aporte/retirada de caixa → fluxo externo.
+   - Venda de ação e dividendos NUNCA entram aqui — o dinheiro permanece
+     dentro do patrimônio (via caixa) até ser explicitamente retirado. */
+function getFluxosExternos(start, end){
+  const dentro = (d)=> (!start || d>=start) && (!end || d<=end);
   const flows = [];
-  DATA.rf.entries.forEach(e=>{ if(e.aporte) flows.push({date:e.date, amount:-e.aporte}); });
-  DATA.transactions.filter(t=>t.type==='compra' && t.funding==='externo').forEach(t=>{
-    flows.push({date:t.date, amount:-(t.qty*t.price+(t.fees||0))});
+  DATA.rf.entries.forEach(e=>{
+    const funding = e.funding || 'externo'; // retrocompatível: lançamentos antigos sempre eram externos
+    if(e.aporte && funding==='externo' && dentro(e.date)) flows.push({date:e.date, amount:e.aporte});
   });
-  DATA.cashMovements.filter(m=>m.type==='aporte_caixa').forEach(m=> flows.push({date:m.date, amount:-m.amount}));
-  DATA.cashMovements.filter(m=>m.type==='retirada').forEach(m=> flows.push({date:m.date, amount:m.amount}));
+  DATA.transactions.filter(t=>t.type==='compra' && t.funding==='externo').forEach(t=>{
+    if(dentro(t.date)) flows.push({date:t.date, amount: t.qty*t.price+(t.fees||0)});
+  });
+  DATA.cashMovements.filter(m=>m.type==='aporte_caixa').forEach(m=>{ if(dentro(m.date)) flows.push({date:m.date, amount:m.amount}); });
+  DATA.cashMovements.filter(m=>m.type==='retirada').forEach(m=>{ if(dentro(m.date)) flows.push({date:m.date, amount:-m.amount}); });
+  return flows;
+}
+function computeXIRR(){
+  const flows = getFluxosExternos(null, null).map(f=>({date:f.date, amount:-f.amount}));
   if(flows.length===0) return null;
   const patr = computePatrimonio();
   const today = todayISO();
@@ -2218,11 +2358,7 @@ function computeTWR(){
   const series = buildTimeline();
   if(series.length<2) return null;
   const flowsByDate = {};
-  const addFlow = (date, amt)=>{ flowsByDate[date]=(flowsByDate[date]||0)+amt; };
-  DATA.rf.entries.forEach(e=>{ if(e.aporte) addFlow(e.date, e.aporte); });
-  DATA.transactions.filter(t=>t.type==='compra' && t.funding==='externo').forEach(t=> addFlow(t.date, t.qty*t.price+(t.fees||0)));
-  DATA.cashMovements.filter(m=>m.type==='aporte_caixa').forEach(m=> addFlow(m.date, m.amount));
-  DATA.cashMovements.filter(m=>m.type==='retirada').forEach(m=> addFlow(m.date, -m.amount));
+  getFluxosExternos(null, null).forEach(f=>{ flowsByDate[f.date]=(flowsByDate[f.date]||0)+f.amount; });
   let linked = 1;
   for(let i=1;i<series.length;i++){
     const prev = series[i-1].patrimonio;
@@ -2235,6 +2371,50 @@ function computeTWR(){
   if(totalDays<=0) return { cumulative: (linked-1)*100, annualized:null };
   const annualized = (Math.pow(linked, 365/totalDays)-1)*100;
   return { cumulative: (linked-1)*100, annualized };
+}
+/* computeTWRInterval — TWR (Time-Weighted Return) para QUALQUER intervalo,
+   não só o histórico completo. É a peça que faltava: a "rentabilidade"
+   simples usada até aqui em Resultado Mensal/Análises era
+   (ganho/patrInicial), que fica matematicamente errada quando há um
+   aporte/resgate NO MEIO do período (o aporte infla ou reduz o
+   denominador de forma que não representa desempenho real). O TWR
+   encadeia sub-períodos entre cada fluxo, eliminando esse efeito.
+   "Dados insuficientes" (sufficient:false) quando não há nenhum ponto de
+   patrimônio real dentro do intervalo — nunca inventamos uma
+   rentabilidade a partir de nada. */
+function computeTWRInterval(start, end, fullOpt){
+  const full = fullOpt || buildTimeline();
+  const finalEnd = end || todayISO();
+  let patrInicial = 0;
+  if(start){
+    const before = full.filter(p=>p.date<start);
+    if(before.length) patrInicial = before[before.length-1].patrimonio;
+  }
+  const pontos = full.filter(p=> (!start||p.date>=start) && p.date<=finalEnd);
+  if(pontos.length===0) return { cumulative:null, annualized:null, sufficient:false };
+
+  const flowsByDate = {};
+  getFluxosExternos(start, finalEnd).forEach(f=>{ flowsByDate[f.date]=(flowsByDate[f.date]||0)+f.amount; });
+
+  let linked = 1;
+  let prev = patrInicial;
+  let algumaComparacao = false;
+  pontos.forEach(p=>{
+    if(prev<=0){ prev = p.patrimonio; return; } // sem base válida ainda (início do histórico) — só estabelece a base
+    const flow = flowsByDate[p.date] || 0;
+    const subReturn = (p.patrimonio - flow - prev) / prev;
+    linked *= (1+subReturn);
+    algumaComparacao = true;
+    prev = p.patrimonio;
+  });
+  // Mesmo sem nenhuma sub-comparação (ex.: um único ponto no período, vindo
+  // direto de patrInicial>0), ainda é possível medir 1 sub-retorno entre o
+  // início do intervalo e esse ponto — o loop acima já cobre esse caso
+  // quando patrInicial>0 desde o começo.
+  const totalDays = daysBetween(start || pontos[0].date, finalEnd);
+  const cumulative = (linked-1)*100;
+  const annualized = totalDays>0 ? (Math.pow(linked, 365/totalDays)-1)*100 : null;
+  return { cumulative, annualized, sufficient:true };
 }
 
 function computeMonthlyContributions(){
@@ -2466,6 +2646,33 @@ function computeConcentracaoAtivo(){
   const posicoes = computePositions().filter(p=>p.qty>0.0000001);
   const totalRv = computeRvTotals().marketValue;
   return posicoes.map(p=>({ ...p, peso: totalRv>0 ? (p.marketValue/totalRv)*100 : 0 })).sort((a,b)=>b.peso-a.peso);
+}
+/* Metas por quantidade de ativos — NUNCA uma meta de valor em R$. A
+   quantidade atual vem sempre de computePositions() (a mesma fonte de
+   verdade da carteira inteira); a meta em si só guarda o ticker e a
+   quantidade desejada, nunca a posição. O valor em R$ mostrado é só uma
+   ESTIMATIVA auxiliar (quantidade restante × preço atual) — se o preço
+   mudar, só essa estimativa muda; quantidade/percentual nunca mudam por
+   causa do preço. Preparado para qualquer ativo negociado em quantidade
+   (ações, FIIs, ETFs, BDRs) — nenhuma regra aqui é específica de ação. */
+function computeQuantityGoals(){
+  const positions = computePositions();
+  return (DATA.quantityGoals||[]).map(g=>{
+    const pos = positions.find(p=>p.ticker===g.ticker);
+    const currentQty = pos ? pos.qty : 0;
+    const remaining = Math.max(0, round2(g.targetQty - currentQty));
+    // Percentual nunca ultrapassa 100%, mesmo se a posição já superou a meta.
+    const pctComplete = g.targetQty>0 ? Math.min(100, (currentQty/g.targetQty)*100) : 0;
+    const hasPrice = pos && pos.hasRealPrice;
+    const priceAtual = hasPrice ? pos.curPrice : (pos ? pos.avgPrice : null); // sem preço real, usa PM como estimativa (mesma lógica já usada em toda a carteira)
+    const estimatedValueRemaining = (priceAtual!==null) ? round2(remaining*priceAtual) : null;
+    return {
+      id:g.id, ticker:g.ticker, unit:g.unit||'ações', note:g.note||'',
+      targetQty: g.targetQty, currentQty: round2(currentQty), remaining, pctComplete,
+      priceAtual, priceEstimated: !hasPrice, estimatedValueRemaining,
+      concluida: currentQty>=g.targetQty
+    };
+  }).sort((a,b)=> a.ticker.localeCompare(b.ticker));
 }
 /* Concentração por setor — só existe quando pelo menos um ativo detido tem
    setor conhecido (DATA.sectors, preenchido por "Atualizar preços" com
@@ -3106,7 +3313,90 @@ function renderAcoes(){
   const rankings = computeRankings();
   document.getElementById('rankMelhores').innerHTML = rankings.melhores.length ? rankings.melhores.slice(0,5).map((p,i)=>rankRow(i+1,p,true)).join('') : '<p class="text-soft small">Nenhuma posição no verde ainda.</p>';
   document.getElementById('rankPiores').innerHTML = rankings.piores.length ? rankings.piores.slice(0,5).map((p,i)=>rankRow(i+1,p,false)).join('') : '<p class="text-soft small">Nenhuma posição no vermelho — carteira saudável. 🎉</p>';
+  renderMetasQuantidade();
 }
+/* Metas por quantidade — render */
+function renderMetasQuantidade(){
+  const metas = computeQuantityGoals();
+  document.getElementById('metasQtdLista').innerHTML = metas.length ? metas.map(m=>{
+    const barraCor = m.concluida ? 'var(--positive)' : 'var(--accent)';
+    return `<div style="padding:14px 0; border-bottom:1px solid var(--line-soft);">
+      <div class="flex-between" style="flex-wrap:wrap; gap:10px; margin-bottom:8px;">
+        <div>
+          <strong style="font-size:15px;">${escapeHtml(m.ticker)}</strong>
+          <span class="mono text-soft small" style="margin-left:8px;">${fmtNum(m.currentQty)} / ${fmtNum(m.targetQty)} ${escapeHtml(m.unit)}</span>
+          ${m.concluida?'<span class="pill pill-pos" style="margin-left:8px; font-size:11px; padding:3px 8px;">Meta atingida ✓</span>':''}
+        </div>
+        <div class="flex gap-6">
+          <button class="icon-btn btn-sm" style="width:28px;height:28px;" onclick="abrirEdicaoMetaQtd('${m.id}')" title="Editar">✎</button>
+          <button class="icon-btn btn-sm" style="width:28px;height:28px;" onclick="excluirMetaQtd('${m.id}')" title="Eliminar">🗑</button>
+        </div>
+      </div>
+      <div style="height:8px; background:var(--surface-3); border-radius:99px; overflow:hidden; margin-bottom:8px;">
+        <div style="height:100%; width:${m.pctComplete.toFixed(1)}%; background:${barraCor}; border-radius:99px; transition:width .3s ease;"></div>
+      </div>
+      <div class="flex-between small text-soft" style="flex-wrap:wrap; gap:8px;">
+        <span class="mono" style="font-weight:700; color:${barraCor};">${fmtNum(m.pctComplete.toFixed(1))}% concluído</span>
+        <span>${m.remaining>0 ? `Faltam ${fmtNum(m.remaining)} ${m.unit}` : 'Meta completa'}</span>
+        <span>${m.remaining>0 && m.estimatedValueRemaining!==null ? `Valor estimado restante: ${fmtMoney(m.estimatedValueRemaining)}${m.priceEstimated?' (estimado, sem preço de mercado)':''}` : ''}</span>
+      </div>
+    </div>`;
+  }).join('') : `<div class="empty"><div class="empty-icon">🎯</div><h3>Nenhuma meta definida</h3><p>Defina quantas ações ou cotas de um ativo você quer acumular — o Patrium acompanha o progresso automaticamente.</p></div>`;
+}
+document.getElementById('btnNovaMetaQtd').addEventListener('click', ()=>{
+  document.getElementById('metaQtdTitulo').textContent = 'Nova meta por quantidade';
+  document.getElementById('metaQtdId').value = '';
+  document.getElementById('metaQtdTicker').value = '';
+  document.getElementById('metaQtdAlvo').value = '';
+  document.getElementById('metaQtdUnidade').value = 'ações';
+  document.getElementById('metaQtdObs').value = '';
+  document.getElementById('btnExcluirMetaQtd').classList.add('hidden');
+  openModal('modalMetaQtd');
+});
+function abrirEdicaoMetaQtd(id){
+  const g = DATA.quantityGoals.find(x=>x.id===id); if(!g) return;
+  document.getElementById('metaQtdTitulo').textContent = 'Editar meta por quantidade';
+  document.getElementById('metaQtdId').value = g.id;
+  document.getElementById('metaQtdTicker').value = g.ticker;
+  document.getElementById('metaQtdAlvo').value = g.targetQty;
+  document.getElementById('metaQtdUnidade').value = g.unit || 'ações';
+  document.getElementById('metaQtdObs').value = g.note || '';
+  document.getElementById('btnExcluirMetaQtd').classList.remove('hidden');
+  openModal('modalMetaQtd');
+}
+document.getElementById('btnSalvarMetaQtd').addEventListener('click', async ()=>{
+  const id = document.getElementById('metaQtdId').value;
+  const ticker = document.getElementById('metaQtdTicker').value.trim().toUpperCase();
+  const targetQty = parseFloat(document.getElementById('metaQtdAlvo').value);
+  const unit = document.getElementById('metaQtdUnidade').value;
+  const note = document.getElementById('metaQtdObs').value.trim();
+  if(!ticker || isNaN(targetQty) || targetQty<=0){ addToast('Informe o ativo e uma quantidade desejada maior que zero.'); return; }
+  if(id){
+    const g = DATA.quantityGoals.find(x=>x.id===id); if(!g) return;
+    g.ticker = ticker; g.targetQty = round2(targetQty); g.unit = unit;
+    if(note) g.note = note; else delete g.note;
+  } else {
+    DATA.quantityGoals.push({ id:uid(), ticker, targetQty:round2(targetQty), unit, note: note||'' });
+  }
+  await Store.save(DATA);
+  renderAll();
+  closeModal('modalMetaQtd');
+  addToast('Meta guardada. ✓');
+});
+function excluirMetaQtd(id){
+  const g = DATA.quantityGoals.find(x=>x.id===id); if(!g) return;
+  askConfirm('Eliminar meta', `Eliminar a meta de ${fmtNum(g.targetQty)} ${g.unit||'ações'} de ${g.ticker}? A sua posição real não é afetada — só a meta é removida.`, async ()=>{
+    DATA.quantityGoals = DATA.quantityGoals.filter(x=>x.id!==id);
+    await Store.save(DATA);
+    renderAll();
+    closeModal('modalMetaQtd');
+    addToast('Meta eliminada.');
+  });
+}
+document.getElementById('btnExcluirMetaQtd').addEventListener('click', ()=>{
+  const id = document.getElementById('metaQtdId').value;
+  if(id) excluirMetaQtd(id);
+});
 
 /* ---- Operações: listar/editar/eliminar diretamente em DATA.transactions ----
    Usa exatamente a mesma estrutura e as mesmas funções de gravação
@@ -3160,18 +3450,20 @@ function getHistoricoFinanceiro(){
     const temResgate = e.aporte<0;
     const temSaldo = e.saldo!==null && e.saldo!==undefined;
     const nomeProduto = rfProductName[e.productId] || 'Renda Fixa';
+    const funding = e.funding || 'externo'; // retrocompatível — lançamentos antigos são sempre externos
+    const isInterno = funding==='interno';
     if(temAporte){
       items.push({
-        id:e.id, date:e.date, tipo:'aporte_rf', direction:'entrada',
+        id:e.id, date:e.date, tipo:'aporte_rf', direction: isInterno?'transferencia':'entrada',
         ativo: nomeProduto, valor: round2(e.aporte),
-        detalhe: 'Aporte em renda fixa' + (temSaldo?` · saldo informado: ${fmtMoney(e.saldo)}`:''),
+        detalhe: (isInterno?'Transferência interna para renda fixa':'Aporte em renda fixa') + (temSaldo?` · saldo informado: ${fmtMoney(e.saldo)}`:''),
         note: e.note||'', sourceType:'rfEntry'
       });
     } else if(temResgate){
       items.push({
-        id:e.id, date:e.date, tipo:'resgate_rf', direction:'saida',
+        id:e.id, date:e.date, tipo:'resgate_rf', direction: isInterno?'transferencia':'saida',
         ativo: nomeProduto, valor: round2(Math.abs(e.aporte)),
-        detalhe: 'Resgate de renda fixa' + (temSaldo?` · saldo informado: ${fmtMoney(e.saldo)}`:''),
+        detalhe: (isInterno?'Resgate interno de renda fixa (foi para o caixa)':'Resgate de renda fixa') + (temSaldo?` · saldo informado: ${fmtMoney(e.saldo)}`:''),
         note: e.note||'', sourceType:'rfEntry'
       });
     } else if(temSaldo){
@@ -3208,6 +3500,8 @@ function renderOperacoes(){
       <td><span class="text-faint small">${TIPO_LABEL[o.tipo]||o.tipo}</span></td>
       <td>${o.direction==='neutro'
         ? '<span class="rentab-chip" style="background:var(--surface-3); color:var(--text-soft);">● Informativo</span>'
+        : o.direction==='transferencia'
+        ? '<span class="rentab-chip" style="background:var(--info-soft); color:var(--info);">↔ Transferência</span>'
         : `<span class="rentab-chip ${o.direction==='entrada'?'pos':'neg'}">${o.direction==='entrada'?'▲ Entrada':'▼ Saída'}</span>`}</td>
       <td class="mono" style="font-weight:700;">${fmtMoney(o.valor)}</td>
       <td class="small text-faint">${escapeHtml(o.detalhe)}</td>
@@ -3321,6 +3615,7 @@ function abrirEdicaoMovimento(sourceType, id){
     document.getElementById('editMovRfTipo').value = tipoAtual;
     document.getElementById('editMovAporte').value = e.aporte ? Math.abs(e.aporte) : '';
     document.getElementById('editMovRfSaldo').value = (e.saldo!==null && e.saldo!==undefined) ? e.saldo : '';
+    document.getElementById('editMovRfFunding').value = e.funding || 'externo';
     document.getElementById('editMovObs').value = e.note||'';
     document.getElementById('editMovRfFields').classList.remove('hidden');
     atualizarCamposRfMovimento();
@@ -3330,6 +3625,7 @@ function abrirEdicaoMovimento(sourceType, id){
 function atualizarCamposRfMovimento(){
   const tipo = document.getElementById('editMovRfTipo').value;
   document.getElementById('editMovRfValorWrap').classList.toggle('hidden', tipo==='saldo');
+  document.getElementById('editMovRfFundingWrap').classList.toggle('hidden', tipo==='saldo');
 }
 document.getElementById('editMovRfTipo').addEventListener('change', atualizarCamposRfMovimento);
 document.getElementById('btnSalvarEdicaoMovimento').addEventListener('click', async ()=>{
@@ -3359,10 +3655,12 @@ document.getElementById('btnSalvarEdicaoMovimento').addEventListener('click', as
     if(tipo==='saldo'){
       if(saldoStr===''){ addToast('Informe o saldo — ou escolha Aporte/Resgate se quer registar um valor.'); return; }
       e.aporte = 0;
+      delete e.funding;
     } else {
       const valorAbs = parseFloat(document.getElementById('editMovAporte').value);
       if(!(valorAbs>0)){ addToast('Informe um valor válido.'); return; }
       e.aporte = round2(tipo==='resgate' ? -valorAbs : valorAbs);
+      e.funding = document.getElementById('editMovRfFunding').value;
     }
     e.saldo = saldoStr!=='' ? round2(parseFloat(saldoStr)) : null;
     e.date = date;
@@ -3685,8 +3983,25 @@ function computeResultadoIntervalo(start, end, fullOpt){
   }
   const patrFinal = series.length ? series[series.length-1].patrimonio : patrInicial;
   const ganhosPeriodo = round2((patrFinal-patrInicial) - aportesPeriodo);
+  // rentabPeriodo (fórmula simples ganho/patrInicial) fica preservada por
+  // compatibilidade, mas NÃO deve mais ser usada como "a" rentabilidade
+  // exibida ao utilizador quando há aportes/resgates no meio do período —
+  // ela fica matematicamente distorcida nesse caso (um aporte grande no
+  // meio do mês infla ou reduz o denominador sem relação com desempenho
+  // real). rentabTWR usa Time-Weighted Return, que encadeia sub-períodos
+  // entre cada fluxo e elimina essa distorção — é o que deve ser mostrado
+  // como "Rentabilidade" na interface. Quando não há dados suficientes no
+  // intervalo, twr.sufficient=false e a interface deve mostrar "Dados
+  // insuficientes", nunca inventar um número.
   const rentabPeriodo = patrInicial>0 ? (ganhosPeriodo/patrInicial)*100 : (aportesPeriodo>0? (ganhosPeriodo/aportesPeriodo)*100 : 0);
-  return { series, start, end, aportesPeriodo, retiradasPeriodo, divsPeriodo, patrInicial, patrFinal, ganhosPeriodo, rentabPeriodo };
+  const twr = computeTWRInterval(start, end, full);
+  // Decomposição do crescimento — nunca soma dividendo duas vezes:
+  // ganhosPeriodo já inclui dividendos (eles entram no patrimônio via
+  // caixa), então valorização = ganhosPeriodo MENOS os dividendos, nunca
+  // os dois somados por cima do total.
+  const valorizacaoPeriodo = round2(ganhosPeriodo - divsPeriodo);
+  return { series, start, end, aportesPeriodo, retiradasPeriodo, divsPeriodo, valorizacaoPeriodo, patrInicial, patrFinal, ganhosPeriodo, rentabPeriodo,
+    rentabTWR: twr.sufficient ? twr.cumulative : null, rentabTWRAnualizada: twr.sufficient ? twr.annualized : null, rentabSuficiente: twr.sufficient };
 }
 function computePeriodoAnalise(periodKey){
   const full = buildTimeline();
@@ -3734,7 +4049,7 @@ function renderResultadoMensal(){
       <td class="mono" style="color:var(--negative);">${r.retiradasPeriodo>0?fmtMoney(r.retiradasPeriodo):fmtMoney(0)}</td>
       <td class="mono" style="font-weight:700; color:${r.ganhosPeriodo>=0?'var(--positive)':'var(--negative)'};">${fmtMoneySigned(r.ganhosPeriodo)}</td>
       <td class="mono" style="font-weight:700;">${fmtMoney(r.patrFinal)}</td>
-      <td class="mono" style="font-weight:700; color:${r.rentabPeriodo>=0?'var(--positive)':'var(--negative)'};">${fmtPct(r.rentabPeriodo)}</td>
+      <td class="mono" style="font-weight:700; color:${r.rentabTWR===null?'var(--text-faint)':(r.rentabTWR>=0?'var(--positive)':'var(--negative)')};">${r.rentabTWR===null?'Dados insuficientes':fmtPct(r.rentabTWR)}</td>
     </tr>`;
   }).join('') : `<tr><td colspan="7"><div class="empty"><div class="empty-icon">📅</div><h3>Ainda sem histórico mensal</h3><p>Registe pelo menos uma operação para começar a ver o resultado mês a mês.</p></div></td></tr>`;
 }
@@ -3744,13 +4059,13 @@ document.getElementById('resMensalFiltro').addEventListener('change', renderResu
    nenhum cálculo novo. Cor por sinal: positivo/negativo/neutro (zero). */
 let rentabMensalFiltro = 12;
 function renderRentabMensal(){
-  const linhas = computeResultadoMensal(rentabMensalFiltro>0?rentabMensalFiltro:null).filter(l=>!l.dadosInsuficientes).slice().reverse(); // cronológico
+  const linhas = computeResultadoMensal(rentabMensalFiltro>0?rentabMensalFiltro:null).filter(l=>!l.dadosInsuficientes && l.rentabTWR!==null).slice().reverse(); // cronológico
   const c = chartColors();
   const corZero = getComputedStyle(document.documentElement).getPropertyValue('--text-faint').trim();
-  const cores = linhas.map(l=> l.rentabPeriodo>0 ? c.positive : (l.rentabPeriodo<0 ? c.negative : corZero));
+  const cores = linhas.map(l=> l.rentabTWR>0 ? c.positive : (l.rentabTWR<0 ? c.negative : corZero));
   deferChartRender('chartRentabMensal', ()=> renderBarChart('chartRentabMensal',
     linhas.map(l=>{ const [y,m] = l.mesKey.split('-'); return MESES_PT[parseInt(m,10)-1].slice(0,3)+'/'+y.slice(2); }),
-    [{ label:'Rentabilidade', data:linhas.map(l=>round2(l.rentabPeriodo)), backgroundColor:cores, borderRadius:4, maxBarThickness:36 }],
+    [{ label:'Rentabilidade (TWR)', data:linhas.map(l=>round2(l.rentabTWR)), backgroundColor:cores, borderRadius:4, maxBarThickness:36 }],
     { plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:(ctx)=> ' '+fmtPct(ctx.parsed.y) } } },
       scales:{ y:{ ticks:{ color:c.text, callback:(v)=>v+'%' } } } }
   ));
@@ -3773,18 +4088,45 @@ function computeResumoPerformance(){
   const patr = computePatrimonio();
   const mesAtual = computePeriodoAnalise('mes');
   const anoAtual = computePeriodoAnalise('ano');
-  const meses = computeResultadoMensal(null).filter(m=>!m.dadosInsuficientes);
+  const meses = computeResultadoMensal(null).filter(m=>!m.dadosInsuficientes && m.rentabTWR!==null);
   let melhorMes=null, piorMes=null, maiorGanho=null, maiorPerda=null, mediaMensal=null;
   if(meses.length){
-    melhorMes = meses.reduce((a,b)=> b.rentabPeriodo>a.rentabPeriodo?b:a);
-    piorMes = meses.reduce((a,b)=> b.rentabPeriodo<a.rentabPeriodo?b:a);
+    melhorMes = meses.reduce((a,b)=> b.rentabTWR>a.rentabTWR?b:a);
+    piorMes = meses.reduce((a,b)=> b.rentabTWR<a.rentabTWR?b:a);
     maiorGanho = meses.reduce((a,b)=> b.ganhosPeriodo>a.ganhosPeriodo?b:a);
     maiorPerda = meses.reduce((a,b)=> b.ganhosPeriodo<a.ganhosPeriodo?b:a);
-    mediaMensal = meses.reduce((s,m)=>s+m.rentabPeriodo,0)/meses.length;
+    mediaMensal = meses.reduce((s,m)=>s+m.rentabTWR,0)/meses.length;
   }
   return { patr, mesAtual, anoAtual, melhorMes, piorMes, maiorGanho, maiorPerda, mediaMensal, mesesValidos:meses.length };
 }
 /* Render do bloco 4.15 — Diagnóstico Patrium */
+/* "De onde veio o crescimento?" — reaproveita computePeriodoAnalise(),
+   que já devolve aportesPeriodo/valorizacaoPeriodo/divsPeriodo/ganhosPeriodo
+   sem nenhuma duplicação (valorizacaoPeriodo já exclui os dividendos). */
+let origemCrescimentoPeriodo = '6m';
+function renderOrigemCrescimento(){
+  const r = computePeriodoAnalise(origemCrescimentoPeriodo);
+  const el = document.getElementById('origemCrescimentoConteudo');
+  const crescimentoTotal = round2(r.patrFinal - r.patrInicial);
+  if(r.patrInicial<=0 && r.patrFinal<=0){
+    el.innerHTML = `<p class="text-soft small">Dados insuficientes para este período.</p>`;
+    return;
+  }
+  const item = (label, valor, cor)=> `<div style="min-width:120px;"><div class="stat-label">${label}</div><div class="mono" style="font-weight:700; font-size:17px; color:${cor};">${fmtMoneySigned(valor)}</div></div>`;
+  el.innerHTML = `<div class="flex" style="flex-wrap:wrap; gap:0; row-gap:16px; align-items:center;">
+    ${item('Aportes', r.aportesPeriodo, r.aportesPeriodo>=0?'var(--positive)':'var(--negative)')}
+    <div class="text-faint" style="font-size:18px; padding:0 14px;">+</div>
+    ${item('Valorização', r.valorizacaoPeriodo, r.valorizacaoPeriodo>=0?'var(--positive)':'var(--negative)')}
+    <div class="text-faint" style="font-size:18px; padding:0 14px;">+</div>
+    ${item('Dividendos', r.divsPeriodo, 'var(--positive)')}
+    <div style="font-size:18px; padding:0 14px; color:var(--accent);">=</div>
+    ${item('Crescimento total', crescimentoTotal, crescimentoTotal>=0?'var(--accent)':'var(--negative)')}
+  </div>`;
+}
+document.getElementById('origemCrescimentoFiltro').addEventListener('change', (e)=>{
+  origemCrescimentoPeriodo = e.target.value;
+  renderOrigemCrescimento();
+});
 function renderDiagnosticoPatrium(){
   const frases = computeDiagnostico();
   const card = document.getElementById('diagnosticoCard');
@@ -3818,6 +4160,9 @@ function renderComparacaoPeriodos(){
     return ((atual-anterior)/Math.abs(anterior))*100;
   };
   const linha = (label, atual, anterior, isPP)=>{
+    if(isPP && (atual===null || anterior===null)){
+      return `<tr><td>${label}</td><td colspan="3" class="text-faint">Dados insuficientes</td></tr>`;
+    }
     const v = isPP ? (atual-anterior) : variacaoPct(atual, anterior);
     const vTexto = v===null ? 'Dados insuficientes' : (isPP ? `${v>=0?'+':''}${fmtNum(v.toFixed(1))} p.p.` : `${v>=0?'+':''}${fmtNum(v.toFixed(1))}%`);
     const cor = v===null ? 'var(--text-faint)' : (v>=0 ? 'var(--positive)' : 'var(--negative)');
@@ -3831,7 +4176,7 @@ function renderComparacaoPeriodos(){
   tbody.innerHTML = [
     linha('Patrimônio', comp.atual.patrFinal, comp.anterior.patrFinal, false),
     linha('Aportes', comp.atual.aportesPeriodo, comp.anterior.aportesPeriodo, false),
-    linha('Rentabilidade', comp.atual.rentabPeriodo, comp.anterior.rentabPeriodo, true),
+    linha('Rentabilidade (TWR)', comp.atual.rentabTWR, comp.anterior.rentabTWR, true),
     linha('Dividendos', comp.atual.divsPeriodo, comp.anterior.divsPeriodo, false),
     linha('Resultado', comp.atual.ganhosPeriodo, comp.anterior.ganhosPeriodo, false),
   ].join('');
@@ -3843,13 +4188,17 @@ function renderResumoPerformance(){
   document.getElementById('rpInvestido').textContent = fmtMoney(r.patr.aportesExternos);
   const lucroEl = document.getElementById('rpLucro'); lucroEl.textContent = fmtMoneySigned(r.patr.ganhoTotal); lucroEl.style.color = r.patr.ganhoTotal>=0?'var(--positive)':'var(--negative)';
   const rentAcEl = document.getElementById('rpRentabAcum'); rentAcEl.textContent = fmtPct(r.patr.rentabPct); rentAcEl.style.color = r.patr.rentabPct>=0?'var(--positive)':'var(--negative)';
-  const rentMesEl = document.getElementById('rpRentabMes'); rentMesEl.textContent = fmtPct(r.mesAtual.rentabPeriodo); rentMesEl.style.color = r.mesAtual.rentabPeriodo>=0?'var(--positive)':'var(--negative)';
-  const rentAnoEl = document.getElementById('rpRentabAno'); rentAnoEl.textContent = fmtPct(r.anoAtual.rentabPeriodo); rentAnoEl.style.color = r.anoAtual.rentabPeriodo>=0?'var(--positive)':'var(--negative)';
+  const rentMesEl = document.getElementById('rpRentabMes');
+  if(r.mesAtual.rentabTWR===null){ rentMesEl.textContent='Dados insuficientes'; rentMesEl.style.color='var(--text-faint)'; }
+  else { rentMesEl.textContent = fmtPct(r.mesAtual.rentabTWR); rentMesEl.style.color = r.mesAtual.rentabTWR>=0?'var(--positive)':'var(--negative)'; }
+  const rentAnoEl = document.getElementById('rpRentabAno');
+  if(r.anoAtual.rentabTWR===null){ rentAnoEl.textContent='Dados insuficientes'; rentAnoEl.style.color='var(--text-faint)'; }
+  else { rentAnoEl.textContent = fmtPct(r.anoAtual.rentabTWR); rentAnoEl.style.color = r.anoAtual.rentabTWR>=0?'var(--positive)':'var(--negative)'; }
   const mediaEl = document.getElementById('rpRentabMedia');
   if(r.mediaMensal===null){ mediaEl.textContent = 'Dados insuficientes'; mediaEl.style.color = 'var(--text-faint)'; }
   else { mediaEl.textContent = fmtPct(r.mediaMensal); mediaEl.style.color = r.mediaMensal>=0?'var(--positive)':'var(--negative)'; }
-  document.getElementById('rpMelhorMes').textContent = r.melhorMes ? `${r.melhorMes.label} (${fmtPct(r.melhorMes.rentabPeriodo)})` : 'Dados insuficientes';
-  document.getElementById('rpPiorMes').textContent = r.piorMes ? `${r.piorMes.label} (${fmtPct(r.piorMes.rentabPeriodo)})` : 'Dados insuficientes';
+  document.getElementById('rpMelhorMes').textContent = r.melhorMes ? `${r.melhorMes.label} (${fmtPct(r.melhorMes.rentabTWR)})` : 'Dados insuficientes';
+  document.getElementById('rpPiorMes').textContent = r.piorMes ? `${r.piorMes.label} (${fmtPct(r.piorMes.rentabTWR)})` : 'Dados insuficientes';
   document.getElementById('rpMaiorGanho').textContent = r.maiorGanho ? `${r.maiorGanho.label} (${fmtMoneySigned(r.maiorGanho.ganhosPeriodo)})` : 'Dados insuficientes';
   document.getElementById('rpMaiorPerda').textContent = r.maiorPerda ? `${r.maiorPerda.label} (${fmtMoneySigned(r.maiorPerda.ganhosPeriodo)})` : 'Dados insuficientes';
 }
@@ -3923,10 +4272,13 @@ function renderSaudeCarteira(){
 /* Render do bloco 4.7 — Análise de Renda Fixa */
 function renderAnaliseRF(){
   const rf = computeRfTotals();
-  document.getElementById('rfaAplicado').textContent = fmtMoney(rf.capital);
+  document.getElementById('rfaAplicado').textContent = fmtMoney(rf.aportesBrutos);
+  document.getElementById('rfaResgates').textContent = rf.resgatesBrutos>0 ? fmtMoney(rf.resgatesBrutos) : fmtMoney(0);
   document.getElementById('rfaSaldo').textContent = fmtMoney(rf.saldo);
   const rendEl = document.getElementById('rfaRendimento'); rendEl.textContent = fmtMoneySigned(rf.rendimento); rendEl.style.color = rf.rendimento>=0?'var(--positive)':'var(--negative)';
-  const rentEl = document.getElementById('rfaRentab'); rentEl.textContent = rf.capital>0 ? fmtPct(rf.rentabPct) : 'Dados insuficientes'; rentEl.style.color = rf.rentabPct>=0?'var(--positive)':'var(--negative)';
+  // Rentabilidade histórica é SEMPRE sobre os aportes brutos — nunca zera
+  // só porque houve um resgate total (ver TESTE J do relatório).
+  const rentEl = document.getElementById('rfaRentab'); rentEl.textContent = rf.aportesBrutos>0 ? fmtPct(rf.rentabPct) : 'Dados insuficientes'; rentEl.style.color = rf.rentabPct>=0?'var(--positive)':'var(--negative)';
   const prods = computeRfProducts();
   document.getElementById('rfaNumProdutos').textContent = fmtNum(prods.length);
 
@@ -3973,6 +4325,7 @@ function renderAnaliseDividendos(){
 }
 function renderAnalises(periodKey){
   renderDiagnosticoPatrium();
+  renderOrigemCrescimento();
   renderComparacaoPeriodos();
   renderResumoPerformance();
   renderRentabMensal();
@@ -3981,13 +4334,15 @@ function renderAnalises(periodKey){
   renderAnaliseDividendos();
   renderSaudeCarteira();
   initPeriodPicker('anaPeriodPicker', (k)=>{ currentAnaPeriod=k; renderAnalises(k); }, periodKey);
-  const { series, aportesPeriodo, divsPeriodo, ganhosPeriodo, rentabPeriodo } = computePeriodoAnalise(periodKey);
+  const { series, aportesPeriodo, divsPeriodo, ganhosPeriodo, rentabTWR } = computePeriodoAnalise(periodKey);
   renderResultadoMensal();
 
   document.getElementById('anaAportes').textContent = fmtMoney(aportesPeriodo);
   const gEl = document.getElementById('anaGanhos'); gEl.textContent = fmtMoneySigned(ganhosPeriodo); gEl.style.color = ganhosPeriodo>=0?'var(--positive)':'var(--negative)';
   document.getElementById('anaDividendos').textContent = fmtMoney(divsPeriodo);
-  const rEl = document.getElementById('anaRentab'); rEl.textContent = fmtPct(rentabPeriodo); rEl.style.color = rentabPeriodo>=0?'var(--positive)':'var(--negative)';
+  const rEl = document.getElementById('anaRentab');
+  if(rentabTWR===null){ rEl.textContent = 'Dados insuficientes'; rEl.style.color = 'var(--text-faint)'; }
+  else { rEl.textContent = fmtPct(rentabTWR); rEl.style.color = rentabTWR>=0?'var(--positive)':'var(--negative)'; }
 
   const cAn = chartColors();
   const evData = series.map(p=>p.patrimonio);
@@ -4477,7 +4832,13 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
     try{
       const imported = JSON.parse(ev.target.result);
       if(!imported.transactions || !imported.rf){ addToast('Ficheiro inválido.'); return; }
-      DATA = imported;
+      // Corrigido nesta rodada: a importação nunca passava por migrateData(),
+      // então um backup de uma versão mais antiga do Patrium (schema anterior)
+      // podia deixar campos novos undefined (ex.: quantityGoals) e quebrar
+      // funcionalidades adicionadas depois do backup ter sido feito.
+      // migrateData() é seguro de rodar sempre — para dados já atuais, é um
+      // no-op (só preenche o que estiver faltando).
+      DATA = migrateData(imported);
       await Store.save(DATA);
       renderAll();
       closeModal('modalBackup');
@@ -4808,6 +5169,12 @@ function updateRvPreview(){
 document.getElementById('rvTicker').addEventListener('input', updateRvPreview);
 document.querySelectorAll('#segOperacaoRv button').forEach(btn=> btn.addEventListener('click', ()=> setTimeout(updateRvPreview, 0)));
 
+document.querySelectorAll('#segFundingRf button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#segFundingRf button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
 document.getElementById('btnSalvarAporte').addEventListener('click', async ()=>{
   const tipo = !document.getElementById('aporteRfFields').classList.contains('hidden') ? 'rf' : 'rv';
   if(tipo==='rf'){
@@ -4815,6 +5182,7 @@ document.getElementById('btnSalvarAporte').addEventListener('click', async ()=>{
     let produtoId = document.getElementById('rfProdutoSelect').value;
     const valor = parseFloat(document.getElementById('rfValorAporte').value)||0;
     const saldo = document.getElementById('rfSaldoAtualInput').value;
+    const fundingRf = document.querySelector('#segFundingRf button.active').dataset.val;
     if(!date || valor<=0){ addToast('Preencha data e valor aportado.'); return; }
     if(produtoId==='__novo__'){
       const inst = document.getElementById('rfNovaInstituicao').value.trim();
@@ -4832,7 +5200,7 @@ document.getElementById('btnSalvarAporte').addEventListener('click', async ()=>{
         dataAporteInicial: date
       });
     }
-    DATA.rf.entries.push({ id:uid(), date, productId:produtoId, aporte:round2(valor), saldo: saldo!==''? round2(parseFloat(saldo)) : null, note: document.getElementById('rfObs').value||'' });
+    DATA.rf.entries.push({ id:uid(), date, productId:produtoId, aporte:round2(valor), saldo: saldo!==''? round2(parseFloat(saldo)) : null, note: document.getElementById('rfObs').value||'', funding:fundingRf });
   } else {
     const date = document.getElementById('rvData').value;
     const ticker = document.getElementById('rvTicker').value.trim().toUpperCase();
@@ -4840,7 +5208,7 @@ document.getElementById('btnSalvarAporte').addEventListener('click', async ()=>{
     const preco = parseFloat(document.getElementById('rvPreco').value)||0;
     const custos = parseFloat(document.getElementById('rvCustos').value)||0;
     const op = document.querySelector('#segOperacaoRv button.active').dataset.val;
-    if(!date || !ticker || qty<=0 || preco<=0){ addToast('Preencha o ativo, quantidade e preço.'); return; }
+    if(!date || !ticker || isNaN(qty) || qty<=0 || isNaN(preco) || preco<=0 || isNaN(custos) || custos<0){ addToast('Preencha o ativo, quantidade e preço com valores numéricos válidos (taxas não podem ser negativas).'); return; }
     if(op==='venda'){
       const pos = computePositions().find(p=>p.ticker===ticker);
       if(!pos || pos.qty < qty){ addToast('Quantidade insuficiente em carteira para esta venda.'); return; }
@@ -4892,22 +5260,25 @@ document.getElementById('btnNovoSaldoRf').addEventListener('click', ()=>{
   sel.innerHTML = DATA.rf.products.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
   if(!DATA.rf.products.length){ addToast('Registe primeiro um aporte de renda fixa em "Novo investimento".'); return; }
   document.getElementById('saldoRfData').value = todayISO();
-  document.getElementById('saldoRfAporte').value='0'; document.getElementById('saldoRfResgate').value='0'; document.getElementById('saldoRfValor').value='';
+  document.getElementById('saldoRfAporte').value='0'; document.getElementById('saldoRfResgate').value='0'; document.getElementById('saldoRfValor').value=''; document.getElementById('saldoRfFunding').value='externo';
   openModal('modalSaldoRf');
 });
-function registarSaldoRealRf(productId, aporte, saldo, date){
-  DATA.rf.entries.push({ id:uid(), date, productId, aporte:round2(aporte||0), saldo: (saldo!==null && saldo!=='') ? round2(parseFloat(saldo)) : null, note:'' });
+function registarSaldoRealRf(productId, aporte, saldo, date, funding){
+  const entry = { id:uid(), date, productId, aporte:round2(aporte||0), saldo: (saldo!==null && saldo!=='') ? round2(parseFloat(saldo)) : null, note:'' };
+  if(aporte) entry.funding = funding || 'externo'; // só relevante quando há de fato um aporte/resgate
+  DATA.rf.entries.push(entry);
 }
 document.getElementById('btnSalvarSaldoRf').addEventListener('click', async ()=>{
   const productId = document.getElementById('saldoRfProduto').value;
   const date = document.getElementById('saldoRfData').value;
   const aporte = parseFloat(document.getElementById('saldoRfAporte').value)||0;
   const resgate = parseFloat(document.getElementById('saldoRfResgate').value)||0;
+  const funding = document.getElementById('saldoRfFunding').value;
   const saldoStr = document.getElementById('saldoRfValor').value;
   if(aporte>0 && resgate>0){ addToast('Preencha só aporte OU resgate, não os dois ao mesmo tempo.'); return; }
   const aporteLiquido = aporte - resgate; // resgate vira aporte negativo — mesma regra usada em todo o Patrium
   if(!date || (aporteLiquido===0 && saldoStr==='')){ addToast('Informe pelo menos um aporte, um resgate ou um saldo.'); return; }
-  registarSaldoRealRf(productId, aporteLiquido, saldoStr, date);
+  registarSaldoRealRf(productId, aporteLiquido, saldoStr, date, funding);
   await Store.save(DATA);
   showSaveSuccess('modalSaldoRf', 'Renda fixa atualizada!', ()=>{
     renderAll();
