@@ -96,7 +96,7 @@ button{ font-family:inherit; cursor:pointer; }
 ::-webkit-scrollbar-track{ background:transparent; }
 
 /* ===== Layout shell ===== */
-.app-shell{ max-width:1360px; margin:0 auto; padding:0 28px 90px; }
+.app-shell{ max-width:1360px; margin:0 auto; padding:0 28px 8px; }
 @media (max-width:640px){ .app-shell{ padding:0 16px 100px; } }
 
 header.top{
@@ -188,8 +188,13 @@ nav.tabs::-webkit-scrollbar{ display:none; }
   font-size:13.5px; font-weight:600; white-space:nowrap; display:inline-flex; align-items:center; gap:7px;
   transition:color .2s ease, transform .15s ease;
 }
-.tab-ico{ font-size:12.5px; opacity:.85; }
+.tab-ico{
+  font-size:15px; line-height:1; opacity:.75; font-weight:400; display:inline-flex; align-items:center; justify-content:center;
+  min-width:15px; color:var(--warning); transition:opacity .2s ease, filter .2s ease, transform .25s cubic-bezier(.34,1.56,.64,1);
+}
 .tab-btn.active{ color:var(--accent-ink); }
+.tab-btn.active .tab-ico{ opacity:1; filter:drop-shadow(0 0 5px var(--emerald-glow)); transform:scale(1.12); }
+.tab-btn:hover:not(.active) .tab-ico{ opacity:.95; }
 .tab-btn:hover:not(.active){ color:var(--text); transform:translateY(-1px); }
 /* Regra sistémica de espaçamento (v2): o espaço entre o topo da aba e o
    título, e entre o título/subtítulo e o primeiro conteúdo, foi reduzido
@@ -515,10 +520,11 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
 .faq-a-inner{ padding:0 16px 15px; font-size:13px; color:var(--text-soft); line-height:1.6; }
 
 /* ===================== ONBOARDING ===================== */
-.onboard-box{ max-width:680px; }
+.onboard-box{ max-width:760px; width:94vw; }
 #modalOnboarding{ align-items:center; }
-#modalOnboarding .modal{ padding:8px; }
-#modalOnboarding .modal-body{ padding:32px 36px; }
+#modalOnboarding .modal{ padding:10px; }
+#modalOnboarding .modal-body{ padding:40px 44px; }
+@media (max-width:560px){ #modalOnboarding .modal-body{ padding:26px 20px; } }
 .onboard-progress-wrap{ margin-bottom:20px; }
 .onboard-progress-label{ display:flex; justify-content:space-between; font-size:11.5px; color:var(--text-faint); margin-bottom:6px; font-weight:600; }
 .onboard-bar-track{ height:6px; background:var(--surface-3); border-radius:99px; overflow:hidden; }
@@ -529,17 +535,18 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
 .onboard-num{ font-family:var(--font-mono, monospace); font-size:12px; font-weight:800; color:var(--accent); letter-spacing:.06em; margin-bottom:6px; }
 .onboard-roadmap{ display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; }
 .onboard-roadmap-item{ font-size:11px; font-weight:600; padding:6px 11px; border-radius:99px; background:var(--surface-2); color:var(--text-soft); border:1px solid var(--line-soft); }
-.onboard-opt-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:20px; }
+.onboard-opt-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:24px; }
 @media (max-width:560px){ .onboard-opt-grid{ grid-template-columns:1fr; } }
 .onboard-opt{
-  text-align:left; padding:20px 22px; border-radius:14px; border:2px solid var(--line); background:var(--surface-2);
-  cursor:pointer; transition:all .18s ease; font-size:14px; color:var(--text); position:relative;
+  text-align:left; padding:26px 26px; border-radius:16px; border:2px solid var(--line); background:var(--surface-2);
+  cursor:pointer; transition:all .18s ease; font-size:14.5px; color:var(--text); position:relative; min-height:96px;
+  display:flex; flex-direction:column; justify-content:center;
 }
 .onboard-opt:hover{ border-color:var(--accent); background:color-mix(in srgb, var(--accent) 6%, var(--surface-2)); transform:translateY(-2px); box-shadow:var(--shadow-sm); }
 .onboard-opt.selected{ border-color:var(--accent); background:color-mix(in srgb, var(--accent) 14%, var(--surface-2)); box-shadow:0 0 0 2px var(--accent); animation:onboardOptPick .3s cubic-bezier(.34,1.56,.64,1); }
 @keyframes onboardOptPick{ 0%{ transform:scale(.97); } 60%{ transform:scale(1.02); } 100%{ transform:scale(1); } }
-.onboard-opt strong{ display:block; margin-bottom:5px; font-size:15px; }
-.onboard-opt span{ font-size:12.5px; color:var(--text-faint); }
+.onboard-opt strong{ display:block; margin-bottom:7px; font-size:16.5px; }
+.onboard-opt span{ font-size:13px; color:var(--text-faint); line-height:1.5; }
 .onboard-profile-result{
   margin-top:18px; padding:18px 20px; border-radius:14px; text-align:center;
   background:linear-gradient(160deg, var(--surface-2), var(--surface)); border:1.5px solid var(--accent);
@@ -596,6 +603,123 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
 .insight-icon{ flex:none; font-size:15px; line-height:1.5; }
 .insight-text{ flex:1; font-size:13.5px; line-height:1.6; }
 @media (prefers-reduced-motion: reduce){ .insight-card{ animation:none; } .insight-card:hover{ transform:none; } }
+.glossario-clicavel{ transition:transform .18s cubic-bezier(.34,1.56,.64,1), background .18s ease; border-radius:10px; padding:10px 12px !important; margin:0 -12px; cursor:pointer; }
+.glossario-clicavel:hover{ background:var(--surface-2); transform:translateX(3px); }
+.glossario-ler-mais{ flex:none; font-size:11.5px; font-weight:700; color:var(--accent); display:flex; align-items:center; gap:3px; }
+.glossario-ler-mais-seta{ display:inline-block; transition:transform .18s ease; }
+.glossario-clicavel:hover .glossario-ler-mais-seta{ transform:translateX(3px); }
+.glossario-modal{ max-width:600px; }
+.glossario-modal-icon{ font-size:20px; }
+.gloss-bloco{ padding:14px 16px; border-radius:12px; background:var(--surface-2); margin-bottom:10px; animation:insightIn .35s cubic-bezier(.34,1.56,.64,1) backwards; }
+.gloss-bloco-head{ font-weight:800; font-size:12.5px; text-transform:uppercase; letter-spacing:.03em; display:flex; align-items:center; gap:7px; margin-bottom:6px; }
+.gloss-bloco-texto{ margin:0; font-size:13.5px; line-height:1.65; color:var(--text-soft); }
+
+/* ===================== CARDS DE ATIVO NO WIZARD (descrição + Explorar) ===================== */
+.wiz-card-ativo{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:2px; padding-bottom:34px !important; position:relative; }
+.wiz-card-ativo-nome{ font-weight:700; }
+.wiz-card-ativo-desc{
+  font-size:10.5px; color:var(--text-faint); line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+  overflow:hidden; text-overflow:ellipsis; max-width:100%; padding:0 2px;
+}
+.wiz-card-explorar{
+  position:absolute; left:50%; bottom:8px; transform:translateX(-50%); font-size:10px; font-weight:800; letter-spacing:.02em;
+  color:var(--accent); padding:3px 10px; border-radius:99px; background:color-mix(in srgb, var(--accent) 12%, transparent);
+  transition:all .16s ease; white-space:nowrap;
+}
+.wiz-card-explorar:hover{ background:var(--accent); color:var(--accent-ink); transform:translateX(-50%) scale(1.06); }
+.wiz-card[data-cat] .wiz-card-explorar{ position:static; transform:none; margin-top:6px; display:inline-block; }
+.wiz-card-retirada{ border-style:dashed; border-color:var(--negative); background:color-mix(in srgb, var(--negative) 6%, var(--surface-2)); max-width:220px; }
+.wiz-card-retirada:hover{ border-color:var(--negative); background:color-mix(in srgb, var(--negative) 12%, var(--surface-2)); }
+
+/* ===================== MODAL EXPLORAR (premium) ===================== */
+.explorar-modal{ max-width:640px; overflow:hidden; padding:0 !important; }
+.explorar-modal-hero{
+  position:relative; padding:34px 30px 26px; text-align:center; overflow:hidden;
+  background:linear-gradient(150deg, var(--navy, #0B1224), var(--surface-2) 120%);
+  border-bottom:1px solid var(--line-soft);
+}
+.explorar-modal-hero-glow{
+  position:absolute; inset:-40% -10% auto -10%; height:180px; border-radius:50%; pointer-events:none;
+  background:radial-gradient(circle, color-mix(in srgb, var(--accent) 55%, transparent) 0%, transparent 70%);
+  animation:explorarGlowMove 6s ease-in-out infinite alternate;
+}
+@keyframes explorarGlowMove{ from{ transform:translateX(-15%); } to{ transform:translateX(15%); } }
+.explorar-modal-hero h3{ position:relative; margin:0 0 6px; font-size:22px; font-weight:800; color:#fff; letter-spacing:.01em; }
+.explorar-modal-hero p{ position:relative; margin:0; font-size:12.5px; color:rgba(255,255,255,.72); }
+.explorar-modal-close{ position:absolute; top:14px; right:14px; background:rgba(255,255,255,.12); color:#fff; z-index:2; }
+.explorar-modal-close:hover{ background:rgba(255,255,255,.22); }
+.explorar-modal .modal-body{ padding:26px 28px; }
+.explorar-block{
+  display:flex; gap:14px; padding:16px 18px; border-radius:14px; margin-bottom:12px; background:var(--surface-2);
+  border-left:3px solid var(--accent); animation:insightIn .4s cubic-bezier(.34,1.56,.64,1) backwards;
+}
+.explorar-block-1{ animation-delay:.03s; border-left-color:var(--info); }
+.explorar-block-2{ animation-delay:.08s; border-left-color:var(--accent); }
+.explorar-block-3{ animation-delay:.13s; border-left-color:var(--purple); }
+.explorar-block-4{ animation-delay:.18s; border-left-color:var(--warning); }
+.explorar-block-icon{ flex:none; font-size:20px; line-height:1.3; }
+.explorar-block-title{ font-weight:800; font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-soft); margin-bottom:5px; }
+.explorar-block p{ margin:0; font-size:13.5px; line-height:1.6; color:var(--text); }
+.explorar-disclaimer{ margin:14px 0 0; font-size:11px; color:var(--text-faint); text-align:center; font-style:italic; }
+
+.ajuda-suporte-final{
+  display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:20px; padding-top:18px; border-top:1px solid var(--line-soft);
+}
+.ajuda-suporte-icon{ font-size:22px; flex:none; }
+.ajuda-suporte-titulo{ font-weight:700; font-size:13.5px; }
+.ajuda-suporte-texto{ margin:2px 0 0; font-size:12px; color:var(--text-faint); }
+.patrium-logo-mini-wrap{ display:flex; align-items:center; gap:10px; min-width:0; }
+.patrium-logo-mini-wrap h3{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.onboard-logo-slot{ display:flex; justify-content:center; margin-bottom:18px; }
+
+/* ===================== RODAPÉ INSTITUCIONAL ===================== */
+.patrium-footer{ margin-top:4px; border-top:1px solid var(--line-soft); background:var(--surface-2); }
+.patrium-footer-inner{ max-width:1180px; margin:0 auto; padding:36px 20px 24px; }
+.patrium-footer-brand{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px; margin-bottom:26px; }
+.patrium-footer-tagline{ color:var(--text-faint); font-size:12.5px; margin:0; }
+.patrium-footer-grid{ display:grid; grid-template-columns:1.2fr 1.3fr 1fr; gap:28px; margin-bottom:24px; }
+@media (max-width:720px){ .patrium-footer-grid{ grid-template-columns:1fr; } }
+.patrium-footer-col{ text-align:center; display:flex; flex-direction:column; align-items:center; }
+.patrium-footer-col h4{ margin:0 0 10px; font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-soft); }
+.patrium-footer-col p{ margin:0; font-size:12.5px; color:var(--text-faint); line-height:1.6; }
+.patrium-footer-list{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; align-items:center; gap:6px; }
+.patrium-footer-list li{ font-size:12.5px; color:var(--text-faint); line-height:1.5; }
+.patrium-footer-list li::before{ content:"✓ "; color:var(--positive); font-weight:800; }
+.patrium-footer-support-hint{ margin:0 0 10px !important; }
+.patrium-footer-email{
+  display:inline-flex; align-items:center; gap:8px; padding:9px 14px; border-radius:11px; border:1.5px solid var(--line);
+  background:var(--surface); color:var(--text); text-decoration:none; font-size:12.5px; font-weight:600; transition:all .18s ease;
+}
+.patrium-footer-email:hover{ border-color:var(--accent); background:color-mix(in srgb, var(--accent) 8%, var(--surface)); transform:translateY(-1px); }
+.patrium-footer-email-icon{ font-size:14px; }
+.patrium-footer-email-copy{ font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; color:var(--text-faint); opacity:0; transition:opacity .18s ease; }
+.patrium-footer-email:hover .patrium-footer-email-copy{ opacity:1; }
+.patrium-footer-bottom{ display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:8px; padding-top:18px; border-top:1px solid var(--line-soft); font-size:11.5px; color:var(--text-faint); text-align:center; }
+.patrium-footer-version{ font-family:var(--font-mono, monospace); opacity:.7; }
+
+/* ===================== CARD DE LEMBRETE DE BACKUP ===================== */
+.backup-reminder-card{
+  display:flex; align-items:center; gap:18px; flex-wrap:wrap; margin-bottom:20px; padding:20px 24px; border-radius:18px;
+  background:linear-gradient(120deg, color-mix(in srgb, var(--warning) 10%, var(--surface-2)), var(--surface));
+  border:1px solid color-mix(in srgb, var(--warning) 35%, var(--line)); box-shadow:var(--shadow-sm);
+  animation:backupCardIn .45s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes backupCardIn{ from{ opacity:0; transform:translateY(-8px) scale(.98); } to{ opacity:1; transform:translateY(0) scale(1); } }
+.backup-reminder-icon{
+  position:relative; flex:none; width:46px; height:46px; border-radius:14px; display:flex; align-items:center; justify-content:center;
+  font-size:20px; background:linear-gradient(160deg, var(--warning), color-mix(in srgb, var(--warning) 60%, black));
+  box-shadow:0 4px 14px -4px color-mix(in srgb, var(--warning) 60%, transparent);
+}
+.backup-reminder-icon-ring{
+  position:absolute; inset:-5px; border-radius:16px; border:1.5px solid var(--warning); opacity:0;
+  animation:backupRingPulse 2.4s ease-out infinite;
+}
+@keyframes backupRingPulse{ 0%{ transform:scale(.85); opacity:.7; } 100%{ transform:scale(1.25); opacity:0; } }
+.backup-reminder-body{ flex:1; min-width:220px; }
+.backup-reminder-title{ font-weight:800; font-size:14.5px; margin-bottom:3px; }
+.backup-reminder-text{ margin:0; font-size:12.5px; color:var(--text-soft); line-height:1.55; }
+.backup-reminder-actions{ display:flex; gap:8px; flex:none; }
+@media (prefers-reduced-motion: reduce){ .backup-reminder-card{ animation:none; } .backup-reminder-icon-ring{ animation:none; opacity:0; } }
 </style>
 </head>
 <body>
@@ -620,19 +744,19 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
   <div class="app-shell" style="padding-bottom:0;">
     <nav class="tabs" id="tabsNav">
       <span class="tab-indicator" id="tabIndicator"></span>
-      <button class="tab-btn active" data-tab="dashboard"><span class="tab-ico">◆</span>Dashboard</button>
-      <button class="tab-btn" data-tab="acoes"><span class="tab-ico">📈</span>Ações</button>
-      <button class="tab-btn" data-tab="operacoes"><span class="tab-ico">🧾</span>Operações</button>
-      <button class="tab-btn" data-tab="rendafixa"><span class="tab-ico">🏦</span>Renda Fixa</button>
-      <button class="tab-btn" data-tab="dividendos"><span class="tab-ico">💰</span>Dividendos</button>
-      <button class="tab-btn" data-tab="historico"><span class="tab-ico">📜</span>Histórico</button>
-      <button class="tab-btn" data-tab="analises"><span class="tab-ico">🔍</span>Análises</button>
-      <button class="tab-btn" data-tab="alocacao"><span class="tab-ico">🥧</span>Alocação</button>
-      <button class="tab-btn" data-tab="calendario"><span class="tab-ico">🗓️</span>Calendário</button>
-      <button class="tab-btn" data-tab="projecoes"><span class="tab-ico">🚀</span>Projeções</button>
-      <button class="tab-btn" data-tab="comparar"><span class="tab-ico">⚖️</span>Comparar</button>
-      <button class="tab-btn" data-tab="alertas"><span class="tab-ico">🔔</span>Alertas</button>
-      <button class="tab-btn" data-tab="educacao"><span class="tab-ico">🎓</span>Educação</button>
+      <button class="tab-btn active" data-tab="dashboard"><span class="tab-ico">𖥔</span>Dashboard</button>
+      <button class="tab-btn" data-tab="acoes"><span class="tab-ico">𖣔</span>Ações</button>
+      <button class="tab-btn" data-tab="operacoes"><span class="tab-ico">⇄</span>Operações</button>
+      <button class="tab-btn" data-tab="rendafixa"><span class="tab-ico">𖧷</span>Renda Fixa</button>
+      <button class="tab-btn" data-tab="dividendos"><span class="tab-ico">❖</span>Dividendos</button>
+      <button class="tab-btn" data-tab="historico"><span class="tab-ico">𖦹</span>Histórico</button>
+      <button class="tab-btn" data-tab="analises"><span class="tab-ico">✥</span>Análises</button>
+      <button class="tab-btn" data-tab="alocacao"><span class="tab-ico">❈</span>Alocação</button>
+      <button class="tab-btn" data-tab="calendario"><span class="tab-ico">⟡</span>Calendário</button>
+      <button class="tab-btn" data-tab="projecoes"><span class="tab-ico">✦</span>Projeções</button>
+      <button class="tab-btn" data-tab="comparar"><span class="tab-ico">✧</span>Comparar</button>
+      <button class="tab-btn" data-tab="alertas"><span class="tab-ico">𖤐</span>Alertas</button>
+      <button class="tab-btn" data-tab="educacao"><span class="tab-ico">✤</span>Educação</button>
     </nav>
   </div>
 </header>
@@ -702,15 +826,7 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
         <div style="min-width:150px;"><div class="stat-label">Patrimônio total</div><div class="mono" id="reconPatrimonioCheck" style="font-weight:800; font-size:19px; color:var(--accent);">—</div></div>
       </div>
       <div class="flex-between" style="margin-top:20px; padding-top:16px; border-top:1px solid var(--line-soft); flex-wrap:wrap; gap:10px;">
-        <span class="small text-faint">Resultado total: <strong class="mono" id="reconResultadoTotal">—</strong> · Retiradas acumuladas: <strong class="mono" id="dashRetiradasAcum">—</strong> · Diferença de conferência: <strong class="mono" id="reconDiff">—</strong></span>
-      </div>
-      <hr class="line">
-      <div class="flex-between" style="flex-wrap:wrap; gap:10px;">
-        <div>
-          <p class="stat-label" style="margin-bottom:4px;">Conferência com o patrimônio real</p>
-          <p class="small text-faint mb-0" id="reconConferenciaStatus">Você ainda não conferiu o valor calculado com o saldo real das suas contas/apps das corretoras.</p>
-        </div>
-        <button class="btn btn-sm" id="btnConferirPatrimonio">Conferir patrimônio real</button>
+        <span class="small text-faint">Resultado total: <strong class="mono" id="reconResultadoTotal">—</strong> · Retiradas acumuladas: <strong class="mono" id="dashRetiradasAcum">—</strong></span>
       </div>
     </div>
 
@@ -1467,7 +1583,7 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
       <h2 class="section-title mb-0">Projeções, onde posso chegar?</h2>
       <span class="pill pill-warn" style="font-size:12px; padding:7px 14px;">⚠️ Projeção ≠ resultado real</span>
     </div>
-    <p class="section-hint">Simulação matemática baseada nas premissas abaixo, nunca uma promessa. Ajuste e veja o gráfico reagir.</p>
+    <p class="section-hint" style="max-width:none;">Simulação matemática baseada nas premissas abaixo, nunca uma promessa. Ajuste e veja o gráfico reagir.</p>
 
     <div class="grid grid-3" style="align-items:start; margin-bottom:20px; gap:20px;">
       <div class="card" style="grid-column:span 1;">
@@ -1598,6 +1714,44 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
 
 </div>
 
+<!-- ===================== RODAPÉ INSTITUCIONAL ===================== -->
+<footer class="patrium-footer">
+  <div class="patrium-footer-inner">
+    <div class="patrium-footer-brand">
+      <div class="patrium-logo" id="footerLogoSlot" style="--logo-h:34px;" aria-label="Patrium Invest"></div>
+      <p class="patrium-footer-tagline">Inteligência para construir o seu patrimônio.</p>
+    </div>
+    <div class="patrium-footer-grid">
+      <div class="patrium-footer-col">
+        <h4>Sobre o Patrium</h4>
+        <p>O Patrium Invest é uma ferramenta pessoal de organização e cálculo financeiro. Todos os seus dados ficam guardados só neste navegador, nunca em um servidor.</p>
+      </div>
+      <div class="patrium-footer-col">
+        <h4>Transparência</h4>
+        <ul class="patrium-footer-list">
+          <li>Não somos uma corretora, banco ou instituição financeira.</li>
+          <li>Não custodiamos ativos nem movimentamos dinheiro real.</li>
+          <li>Nenhum conteúdo aqui é recomendação de investimento.</li>
+          <li>Cotações via brapi.dev, fonte pública de dados de mercado.</li>
+        </ul>
+      </div>
+      <div class="patrium-footer-col">
+        <h4>Suporte</h4>
+        <p class="patrium-footer-support-hint">Dúvidas, sugestões ou algo não funcionou como esperado?</p>
+        <a href="mailto:suporte@bussolafinanceirays.com" class="patrium-footer-email" id="footerEmailLink">
+          <span class="patrium-footer-email-icon">✉️</span>
+          <span>suporte@bussolafinanceirays.com</span>
+          <span class="patrium-footer-email-copy" title="Copiar e-mail">copiar</span>
+        </a>
+      </div>
+    </div>
+    <div class="patrium-footer-bottom">
+      <span>© <span id="footerAno"></span> Patrium Invest. Todos os cálculos são feitos localmente no seu dispositivo.</span>
+      <span class="patrium-footer-version">v1.0</span>
+    </div>
+  </div>
+</footer>
+
 <!-- ===================== MODAL: NOVO APORTE ===================== -->
 <div class="modal-overlay" id="modalAporte">
   <div class="modal wide">
@@ -1608,17 +1762,19 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
       <div class="wiz-step" id="wizPasso1">
         <p class="wiz-question">O que você quer cadastrar?</p>
         <div class="wiz-cards" id="wizCategoriaCards">
-          <button type="button" class="wiz-card" data-cat="rf"><span class="wiz-card-icon">🏦</span><span>Renda Fixa</span></button>
-          <button type="button" class="wiz-card" data-cat="acao"><span class="wiz-card-icon">📈</span><span>Ações</span></button>
-          <button type="button" class="wiz-card" data-cat="fii"><span class="wiz-card-icon">🏢</span><span>FIIs</span></button>
-          <button type="button" class="wiz-card" data-cat="etf"><span class="wiz-card-icon">📊</span><span>ETFs</span></button>
-          <button type="button" class="wiz-card" data-cat="bdr"><span class="wiz-card-icon">🌎</span><span>BDRs</span></button>
-          <button type="button" class="wiz-card" data-cat="fundo"><span class="wiz-card-icon">🧺</span><span>Fundos</span></button>
-          <button type="button" class="wiz-card" data-cat="cripto"><span class="wiz-card-icon">₿</span><span>Criptomoedas</span></button>
-          <button type="button" class="wiz-card" data-cat="previdencia"><span class="wiz-card-icon">🌅</span><span>Previdência</span></button>
-          <button type="button" class="wiz-card" data-cat="outros"><span class="wiz-card-icon">✏️</span><span>Outros</span></button>
-          <button type="button" class="wiz-card" id="wizCardRetirada" style="border-style:dashed;"><span class="wiz-card-icon">💸</span><span>Retirada</span></button>
+          <button type="button" class="wiz-card" data-cat="rf"><span class="wiz-card-icon">🏦</span><span>Renda Fixa</span><span class="wiz-card-explorar" data-explorar-cat="rf">Explorar ✦</span></button>
+          <button type="button" class="wiz-card" data-cat="acao"><span class="wiz-card-icon">📈</span><span>Ações</span><span class="wiz-card-explorar" data-explorar-cat="acao">Explorar ✦</span></button>
+          <button type="button" class="wiz-card" data-cat="fii"><span class="wiz-card-icon">🏢</span><span>FIIs</span><span class="wiz-card-explorar" data-explorar-cat="fii">Explorar ✦</span></button>
+          <button type="button" class="wiz-card" data-cat="etf"><span class="wiz-card-icon">📊</span><span>ETFs</span><span class="wiz-card-explorar" data-explorar-cat="etf">Explorar ✦</span></button>
+          <button type="button" class="wiz-card" data-cat="bdr"><span class="wiz-card-icon">🌎</span><span>BDRs</span><span class="wiz-card-explorar" data-explorar-cat="bdr">Explorar ✦</span></button>
+          <button type="button" class="wiz-card" data-cat="fundo"><span class="wiz-card-icon">🧺</span><span>Fundos</span><span class="wiz-card-explorar" data-explorar-cat="fundo">Explorar ✦</span></button>
+          <button type="button" class="wiz-card" data-cat="cripto"><span class="wiz-card-icon">₿</span><span>Criptomoedas</span><span class="wiz-card-explorar" data-explorar-cat="cripto">Explorar ✦</span></button>
+          <button type="button" class="wiz-card" data-cat="previdencia"><span class="wiz-card-icon">🌅</span><span>Previdência</span><span class="wiz-card-explorar" data-explorar-cat="previdencia">Explorar ✦</span></button>
+          <button type="button" class="wiz-card" data-cat="outros"><span class="wiz-card-icon">✏️</span><span>Outros</span><span class="wiz-card-explorar" data-explorar-cat="outros">Explorar ✦</span></button>
         </div>
+        <hr class="line">
+        <p class="stat-label" style="margin-bottom:10px;">Ou, se o dinheiro está saindo do Patrium</p>
+        <button type="button" class="wiz-card wiz-card-retirada" id="wizCardRetirada"><span class="wiz-card-icon">💸</span><span>Retirar dinheiro</span></button>
       </div>
 
       <!-- ===== Passo 2a: tipo de Renda Fixa (cards) ===== -->
@@ -1712,7 +1868,7 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
         <div class="field hidden" id="rvTickerManualWrap"><label>Ticker</label><input type="text" id="rvTicker" placeholder="Ex: PETR4" style="text-transform:uppercase;"></div>
         <div class="field"><label>Data</label><input type="date" id="rvData"></div>
         <div class="field-row">
-          <div class="field"><label>Quantidade</label><input type="number" id="rvQtd"></div>
+          <div class="field"><label>Quantidade</label><input type="number" id="rvQtd"><div class="small" id="rvQtdHint" style="margin-top:4px; min-height:15px;"></div></div>
           <div class="field"><label>Preço por unidade (R$)</label><input type="number" step="0.01" id="rvPreco"></div>
         </div>
         <div class="field-row">
@@ -1804,13 +1960,25 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
       <input type="text" id="ajudaBusca" placeholder="Buscar uma dúvida…" style="width:100%; margin-bottom:12px; background:var(--surface-2); border:1.5px solid var(--line); border-radius:11px; padding:10px 14px; color:var(--text); font-size:13.5px;">
       <div class="help-cat-filters" id="ajudaCatFilters"></div>
       <div class="faq-list" id="ajudaFaqList"></div>
+      <div class="ajuda-suporte-final">
+        <span class="ajuda-suporte-icon">✉️</span>
+        <div>
+          <div class="ajuda-suporte-titulo">Não encontrou o que precisava?</div>
+          <p class="ajuda-suporte-texto">Fale diretamente com o suporte do Patrium.</p>
+        </div>
+        <a href="mailto:suporte@bussolafinanceirays.com" class="patrium-footer-email" id="ajudaSuporteEmailLink">
+          <span class="patrium-footer-email-icon">✉️</span>
+          <span>suporte@bussolafinanceirays.com</span>
+          <span class="patrium-footer-email-copy">copiar</span>
+        </a>
+      </div>
     </div>
     <div class="modal-foot"><button class="btn" data-close="modalCentralAjuda">Fechar</button></div>
   </div>
 </div>
 
 <!-- ===================== MODAL: DETALHE DO SELO ===================== -->
-<div class="modal-overlay" id="modalSeloDetalhe">
+<div class="modal-overlay" id="modalSeloDetalhe" style="align-items:center;">
   <div class="modal" style="max-width:380px; text-align:center;">
     <div class="modal-head" style="border-bottom:none;"><span></span><button class="icon-btn" data-close="modalSeloDetalhe">✕</button></div>
     <div class="modal-body" style="padding-top:0; text-align:center;">
@@ -1823,10 +1991,43 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
   </div>
 </div>
 
+<!-- ===================== MODAL: TERMO DO GLOSSÁRIO (leitura profunda) ===================== -->
+<div class="modal-overlay" id="modalGlossarioTermo" style="align-items:center;">
+  <div class="modal glossario-modal">
+    <div class="modal-head">
+      <div class="flex gap-10" style="align-items:center;">
+        <span class="glossario-modal-icon">🔤</span>
+        <h3 id="glossModalTitulo" style="margin:0;">—</h3>
+      </div>
+      <button class="icon-btn" data-close="modalGlossarioTermo">✕</button>
+    </div>
+    <div class="modal-body">
+      <p id="glossModalDef" class="text-soft" style="font-size:14.5px; margin:0 0 16px; padding-bottom:16px; border-bottom:1px solid var(--line-soft);"></p>
+      <div id="glossModalAprofundar"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-primary" data-close="modalGlossarioTermo">Fechar</button></div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: EXPLORAR ATIVO/CATEGORIA ===================== -->
+<div class="modal-overlay" id="modalExplorarAtivo" style="align-items:center;">
+  <div class="modal explorar-modal">
+    <div class="explorar-modal-hero">
+      <span class="explorar-modal-hero-glow"></span>
+      <h3 id="explorarModalTitulo">—</h3>
+      <p id="explorarModalSub"></p>
+    </div>
+    <button class="icon-btn explorar-modal-close" data-close="modalExplorarAtivo">✕</button>
+    <div class="modal-body" id="explorarModalBody"></div>
+    <div class="modal-foot"><button class="btn btn-primary" data-close="modalExplorarAtivo">Fechar</button></div>
+  </div>
+</div>
+
 <!-- ===================== ONBOARDING ===================== -->
 <div class="modal-overlay" id="modalOnboarding">
   <div class="modal onboard-box">
     <div class="modal-body">
+      <div class="onboard-logo-slot" id="onboardLogoSlot"></div>
       <div class="onboard-progress-wrap">
         <div class="onboard-progress-label"><span id="onboardStepLabel">Passo 1 de 10</span><span id="onboardStepPct">0%</span></div>
         <div class="onboard-bar-track"><div class="onboard-bar-fill" id="onboardProgressFill" style="width:0%;"></div></div>
@@ -1888,24 +2089,7 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
 </div>
 
 <!-- ===================== MODAL: CONFERIR PATRIMÔNIO REAL ===================== -->
-<div class="modal-overlay" id="modalConferir">
-  <div class="modal wide">
-    <div class="modal-head"><h3>Conferir patrimônio real</h3><button class="icon-btn" data-close="modalConferir">✕</button></div>
-    <div class="modal-body">
-      <p class="section-hint">Informe o saldo real de cada lugar onde tem dinheiro aplicado, renda fixa (qualquer % do CDI), ações, FIIs, cripto, o que for. Ao registar, o Patrium recalcula o patrimônio total e o rendimento de cada posição a partir do valor que você informou aqui, não do valor calculado.</p>
-      <div class="field" style="max-width:220px;"><label>Data desta conferência</label><input type="date" id="conferirDataGeral"></div>
-      <div id="conferirListaWrap"></div>
-      <div class="card card-tight" id="conferirDiffPreview" style="margin-top:14px;">
-        <div class="flex-between"><span class="stat-label">Patrimônio calculado (antes)</span><strong class="mono" id="conferirTotalCalculado">—</strong></div>
-        <div class="flex-between" style="margin-top:6px;"><span class="stat-label">Patrimônio com os saldos que você está a informar</span><strong class="mono" id="conferirTotalNovo" style="color:var(--accent);">—</strong></div>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn" data-close="modalConferir">Cancelar</button>
-      <button class="btn btn-primary" id="btnSalvarConferencia">Registar todos os saldos informados</button>
-    </div>
-  </div>
-</div>
+
 
 <!-- ===================== MODAL: EDITAR PRODUTO RF ===================== -->
 <div class="modal-overlay" id="modalEditarRf">
@@ -3256,28 +3440,36 @@ function computeSaudeCarteira(){
 function computeInsightsCompletos(){
   const insights = [];
   const push = (tipo, texto)=> insights.push({tipo, texto});
+  const num = (texto, cor)=> `<strong class="mono" style="color:${cor};">${texto}</strong>`;
+  const corSinal = (v)=> v>=0 ? 'var(--positive)' : 'var(--negative)';
 
   const res6m = computePeriodoAnalise('6m');
   const res3m = computePeriodoAnalise('3m');
   if(res3m.patrInicial>0){
     const crescimentoTotal3m = round2(res3m.patrFinal - res3m.patrInicial);
     const crescimentoPct3m = (crescimentoTotal3m/res3m.patrInicial)*100;
-    push(crescimentoPct3m>=0?'positivo':'atencao', `Seu patrimônio ${crescimentoPct3m>=0?'cresceu':'caiu'} ${fmtNum(Math.abs(crescimentoPct3m).toFixed(1))}% nos últimos 3 meses.`);
+    let frase3m = `Seu patrimônio ${crescimentoPct3m>=0?'cresceu':'caiu'} ${num(fmtNum(Math.abs(crescimentoPct3m).toFixed(1))+'%', corSinal(crescimentoPct3m))} nos últimos 3 meses`;
+    if(crescimentoTotal3m>0 && res3m.aportesPeriodo>0){
+      const pctAportes3m = Math.max(0, Math.min(100, (res3m.aportesPeriodo/crescimentoTotal3m)*100));
+      frase3m += `, ${num(fmtNum(pctAportes3m.toFixed(0))+'%', 'var(--info)')} disso veio de novos aportes e ${num(fmtNum(round2(100-pctAportes3m).toFixed(0))+'%', 'var(--purple)')} de rendimentos/valorização`;
+    }
+    push(crescimentoPct3m>=0?'positivo':'atencao', frase3m+'.');
   }
   if(res6m.patrInicial>0){
     const crescimentoTotal = round2(res6m.patrFinal - res6m.patrInicial);
     const crescimentoPct = (crescimentoTotal/res6m.patrInicial)*100;
-    push(crescimentoPct>=0?'positivo':'atencao', `Seu patrimônio ${crescimentoPct>=0?'cresceu':'caiu'} ${fmtNum(Math.abs(crescimentoPct).toFixed(1))}% nos últimos 6 meses.`);
+    let frase6m = `Seu patrimônio ${crescimentoPct>=0?'cresceu':'caiu'} ${num(fmtNum(Math.abs(crescimentoPct).toFixed(1))+'%', corSinal(crescimentoPct))} nos últimos 6 meses`;
     if(crescimentoTotal>0 && res6m.aportesPeriodo>0){
       const pctAportes = Math.max(0, Math.min(100, (res6m.aportesPeriodo/crescimentoTotal)*100));
       const pctResto = round2(100-pctAportes);
-      push('info', `${fmtNum(pctAportes.toFixed(0))}% desse crescimento veio de novos aportes e ${fmtNum(pctResto.toFixed(0))}% de rendimentos/valorização.`);
+      frase6m += `, ${num(fmtNum(pctAportes.toFixed(0))+'%', 'var(--info)')} disso veio de novos aportes e ${num(fmtNum(pctResto.toFixed(0))+'%', 'var(--purple)')} de rendimentos/valorização`;
     }
+    push(crescimentoPct>=0?'positivo':'atencao', frase6m+'.');
   }
 
   const alloc = computeAllocation();
   if(alloc.rfTotal>0 || alloc.rvTotal>0){
-    push('info', `Sua Renda Fixa representa ${fmtNum(alloc.rfPct.toFixed(0))}% da carteira, enquanto sua Renda Variável representa ${fmtNum(alloc.rvPct.toFixed(0))}%.`);
+    push('info', `Sua Renda Fixa representa ${num(fmtNum(alloc.rfPct.toFixed(0))+'%','var(--rf)')} da carteira, enquanto sua Renda Variável representa ${num(fmtNum(alloc.rvPct.toFixed(0))+'%','var(--rv)')}.`);
   }
 
   const conc = computeConcentracaoAtivo();
@@ -3657,8 +3849,6 @@ function computeMilestones(){
       'Você criou a sua primeira meta de quantidade de ativos.','Meta definida é metade do caminho andado. 🎯'),
     m('primeira_venda','💼','Primeira venda registada','Registe a venda de um ativo', nVendas>0,
       'Você já registou a sua primeira venda de um ativo.','Saber vender também faz parte da estratégia. 💼'),
-    m('primeira_conferencia','🔍','Primeira conferência de patrimônio','Use "Conferir patrimônio real" no Dashboard', (DATA.reconciliations||[]).length>0,
-      'Você já conferiu o valor calculado com o saldo real das suas contas.','Conferir de tempos em tempos mantém tudo confiável. 🔍'),
     m('primeiro_ajuste','🛠️','Primeiro ajuste histórico de posição','Registe um ajuste de valor real numa posição', (DATA.positionAdjustments||[]).length>0,
       'Você já registou um ajuste de valor real numa das suas posições.','Detalhe que deixa o histórico ainda mais preciso. 🛠️'),
     m('perfil_definido','🧭','Perfil de investidor definido','Complete o questionário de perfil na Educação', !!DATA.settings.investorProfile,
@@ -3915,6 +4105,11 @@ const EDUCATION_TOPICS = [
   { icon:'💼', titulo:'Fundos de investimento', texto:'Um fundo reúne o dinheiro de vários investidores para ser gerido por um profissional, que aplica em diferentes ativos conforme a estratégia do fundo. Vale sempre observar a taxa de administração (e eventual taxa de performance) e comparar o histórico com um índice de referência.' },
   { icon:'🧮', titulo:'Planejamento financeiro pessoal', texto:'Planejar as finanças pessoais envolve conhecer as suas receitas e despesas, definir objetivos claros (curto, médio e longo prazo) e alinhar os seus investimentos a esses objetivos. Investir bem começa, quase sempre, por organizar o orçamento antes.' },
   { icon:'🌅', titulo:'Aposentadoria e Previdência', texto:'Além do INSS, existem opções de previdência privada (PGBL e VGBL), com regras próprias de tributação e portabilidade. A escolha entre elas depende principalmente de como você declara o Imposto de Renda e do seu horizonte até a aposentadoria, vale estudar com calma ou buscar orientação especializada.' },
+  { icon:'🧠', titulo:'Vieses psicológicos do investidor', texto:'A mente humana joga contra o bom investidor de várias formas: o "viés de confirmação" (só buscar notícias que confirmam o que já achamos), a "aversão à perda" (sentir a dor de perder mais forte do que o prazer de ganhar o mesmo valor) e o "efeito manada" (comprar ou vender só porque todo mundo está fazendo isso). Reconhecer esses padrões é o primeiro passo para decidir com mais racionalidade.' },
+  { icon:'🏗️', titulo:'Ciclos econômicos', texto:'A economia se move em ciclos de expansão e retração, influenciados por juros, inflação e crédito disponível. Entender em qual fase do ciclo o país está (sem tentar prever o próximo movimento com precisão) ajuda a interpretar por que certos setores performam melhor ou pior em diferentes momentos.' },
+  { icon:'🌍', titulo:'Investir no exterior', texto:'Além dos BDRs (que replicam ações estrangeiras aqui no Brasil), é possível investir diretamente fora do país através de corretoras internacionais. As vantagens incluem diversificação de moeda e acesso a mercados maiores, mas exigem atenção redobrada a impostos, câmbio e à complexidade extra de declarar bens no exterior.' },
+  { icon:'📈', titulo:'Análise fundamentalista × técnica', texto:'A análise fundamentalista estuda os números e a saúde financeira de uma empresa (lucro, dívida, crescimento) para estimar se ela vale mais ou menos do que o preço atual. Já a análise técnica foca em padrões de preço e volume no gráfico, tentando prever movimentos futuros. São abordagens diferentes, e muitos investidores de longo prazo se apoiam principalmente na primeira.' },
+  { icon:'🛡️', titulo:'Seguros e proteção patrimonial', texto:'Investir bem também envolve se proteger de imprevistos que poderiam destruir o patrimônio construído, seguro de vida, seguro residencial, seguro saúde. Antes de buscar retornos maiores, vale garantir que um evento inesperado não vai obrigar a liquidar investimentos de longo prazo no pior momento possível.' },
 ];
 function renderEducationTopics(){
   document.getElementById('eduTemasGrid').innerHTML = EDUCATION_TOPICS.map((t,i)=>`
@@ -3992,72 +4187,111 @@ function renderInvestmentFaq(){
 const GLOSSARY_TERMS = [
   { termo:'TWR', def:'Time-Weighted Return, mede a performance da carteira independente de quando e quanto você aportou ou retirou.', aprofundar:'Como pode ajudar: é a métrica certa para responder "meus investimentos estão indo bem?", sem o ruído de quando você colocou dinheiro. Como pode confundir: um TWR alto não significa que VOCÊ ganhou muito dinheiro em reais, só que a carteira teve boa performance no período em que esteve investida. Na prática: use o TWR para avaliar se as suas escolhas de ativos estão funcionando, e o XIRR para saber quanto dinheiro de fato entrou no seu bolso.' },
   { termo:'XIRR', def:'Retorno anualizado que considera o valor e a data exata de cada aporte e retirada, o retorno que você efetivamente obteve sobre o seu dinheiro.', aprofundar:'Como pode ajudar: mostra o retorno real do SEU dinheiro, o número mais próximo de "quanto rendeu o que eu efetivamente investi". Como pode confundir: um aporte grande muito recente pode distorcer o XIRR anualizado no curto prazo, dando a impressão de retorno explosivo ou muito baixo sem refletir a tendência real. Na prática: compare o XIRR ao longo de vários meses, não julgue com base numa única leitura logo depois de um aporte grande.' },
-  { termo:'Preço médio', def:'Custo médio pago por uma unidade de um ativo, considerando todas as compras já feitas.' },
+  { termo:'Preço médio', def:'Custo médio pago por uma unidade de um ativo, considerando todas as compras já feitas.', aprofundar:'Exemplo prático: comprou 10 ações a R$20 e depois mais 10 a R$30, o preço médio fica em R$25 (não R$25 de "desconto", é matematicamente a média ponderada). Como pode ajudar: comprar mais quando o preço cai reduz o preço médio, uma estratégia chamada "preço médio para baixo". Como pode prejudicar: só faz sentido reduzir o preço médio se a tese de investimento continuar válida, comprar mais só para "baixar a média" de um ativo com problemas reais é jogar dinheiro bom atrás do ruim.' },
   { termo:'Dividend Yield (DY)', def:'Percentual que relaciona os proventos distribuídos por um ativo num período com o seu preço, atual ou de custo.', aprofundar:'Como pode ajudar: um DY consistente ao longo dos anos é um bom sinal de geração de caixa real do negócio. Como pode prejudicar: um DY muito alto de repente pode ser um sinal de alerta ("yield trap"), às vezes o preço caiu tanto que o DY parece ótimo, mas o motivo da queda pode ser um problema sério na empresa. Como ler na prática antes de comprar: compare o DY dos últimos anos (não só o mês mais recente), veja se o lucro da empresa sustenta esse pagamento, e desconfie de um DY muito acima da média do setor sem explicação clara.' },
-  { termo:'Liquidez', def:'Facilidade e velocidade de transformar um ativo em dinheiro sem perder valor relevante no processo.' },
-  { termo:'CDI', def:'Certificado de Depósito Interbancário, taxa de referência usada para indexar a maioria dos produtos de Renda Fixa pós-fixados.' },
-  { termo:'IPCA', def:'Índice oficial de inflação do Brasil, usado como referência em produtos de Renda Fixa "híbridos" (IPCA+).' },
-  { termo:'Selic', def:'Taxa básica de juros da economia brasileira, definida pelo Banco Central, referência para praticamente todas as taxas de juros do país.' },
-  { termo:'FGC', def:'Fundo Garantidor de Créditos, protege até R$ 250.000 por CPF e por instituição em determinados produtos de Renda Fixa.' },
-  { termo:'Rentabilidade realizada', def:'Ganho ou perda já efetivado, normalmente por uma venda, diferente do resultado não realizado, que ainda pode mudar.' },
-  { termo:'Resultado não realizado', def:'Ganho ou perda "no papel" de uma posição que ainda não foi vendida, calculado pela diferença entre o preço atual e o preço médio.' },
-  { termo:'Aporte', def:'Dinheiro novo, vindo de fora da carteira, direcionado para um investimento.' },
-  { termo:'Resgate', def:'Retirada de dinheiro de um investimento, seja para o caixa (transferência interna) seja definitivamente do patrimônio.' },
-  { termo:'Concentração', def:'Percentual do patrimônio (ou de uma classe) que está alocado num único ativo ou num pequeno grupo deles.' },
-  { termo:'Ticker', def:'Código curto usado para identificar um ativo negociado em bolsa, como PETR4 ou ITUB4.' },
-  { termo:'JCP', def:'Juros sobre Capital Próprio, forma de distribuição de lucro semelhante ao dividendo, mas com 15% de Imposto de Renda retido na fonte.' },
-  { termo:'CDB', def:'Certificado de Depósito Bancário, título de Renda Fixa emitido por bancos, protegido pelo FGC até o limite legal.' },
-  { termo:'LCI/LCA', def:'Letras de Crédito Imobiliário/do Agronegócio, títulos de Renda Fixa isentos de Imposto de Renda para pessoa física, também cobertos pelo FGC.' },
-  { termo:'Tesouro Direto', def:'Programa do governo federal que permite comprar títulos públicos diretamente, com diferentes prazos e formas de remuneração (prefixado, Selic, IPCA+).' },
-  { termo:'RDB', def:'Recibo de Depósito Bancário, semelhante ao CDB, mas sem possibilidade de negociação antes do vencimento.' },
-  { termo:'FII', def:'Fundo de Investimento Imobiliário, fundo negociado em bolsa que investe em imóveis físicos ou títulos ligados ao setor imobiliário.' },
-  { termo:'ETF', def:'Exchange Traded Fund, fundo negociado em bolsa que replica um índice (ex.: Ibovespa) numa única cota.' },
-  { termo:'BDR', def:'Brazilian Depositary Receipt, recibo negociado no Brasil que representa uma ação de uma empresa estrangeira.' },
-  { termo:'Blue chip', def:'Ação de uma empresa grande, consolidada e com histórico de resultados sólidos, geralmente com maior liquidez.' },
-  { termo:'Small cap', def:'Ação de uma empresa de menor valor de mercado, geralmente com maior potencial de crescimento e também maior risco/volatilidade.' },
-  { termo:'Ibovespa', def:'Principal índice da bolsa brasileira, representa o desempenho médio das ações mais negociadas no país.' },
-  { termo:'Volatilidade', def:'Medida de quanto o preço de um ativo oscila num período, quanto maior, mais intensas as variações de preço.' },
+  { termo:'Liquidez', def:'Facilidade e velocidade de transformar um ativo em dinheiro sem perder valor relevante no processo.', aprofundar:'Como pode ajudar: ativos líquidos (Tesouro Selic, a maioria das ações grandes) permitem resgatar dinheiro rápido numa emergência, sem grandes perdas. Como pode prejudicar: um ativo pouco líquido (uma small cap pouco negociada, um CDB sem liquidez diária) pode obrigar você a vender por um preço pior do que gostaria, ou simplesmente não conseguir vender quando precisar. Na prática: mantenha pelo menos a sua reserva de emergência em ativos de alta liquidez, mesmo que o rendimento seja um pouco menor.' },
+  { termo:'CDI', def:'Certificado de Depósito Interbancário, taxa de referência usada para indexar a maioria dos produtos de Renda Fixa pós-fixados.', aprofundar:'Como pode ajudar: comparar "% do CDI" é uma forma rápida de saber se um CDB está pagando bem ou mal frente ao que o mercado costuma oferecer. Como pode confundir: 100% do CDI não significa uma taxa fixa, ela sobe e desce junto com os juros da economia, então o rendimento em reais varia mês a mês. Na prática: ao comparar dois CDBs, olhe sempre o percentual do CDI e não só o número absoluto de rendimento do mês passado.' },
+  { termo:'IPCA', def:'Índice oficial de inflação do Brasil, usado como referência em produtos de Renda Fixa "híbridos" (IPCA+).', aprofundar:'Como pode ajudar: um título "IPCA+6%" garante que o seu dinheiro sempre renderá 6% ACIMA da inflação, protegendo o poder de compra no longo prazo, ótimo para objetivos distantes como aposentadoria. Como pode confundir: no curto prazo, o preço de mercado desses títulos pode oscilar bastante se vendidos antes do vencimento (a chamada "marcação a mercado"). Na prática: títulos IPCA+ costumam fazer mais sentido quando você pode levá-los até o vencimento.' },
+  { termo:'Selic', def:'Taxa básica de juros da economia brasileira, definida pelo Banco Central, referência para praticamente todas as taxas de juros do país.', aprofundar:'Como pode ajudar: quando a Selic sobe, a Renda Fixa pós-fixada (CDI) fica mais atrativa e a Renda Variável tende a sofrer mais concorrência por capital. Como pode confundir: uma Selic alta não é "boa" ou "ruim" em si, ela reflete o cenário econômico (geralmente sobe para combater inflação). Na prática: acompanhar a tendência da Selic ajuda a entender por que certos períodos favorecem mais a Renda Fixa e outros mais a Renda Variável.' },
+  { termo:'FGC', def:'Fundo Garantidor de Créditos, protege até R$ 250.000 por CPF e por instituição em determinados produtos de Renda Fixa.', aprofundar:'Como pode ajudar: permite aplicar em instituições menores (que costumam pagar taxas mais altas) com uma rede de segurança, dentro do limite garantido. Como pode prejudicar: se você concentrar mais de R$ 250.000 numa única instituição, o valor excedente NÃO está protegido pelo FGC em caso de problema com o banco. Na prática: ao aplicar valores altos, distribua entre instituições diferentes para manter tudo dentro do limite de cobertura por CPF+instituição.' },
+  { termo:'Rentabilidade realizada', def:'Ganho ou perda já efetivado, normalmente por uma venda, diferente do resultado não realizado, que ainda pode mudar.', aprofundar:'Exemplo: você comprou a R$20 e vendeu a R$30, o lucro de R$10 por ação é realizado, está garantido, ninguém pode tirar mais. Como pode ajudar: é um número definitivo, útil para saber exatamente quanto você já embolsou. Dica: só é tributável (gera imposto a pagar) quando é realizado, ganhos não realizados não geram IR até a venda efetiva.' },
+  { termo:'Resultado não realizado', def:'Ganho ou perda "no papel" de uma posição que ainda não foi vendida, calculado pela diferença entre o preço atual e o preço médio.', aprofundar:'Como pode confundir: é tentador tratar um ganho não realizado como "dinheiro no bolso", mas ele pode subir ou descer até o dia da venda, não é definitivo. Como pode prejudicar: vender só porque um ganho não realizado "parece bom" no momento, sem reavaliar a tese do investimento, pode ser uma decisão precipitada. Na prática: acompanhe, mas não trate como certo até realizá-lo de fato.' },
+  { termo:'Aporte', def:'Dinheiro novo, vindo de fora da carteira, direcionado para um investimento.', aprofundar:'Dica prática: aportes regulares e programados (o mesmo valor todo mês, independente do preço do momento) reduzem o risco de "acertar o timing" errado, essa estratégia é chamada de custo médio programado. No Patrium: o sistema sempre distingue um aporte externo (dinheiro novo) de uma transferência interna (dinheiro que só mudou de lugar), para nunca inflar artificialmente a sua rentabilidade real.' },
+  { termo:'Resgate', def:'Retirada de dinheiro de um investimento, seja para o caixa (transferência interna) seja definitivamente do patrimônio.', aprofundar:'Distinção importante: resgatar da Renda Fixa para o Caixa (dentro do Patrium) é diferente de retirar esse dinheiro definitivamente para fora. A primeira não altera o seu patrimônio total nem distorce o XIRR/TWR; a segunda, sim, é dinheiro que efetivamente saiu. No Patrium: essa distinção já é feita automaticamente ao registar um resgate de Renda Fixa.' },
+  { termo:'Concentração', def:'Percentual do patrimônio (ou de uma classe) que está alocado num único ativo ou num pequeno grupo deles.', aprofundar:'Como pode ajudar: uma posição concentrada num ativo em que você tem muita convicção pode ampliar o retorno se a tese se confirmar. Como pode prejudicar: também amplia a perda se algo der errado com esse ativo específico, um problema isolado numa única empresa pode pesar bem mais no seu patrimônio total. Na prática: acompanhe o peso de cada ativo na sua carteira (o Patrium mostra isso em Análises e Alocação) e questione-se sempre que um único ativo passar de 20-30% da renda variável.' },
+  { termo:'Ticker', def:'Código curto usado para identificar um ativo negociado em bolsa, como PETR4 ou ITUB4.', aprofundar:'Como ler: as 4 letras identificam a empresa (PETR = Petrobras) e o número final indica o tipo de ação, 3 costuma ser ação ordinária (ON, com direito a voto) e 4 ação preferencial (PN, geralmente com prioridade no recebimento de dividendos). FIIs e ETFs seguem outra convenção, terminando em 11.' },
+  { termo:'JCP', def:'Juros sobre Capital Próprio, forma de distribuição de lucro semelhante ao dividendo, mas com 15% de Imposto de Renda retido na fonte.', aprofundar:'Como pode ajudar: para a empresa, pagar JCP é vantajoso do ponto de vista tributário (é dedutível do lucro tributável), o que às vezes se traduz em mais distribuição total ao acionista. Como pode confundir: o valor que você recebe de JCP já vem líquido, com os 15% de IR descontados na fonte, diferente do dividendo, que é isento. Ao registar no Patrium: registe sempre o valor líquido efetivamente recebido.' },
+  { termo:'CDB', def:'Certificado de Depósito Bancário, título de Renda Fixa emitido por bancos, protegido pelo FGC até o limite legal.', aprofundar:'Como pode ajudar: bancos menores costumam pagar CDBs com percentuais do CDI mais altos para atrair clientes, dentro da proteção do FGC. Como pode prejudicar: CDBs sem liquidez diária prendem o seu dinheiro até o vencimento, um problema se você precisar do valor antes. Na prática: verifique sempre a liquidez antes de aplicar, e nunca ultrapasse R$250.000 por instituição se a proteção do FGC for importante para você.' },
+  { termo:'LCI/LCA', def:'Letras de Crédito Imobiliário/do Agronegócio, títulos de Renda Fixa isentos de Imposto de Renda para pessoa física, também cobertos pelo FGC.', aprofundar:'Como pode ajudar: a isenção de IR pode fazer uma LCI/LCA com taxa nominal menor render, na prática, mais do que um CDB tributado, vale sempre comparar a taxa líquida equivalente. Como pode prejudicar: costumam ter prazos de carência mais longos e menos liquidez do que um CDB comum. Na prática: bom instrumento para dinheiro que você já sabe que não vai precisar no curto prazo.' },
+  { termo:'Tesouro Direto', def:'Programa do governo federal que permite comprar títulos públicos diretamente, com diferentes prazos e formas de remuneração (prefixado, Selic, IPCA+).', aprofundar:'Como pode ajudar: é considerado um dos investimentos mais seguros do país (risco soberano) e permite começar com valores bem baixos. Como pode confundir: o Tesouro Selic tem liquidez diária e baixa oscilação, ideal para reserva de emergência, mas o Tesouro IPCA+ e o Prefixado podem oscilar de preço se vendidos antes do vencimento. Dica: escolha o título pelo seu objetivo e prazo, não só pela taxa anunciada.' },
+  { termo:'RDB', def:'Recibo de Depósito Bancário, semelhante ao CDB, mas sem possibilidade de negociação antes do vencimento.', aprofundar:'Como pode prejudicar: por não poder ser negociado (transferido a terceiros), fica ainda mais preso ao prazo combinado do que um CDB, um risco de liquidez a considerar antes de aplicar. Na prática: verifique sempre se existe resgate antecipado disponível e em que condições, antes de aplicar um valor que talvez precise usar antes do vencimento.' },
+  { termo:'FII', def:'Fundo de Investimento Imobiliário, fundo negociado em bolsa que investe em imóveis físicos ou títulos ligados ao setor imobiliário.', aprofundar:'Tipos comuns: FIIs de tijolo (imóveis físicos, como shoppings e galpões), FIIs de papel (títulos de crédito imobiliário, como CRIs) e FIIs de fundos (que investem em outros FIIs). Como pode ajudar: rendimentos mensais isentos de IR para pessoa física são um dos grandes atrativos. Como pode prejudicar: vacância alta ou inadimplência dos inquilinos reduz diretamente a renda distribuída, vale sempre acompanhar esses indicadores.' },
+  { termo:'ETF', def:'Exchange Traded Fund, fundo negociado em bolsa que replica um índice (ex.: Ibovespa) numa única cota.', aprofundar:'Como pode ajudar: uma única compra de ETF já te dá exposição a dezenas de empresas de uma vez, uma forma simples e barata de diversificar sem escolher ação por ação. Como pode prejudicar: você fica sujeito ao desempenho médio do índice, sem poder escolher evitar as empresas mais fracas dele. Dica: bom ponto de partida para quem está começando ou não tem tempo de acompanhar empresas individualmente.' },
+  { termo:'BDR', def:'Brazilian Depositary Receipt, recibo negociado no Brasil que representa uma ação de uma empresa estrangeira.', aprofundar:'Como pode ajudar: permite investir em empresas como Apple ou Amazon direto pela bolsa brasileira, em reais, sem precisar de conta numa corretora internacional. Como pode confundir: o preço do BDR reflete tanto a variação da ação lá fora quanto a variação do câmbio (dólar/real), dois fatores diferentes influenciando o mesmo preço. Na prática: entenda que está exposto tanto ao negócio quanto à moeda estrangeira.' },
+  { termo:'Blue chip', def:'Ação de uma empresa grande, consolidada e com histórico de resultados sólidos, geralmente com maior liquidez.', aprofundar:'Como pode ajudar: costumam oscilar menos do que empresas menores e têm mais informação disponível para análise, um ponto de partida comum para quem está começando em Renda Variável. Como pode limitar: por já serem grandes e conhecidas, o potencial de crescimento explosivo tende a ser menor do que em empresas menores ainda em expansão.' },
+  { termo:'Small cap', def:'Ação de uma empresa de menor valor de mercado, geralmente com maior potencial de crescimento e também maior risco/volatilidade.', aprofundar:'Como pode ajudar: têm mais espaço para crescer proporcionalmente do que uma empresa já gigante, um atrativo para quem busca retornos maiores no longo prazo. Como pode prejudicar: costumam ter menos liquidez (mais difícil comprar/vender rápido sem afetar o preço) e mais volatilidade. Na prática: exige mais estudo individual da empresa antes de investir, e posições geralmente menores dentro da carteira.' },
+  { termo:'Ibovespa', def:'Principal índice da bolsa brasileira, representa o desempenho médio das ações mais negociadas no país.', aprofundar:'Como pode ajudar: é a referência mais usada para comparar "como o mercado brasileiro foi" num período, útil para colocar a sua própria performance em contexto. Como pode confundir: o Ibovespa é ponderado por liquidez, algumas poucas empresas grandes pesam bastante no índice, então ele não representa igualmente "toda" a bolsa brasileira.' },
+  { termo:'Volatilidade', def:'Medida de quanto o preço de um ativo oscila num período, quanto maior, mais intensas as variações de preço.', aprofundar:'Como pode ajudar: ativos mais voláteis costumam oferecer, em troca, um potencial de retorno maior no longo prazo, é o "prêmio" por aceitar mais oscilação. Como pode prejudicar: pode levar a decisões ruins no curto prazo, vender no susto durante uma queda forte, por exemplo, transformando uma oscilação temporária numa perda real. Na prática: antes de comprar um ativo muito volátil, pergunte-se se você realmente aguentaria vê-lo cair 20-30% sem entrar em pânico.' },
   { termo:'P/L (Preço/Lucro)', def:'Indicador que divide o preço da ação pelo lucro por ação, usado como referência de quão "cara" ou "barata" uma ação está frente ao seu lucro.', aprofundar:'Como pode ajudar: compara rapidamente o preço de diferentes empresas do MESMO setor em relação ao lucro que geram. Como pode prejudicar: comparar o P/L de setores diferentes costuma levar a conclusões erradas, cada setor tem uma faixa "normal" própria. Um P/L muito baixo também pode significar que o mercado espera uma queda de lucro à frente, não necessariamente uma pechincha. Na prática: use sempre dentro do mesmo setor, e junto com outros indicadores, nunca isolado.' },
   { termo:'P/VP (Preço/Valor Patrimonial)', def:'Indicador que compara o preço de mercado de uma ação/cota com o seu valor patrimonial contábil.', aprofundar:'Como pode ajudar: em FIIs, é bastante usado para avaliar se a cota está sendo negociada acima ou abaixo do valor dos imóveis que o fundo possui. Como pode prejudicar: um P/VP baixo não garante uma boa compra, o valor patrimonial pode estar desatualizado ou os ativos por trás podem ter problemas reais (vacância alta, inadimplência). Na prática: combine sempre com outros dados do fundo/empresa, nunca decida só pelo número isolado.' },
   { termo:'ROE', def:'Return on Equity, retorno que uma empresa gera sobre o seu patrimônio líquido, mede a eficiência em usar o capital dos acionistas.', aprofundar:'Como pode ajudar: um ROE consistentemente alto ao longo dos anos costuma indicar uma empresa eficiente em gerar retorno com o capital que tem. Como pode prejudicar: um ROE muito alto pode vir de uma empresa com dívida elevada (mais risco), não necessariamente de eficiência genuína, o indicador sozinho não distingue os dois casos. Na prática: olhe o ROE junto com o nível de endividamento da empresa antes de tirar conclusões.' },
-  { termo:'Payout', def:'Percentual do lucro de uma empresa que é distribuído como dividendos/JCP aos acionistas, em vez de ser reinvestido no negócio.' },
-  { termo:'Vacância', def:'Em FIIs, percentual dos imóveis do fundo que estão desocupados e, portanto, não gerando renda de aluguel.' },
-  { termo:'Diversificação', def:'Distribuição do capital entre ativos, setores ou classes diferentes, para reduzir o impacto do desempenho ruim de um único investimento.' },
-  { termo:'Rebalanceamento', def:'Ajuste periódico da carteira para voltar à distribuição-alvo definida entre classes de ativos.' },
-  { termo:'Reserva de emergência', def:'Valor guardado em ativos líquidos e de baixo risco para cobrir imprevistos, geralmente de 3 a 12 meses de despesas essenciais.' },
-  { termo:'Juros compostos', def:'"Juros sobre juros": o rendimento de um período passa a compor o capital que gera rendimento no período seguinte.' },
-  { termo:'Day trade', def:'Compra e venda de um mesmo ativo dentro do mesmo dia, com tributação e regras diferentes de operações comuns.' },
-  { termo:'DARF', def:'Documento de Arrecadação de Receitas Federais, usado para recolher o Imposto de Renda devido sobre ganhos em operações de Renda Variável.' },
-  { termo:'Come-cotas', def:'Antecipação semestral de Imposto de Renda cobrada automaticamente em alguns fundos de investimento (não se aplica a ações, FIIs ou ETFs comuns).' },
-  { termo:'Home broker', def:'Plataforma eletrônica oferecida pelas corretoras para negociar ativos diretamente pela internet.' },
-  { termo:'Corretora', def:'Instituição autorizada a intermediar a compra e venda de ativos na bolsa em nome do investidor.' },
-  { termo:'B3', def:'Bolsa de valores oficial do Brasil, onde ações, FIIs, ETFs e outros ativos são negociados.' },
-  { termo:'Patrimônio líquido', def:'Diferença entre tudo o que você possui (ativos) e tudo o que deve (dívidas), o seu patrimônio "de verdade".' },
-  { termo:'Custo médio', def:'Ver Preço médio, o custo médio pago por unidade de um ativo, considerando todas as compras já feitas.' },
-  { termo:'Fluxo externo', def:'Dinheiro que entra ou sai de verdade do patrimônio (vindo de fora ou retirado definitivamente), diferente de uma transferência interna.' },
-  { termo:'Transferência interna', def:'Movimentação de dinheiro entre componentes do próprio patrimônio (ex.: Renda Fixa para Caixa), que não altera o total nem distorce a performance.' },
+  { termo:'Payout', def:'Percentual do lucro de uma empresa que é distribuído como dividendos/JCP aos acionistas, em vez de ser reinvestido no negócio.', aprofundar:'Como pode ajudar: um payout alto e sustentável indica uma empresa madura, que já não precisa reinvestir todo o lucro para crescer, e prioriza devolver caixa ao acionista. Como pode prejudicar: um payout de 100% ou mais (a empresa distribuindo mais do que lucra) pode não ser sustentável a longo prazo, e um payout crescente demais pode significar falta de boas oportunidades de reinvestimento no próprio negócio. Na prática: compare o payout ao longo de vários anos, não só do último resultado, para ver se é uma política consistente.' },
+  { termo:'Vacância', def:'Em FIIs, percentual dos imóveis do fundo que estão desocupados e, portanto, não gerando renda de aluguel.', aprofundar:'Como pode ajudar: FIIs com vacância historicamente baixa costumam indicar imóveis bem localizados e administração eficiente. Como pode prejudicar: vacância alta ou crescente reduz diretamente a renda distribuída aos cotistas, e pode ser um sinal de problemas estruturais no portfólio do fundo (localização ruim, excesso de oferta na região). Na prática: acompanhe a evolução da vacância ao longo do tempo, não só o número de um único mês, antes de investir num FII.' },
+  { termo:'Diversificação', def:'Distribuição do capital entre ativos, setores ou classes diferentes, para reduzir o impacto do desempenho ruim de um único investimento.', aprofundar:'Como pode ajudar: reduz o risco específico de qualquer ativo isolado, um problema numa única empresa não compromete toda a carteira. Como pode prejudicar (o exagero): diversificar demais, com posições minúsculas em dezenas de ativos que você não consegue acompanhar, pode diluir tanto os ganhos quanto dificultar entender de verdade o que você possui. Na prática: busque um número de ativos que você consiga acompanhar com atenção real, mais importa a qualidade da diversificação (setores diferentes) do que só a quantidade de ativos.' },
+  { termo:'Rebalanceamento', def:'Ajuste periódico da carteira para voltar à distribuição-alvo definida entre classes de ativos.', aprofundar:'Como pode ajudar: disciplina automática para "vender na alta e comprar na baixa" sem depender de previsão de mercado, você volta ao alvo definido independente do humor do momento. Como pode prejudicar: rebalancear com muita frequência pode gerar custos (taxas, impostos em vendas) que corroem o benefício. Na prática: rebalancear direcionando novos aportes para a classe que ficou abaixo do alvo costuma ser mais simples e barato do que vender posições existentes.' },
+  { termo:'Reserva de emergência', def:'Valor guardado em ativos líquidos e de baixo risco para cobrir imprevistos, geralmente de 3 a 12 meses de despesas essenciais.', aprofundar:'Como pode ajudar: evita que um imprevisto (perda de renda, uma despesa médica) force a venda de investimentos de longo prazo no pior momento possível, como durante uma queda de mercado. Como pode "prejudicar" se mal dimensionada: uma reserva grande demais parada em baixo rendimento tem um custo de oportunidade real, dinheiro que poderia estar rendendo mais em outros investimentos. Na prática: defina o tamanho da reserva pela estabilidade da sua renda (menos estável = reserva maior) e mantenha-a sempre em ativos de alta liquidez.' },
+  { termo:'Juros compostos', def:'"Juros sobre juros": o rendimento de um período passa a compor o capital que gera rendimento no período seguinte.', aprofundar:'Exemplo: R$1.000 a 10% ao ano vira R$1.100 no primeiro ano, mas no segundo ano os 10% incidem sobre R$1.100 (não mais sobre R$1.000), virando R$1.210. Como pode ajudar: quanto mais tempo o dinheiro fica investido, mais forte fica esse efeito, começar cedo pesa mais do que aportar mais tarde com valores maiores. Dica: reinvestir os proventos recebidos (em vez de gastá-los) acelera bastante esse efeito.' },
+  { termo:'Day trade', def:'Compra e venda de um mesmo ativo dentro do mesmo dia, com tributação e regras diferentes de operações comuns.', aprofundar:'Diferença importante: não existe isenção de R$20.000/mês para day trade como existe para operações comuns de ações, o IR de 20% incide sobre qualquer ganho. Como pode prejudicar: é uma modalidade de alto risco e exige dedicação de tempo real ao mercado durante o dia, muito diferente de uma estratégia de longo prazo.' },
+  { termo:'DARF', def:'Documento de Arrecadação de Receitas Federais, usado para recolher o Imposto de Renda devido sobre ganhos em operações de Renda Variável.', aprofundar:'Como funciona na prática: quando você tem lucro tributável numa venda de ações (acima da faixa de isenção), é sua responsabilidade calcular e pagar o DARF até o último dia útil do mês seguinte, a corretora não desconta isso automaticamente. Dica: guarde o histórico de todas as suas operações, é a partir dele que o cálculo do imposto devido é feito.' },
+  { termo:'Come-cotas', def:'Antecipação semestral de Imposto de Renda cobrada automaticamente em alguns fundos de investimento (não se aplica a ações, FIIs ou ETFs comuns).', aprofundar:'Como funciona: em maio e novembro, uma parte das suas cotas é automaticamente "consumida" para pagar IR antecipado, reduzindo o efeito dos juros compostos ao longo do tempo nesses fundos. Como pode confundir: apesar do nome, não é uma taxa extra, é só uma antecipação do imposto que seria pago de qualquer forma no resgate.' },
+  { termo:'Home broker', def:'Plataforma eletrônica oferecida pelas corretoras para negociar ativos diretamente pela internet.', aprofundar:'Dica prática: antes de escolher uma corretora, compare não só as taxas, mas a qualidade e estabilidade do home broker, principalmente se você pretende operar com mais frequência. A maioria das corretoras no Brasil hoje oferece corretagem zero para ações.' },
+  { termo:'Corretora', def:'Instituição autorizada a intermediar a compra e venda de ativos na bolsa em nome do investidor.', aprofundar:'Ponto importante para tranquilidade: os ativos que você compra ficam custodiados na B3, não na corretora, então mesmo que a corretora tenha problemas financeiros, os seus ativos continuam sendo seus. Ao escolher uma corretora, compare taxas, qualidade do suporte e da plataforma.' },
+  { termo:'B3', def:'Bolsa de valores oficial do Brasil, onde ações, FIIs, ETFs e outros ativos são negociados.', aprofundar:'Curiosidade: o nome vem da fusão da antiga BM&FBovespa com a Cetip em 2017. É a B3 quem efetivamente guarda o registro de que você é dono dos seus ativos, não a corretora, um ponto de segurança importante para o investidor.' },
+  { termo:'Patrimônio líquido', def:'Diferença entre tudo o que você possui (ativos) e tudo o que deve (dívidas), o seu patrimônio "de verdade".', aprofundar:'Dica prática: ao calcular o seu patrimônio líquido pessoal, inclua tudo, investimentos, imóveis, veículos, e subtraia todas as dívidas (financiamentos, cartão, empréstimos). É esse número, não só o saldo investido, que reflete a sua real situação financeira.' },
+  { termo:'Custo médio', def:'Ver Preço médio, o custo médio pago por unidade de um ativo, considerando todas as compras já feitas.', aprofundar:'Ver o termo "Preço médio" acima para a explicação completa, exemplo prático e dicas de quando faz (ou não) sentido comprar mais para reduzir esse número.' },
+  { termo:'Fluxo externo', def:'Dinheiro que entra ou sai de verdade do patrimônio (vindo de fora ou retirado definitivamente), diferente de uma transferência interna.', aprofundar:'Por que isso importa: o cálculo do XIRR (retorno anualizado) depende inteiramente de identificar corretamente cada fluxo externo, um erro aqui pode fazer parecer que você teve um retorno muito maior ou menor do que o real. No Patrium: essa distinção já é feita automaticamente em cada operação, RF, compra de ação, aporte de caixa, retirada.' },
+  { termo:'Transferência interna', def:'Movimentação de dinheiro entre componentes do próprio patrimônio (ex.: Renda Fixa para Caixa), que não altera o total nem distorce a performance.', aprofundar:'Exemplo prático: resgatar R$1.000 da Renda Fixa para o Caixa é uma transferência interna, o seu patrimônio total continua exatamente igual, só mudou de "gaveta". Já retirar esses R$1.000 do Patrium de vez é um fluxo externo negativo, e reduz o patrimônio de verdade. O Patrium sempre pergunta qual dos dois casos é, para nunca confundir um com o outro.' },
 ];
 function renderGlossario(filtro){
   filtro = (filtro||'').toLowerCase().trim();
   const itens = GLOSSARY_TERMS.filter(t=> !filtro || t.termo.toLowerCase().includes(filtro) || t.def.toLowerCase().includes(filtro));
-  document.getElementById('eduGlossarioLista').innerHTML = itens.length ? itens.map((t,i)=>`
-    <div class="edu-glossary-item" ${t.aprofundar?`data-termo-idx="${i}" style="cursor:pointer;"`:''}>
+  document.getElementById('eduGlossarioLista').innerHTML = itens.length ? itens.map((t)=>`
+    <div class="edu-glossary-item glossario-clicavel" data-termo="${escapeHtml(t.termo)}">
       <div class="flex-between" style="align-items:flex-start; gap:8px;">
         <strong style="font-size:13.5px;">${escapeHtml(t.termo)}</strong>
-        ${t.aprofundar?'<span class="text-faint small" style="flex:none;">Ler mais →</span>':''}
+        <span class="glossario-ler-mais">Ler mais <span class="glossario-ler-mais-seta">→</span></span>
       </div>
       <p class="text-soft small" style="margin:4px 0 0;">${escapeHtml(t.def)}</p>
-      ${t.aprofundar?`<div class="text-soft small edu-glossario-fundo hidden" id="glossFundo${i}" style="margin-top:10px; padding-top:10px; border-top:1px dashed var(--line-soft); line-height:1.6;">${escapeHtml(t.aprofundar)}</div>`:''}
     </div>
   `).join('') : `<p class="text-faint small">Nenhum termo encontrado para "${escapeHtml(filtro)}".</p>`;
-  document.querySelectorAll('#eduGlossarioLista [data-termo-idx]').forEach(item=>{
-    item.addEventListener('click', ()=>{
-      const i = item.dataset.termoIdx;
-      document.getElementById('glossFundo'+i).classList.toggle('hidden');
-    });
+  document.querySelectorAll('#eduGlossarioLista .glossario-clicavel').forEach(item=>{
+    item.addEventListener('click', ()=> abrirGlossarioModal(item.dataset.termo));
   });
 }
 document.getElementById('eduGlossarioBusca').addEventListener('input', e=> renderGlossario(e.target.value));
+
+/* Modal de leitura profunda do glossário — parseia o texto de `aprofundar`
+   em blocos visuais (Como pode ajudar / Como pode prejudicar / Na prática /
+   Exemplo / Dica etc.), reconhecendo os rótulos que os próprios textos já
+   usam, sem inventar nenhuma seção nova. */
+const GLOSS_LABEL_ICONS = [
+  [/^como pode ajudar/i, '💡', 'var(--positive)'],
+  [/^como pode (prejudicar|confundir|limitar)/i, '⚠️', 'var(--warning)'],
+  [/^na prática/i, '🎯', 'var(--accent)'],
+  [/^exemplo/i, '📊', 'var(--info)'],
+  [/^dica/i, '✨', 'var(--purple)'],
+  [/^(diferença importante|distinção importante|ponto importante)/i, '📌', 'var(--info)'],
+  [/^como funciona/i, '⚙️', 'var(--accent)'],
+  [/^curiosidade/i, '🔎', 'var(--purple)'],
+  [/^tipos comuns/i, '🗂️', 'var(--info)'],
+];
+function abrirGlossarioModal(termoNome){
+  const t = GLOSSARY_TERMS.find(x=>x.termo===termoNome);
+  if(!t) return;
+  document.getElementById('glossModalTitulo').textContent = t.termo;
+  document.getElementById('glossModalDef').textContent = t.def;
+  const wrap = document.getElementById('glossModalAprofundar');
+  if(!t.aprofundar){
+    wrap.innerHTML = `<p class="text-faint small">Sem leitura aprofundada para este termo ainda.</p>`;
+  } else {
+    // Divide o texto em blocos sempre que encontra "Rótulo: " no início de uma frase.
+    const partes = t.aprofundar.split(/(?<=\.)\s+(?=[A-ZÀ-Ú][a-zà-ú ]{2,40}:\s)/);
+    wrap.innerHTML = partes.map((bloco,i)=>{
+      const match = bloco.match(/^([A-ZÀ-Ú][a-zà-ú A-ZÀ-Ú]{2,40}):\s*(.*)$/s);
+      let icone='📖', cor='var(--text-soft)', label=null, texto=bloco;
+      if(match){
+        label = match[1]; texto = match[2];
+        const found = GLOSS_LABEL_ICONS.find(([re])=>re.test(label));
+        if(found){ icone=found[1]; cor=found[2]; }
+      }
+      return `<div class="gloss-bloco" style="animation-delay:${i*0.06}s;">
+        <div class="gloss-bloco-head" style="color:${cor};"><span>${icone}</span>${label?escapeHtml(label):''}</div>
+        <p class="gloss-bloco-texto">${escapeHtml(texto)}</p>
+      </div>`;
+    }).join('');
+  }
+  openModal('modalGlossarioTermo');
+}
 
 function renderEducacao(){
   renderPerfilCard();
@@ -4111,6 +4345,9 @@ const HELP_FAQ = [
   { cat:'Geral', q:'O Patrium recomenda comprar ou vender algum ativo?', a:'Não. O Patrium organiza e calcula os seus próprios dados, ele nunca recomenda decisões de compra ou venda de um ativo específico.' },
   { cat:'Geral', q:'De onde vêm as cotações de preço?', a:'Da brapi.dev, uma fonte pública de dados do mercado brasileiro, acessada através de um serviço intermediário do Patrium, sem expor nenhuma credencial no seu navegador.' },
   { cat:'Geral', q:'Os cálculos do Patrium consideram taxas e custos?', a:'Sim, taxas de corretagem informadas nas compras e vendas entram no cálculo do preço médio, do resultado realizado e do capital efetivamente investido.' },
+  { cat:'Ações', q:'O Patrium me deixa vender mais ações do que eu tenho?', a:'Não. Ao escolher "Venda" no formulário, o campo de quantidade mostra quantas unidades você tem disponíveis e se ajusta automaticamente ao máximo, nunca é possível registar uma venda maior do que a sua posição real.' },
+  { cat:'Renda Fixa', q:'Como retiro dinheiro da Renda Fixa de forma rápida?', a:'Use o botão "↓ Retirar dinheiro" na aba Renda Fixa, ele já abre o formulário certo com o campo de resgate em foco, sem precisar navegar por outras opções.' },
+  { cat:'Começando', q:'O que é o botão "Explorar" ao cadastrar um investimento?', a:'Ao lado de cada categoria e de cada ativo sugerido no "+ Novo investimento", "Explorar" abre uma explicação sobre o que é aquele ativo, como funciona, o peso sugerido por perfil de investidor e dicas práticas, tudo antes de você decidir cadastrar algo.' },
 ];
 let helpCurrentCat = 'Todos';
 function renderCentralAjuda(categoriaInicial){
@@ -4174,52 +4411,62 @@ const ONBOARD_PERGUNTAS = [
   { id:'horizonte', titulo:'Por quanto tempo você pretende deixar esse dinheiro investido?', opts:[
     {label:'Menos de 1 ano', desc:'Preciso do dinheiro em breve', score:1},
     {label:'De 1 a 5 anos', desc:'Um objetivo de médio prazo', score:2},
-    {label:'Mais de 5 anos', desc:'Penso no longo prazo', score:3},
+    {label:'De 5 a 10 anos', desc:'Um horizonte já bem longo', score:3},
+    {label:'Mais de 10 anos', desc:'Penso em décadas à frente', score:4},
   ]},
   { id:'reacao_queda', titulo:'Se a sua carteira caísse 20% em um mês, o que você faria?', opts:[
     {label:'Venderia tudo', desc:'Prefiro evitar mais perdas', score:1},
-    {label:'Ficaria desconfortável, mas esperaria', desc:'Não mexeria de imediato', score:2},
-    {label:'Veria como oportunidade', desc:'Talvez até aportasse mais', score:3},
+    {label:'Venderia uma parte', desc:'Reduziria a exposição', score:2},
+    {label:'Ficaria desconfortável, mas esperaria', desc:'Não mexeria de imediato', score:3},
+    {label:'Veria como oportunidade', desc:'Talvez até aportasse mais', score:4},
   ]},
   { id:'objetivo', titulo:'Qual é o seu principal objetivo ao investir?', opts:[
     {label:'Proteger o que já tenho', desc:'Prioridade em não perder', score:1},
-    {label:'Crescer de forma equilibrada', desc:'Um meio-termo saudável', score:2},
-    {label:'Maximizar o crescimento', desc:'Aceito mais oscilação por isso', score:3},
+    {label:'Complementar a renda', desc:'Gerar uma receita extra estável', score:2},
+    {label:'Crescer de forma equilibrada', desc:'Um meio-termo saudável', score:3},
+    {label:'Maximizar o crescimento', desc:'Aceito mais oscilação por isso', score:4},
   ]},
   { id:'experiencia', titulo:'Qual a sua experiência com investimentos?', opts:[
     {label:'Estou começando agora', desc:'Pouca ou nenhuma experiência', score:1},
     {label:'Já invisto há algum tempo', desc:'Tenho uma base razoável', score:2},
-    {label:'Sou bastante experiente', desc:'Acompanho o mercado de perto', score:3},
+    {label:'Tenho bastante experiência', desc:'Já passei por altos e baixos', score:3},
+    {label:'Sou bastante experiente', desc:'Acompanho o mercado de perto', score:4},
   ]},
   { id:'tolerancia', titulo:'Que parte do seu patrimônio você toleraria ver oscilar bastante?', opts:[
     {label:'Pouca ou nenhuma', desc:'Prefiro estabilidade', score:1},
-    {label:'Uma parte controlada', desc:'Algo entre 30% e 60%', score:2},
-    {label:'A maior parte, se necessário', desc:'Busco potencial de retorno', score:3},
+    {label:'Uma parte pequena', desc:'Algo até 30%', score:2},
+    {label:'Uma parte controlada', desc:'Algo entre 30% e 60%', score:3},
+    {label:'A maior parte, se necessário', desc:'Busco potencial de retorno', score:4},
   ]},
   { id:'prioridade', titulo:'No fim das contas, o que pesa mais para você?', opts:[
     {label:'Dormir tranquilo', desc:'Segurança acima de tudo', score:1},
-    {label:'Um pouco dos dois', desc:'Segurança e crescimento', score:2},
-    {label:'Buscar o maior retorno possível', desc:'Aceito o risco por isso', score:3},
+    {label:'Segurança, com algum crescimento', desc:'Prioridade na estabilidade', score:2},
+    {label:'Um pouco dos dois', desc:'Segurança e crescimento', score:3},
+    {label:'Buscar o maior retorno possível', desc:'Aceito o risco por isso', score:4},
   ]},
   { id:'reserva', titulo:'Você já tem uma reserva de emergência formada?', opts:[
     {label:'Ainda não tenho', desc:'É a minha prioridade agora', score:1},
     {label:'Tenho uma reserva parcial', desc:'Já comecei a construir', score:2},
     {label:'Já tenho a reserva completa', desc:'Posso focar no resto', score:3},
+    {label:'Tenho reserva e já invisto além dela', desc:'Estou numa fase mais avançada', score:4},
   ]},
   { id:'preocupacao', titulo:'O que mais te preocupa ao investir?', opts:[
     {label:'Perder o dinheiro investido', desc:'Medo de prejuízo', score:1},
-    {label:'Não saber se estou fazendo certo', desc:'Falta de confiança nas decisões', score:2},
-    {label:'Deixar dinheiro parado rendendo pouco', desc:'Medo de perder oportunidades', score:3},
+    {label:'Não entender bem os produtos', desc:'Falta de conhecimento técnico', score:2},
+    {label:'Não saber se estou fazendo certo', desc:'Falta de confiança nas decisões', score:3},
+    {label:'Deixar dinheiro parado rendendo pouco', desc:'Medo de perder oportunidades', score:4},
   ]},
   { id:'frequencia_aporte', titulo:'Com que frequência você pretende investir?', opts:[
     {label:'De vez em quando, quando sobrar', desc:'Sem uma rotina fixa', score:1},
-    {label:'Mensalmente, de forma planejada', desc:'Um valor fixo por mês', score:2},
-    {label:'Sempre que identificar uma oportunidade', desc:'De forma mais ativa', score:3},
+    {label:'A cada poucos meses', desc:'De forma esporádica', score:2},
+    {label:'Mensalmente, de forma planejada', desc:'Um valor fixo por mês', score:3},
+    {label:'Sempre que identificar uma oportunidade', desc:'De forma mais ativa', score:4},
   ]},
   { id:'conhecimento_rv', titulo:'Como você avalia o seu conhecimento sobre Renda Variável?', opts:[
-    {label:'Básico ou nenhum', desc:'Prefiro manter distância por enquanto', score:1},
-    {label:'Intermediário', desc:'Entendo os conceitos principais', score:2},
-    {label:'Avançado', desc:'Estudo e acompanho de perto', score:3},
+    {label:'Nenhum', desc:'Nunca estudei o assunto', score:1},
+    {label:'Básico', desc:'Conheço só o essencial', score:2},
+    {label:'Intermediário', desc:'Entendo os conceitos principais', score:3},
+    {label:'Avançado', desc:'Estudo e acompanho de perto', score:4},
   ]},
 ];
 let onboardStepAtual = 1;
@@ -4228,7 +4475,9 @@ function onboardTotalSteps(){ return 1 + ONBOARD_PERGUNTAS.length + 1 + 4; } // 
 function computeInvestorProfileFromAnswers(respostas){
   const scores = Object.values(respostas);
   const media = scores.reduce((s,v)=>s+v,0) / scores.length;
-  const tipo = media<1.7 ? 'conservador' : media<2.4 ? 'moderado' : 'arrojado';
+  // Escala de 1 a 4: dois cortes proporcionais aos mesmos pontos relativos
+  // usados antes (35% e 70% da faixa), agora recalculados para 1..4.
+  const tipo = media<2.05 ? 'conservador' : media<3.1 ? 'moderado' : 'arrojado';
   return { tipo, score: round2(media), respostas, completedAt: todayISO() };
 }
 function onboardStepHtml(step){
@@ -4324,6 +4573,7 @@ function finalizarOnboarding(){
   Store.save(DATA);
   closeModal('modalOnboarding');
   renderEducacao();
+  renderPrimeirosPassos();
   addToast('Perfil atualizado. Confira as suas dicas personalizadas na aba Educação. 🧭');
 }
 function abrirOnboarding(){
@@ -4414,14 +4664,15 @@ function renderBackupReminder(){
   const texto = !DATA.settings.lastBackupAt
     ? 'Você ainda não exportou nenhum backup. Seus dados existem só neste navegador, exportar leva alguns segundos e evita perder tudo.'
     : `Já se passaram ${diasSemBackup} dias desde o seu último backup. Vale exportar um novo agora.`;
-  el.innerHTML = `<div class="card" style="margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; border-color:var(--warning);">
-    <div class="flex gap-12" style="align-items:center;">
-      <div style="width:38px; height:38px; border-radius:11px; background:var(--warning-soft); display:flex; align-items:center; justify-content:center; font-size:17px; flex:none;">💾</div>
-      <p class="small text-soft mb-0">${texto}</p>
+  el.innerHTML = `<div class="backup-reminder-card">
+    <div class="backup-reminder-icon">💾<span class="backup-reminder-icon-ring"></span></div>
+    <div class="backup-reminder-body">
+      <div class="backup-reminder-title">Proteja o seu histórico</div>
+      <p class="backup-reminder-text">${texto}</p>
     </div>
-    <div class="flex gap-8">
+    <div class="backup-reminder-actions">
       <button class="btn btn-sm" id="btnBackupReminderDepois">Agora não</button>
-      <button class="btn btn-primary btn-sm" id="btnBackupReminderExportar">Exportar backup</button>
+      <button class="btn btn-primary btn-sm" id="btnBackupReminderExportar">⬇ Exportar backup</button>
     </div>
   </div>`;
   document.getElementById('btnBackupReminderDepois').addEventListener('click', ()=>{
@@ -4446,7 +4697,6 @@ function computePrimeirosPassos(){
     { label:'Registar primeira ação', feito: computePositions().some(p=>p.qty>0.0000001), jump:'acoes' },
     { label:'Criar primeira meta', feito: (DATA.quantityGoals||[]).length>0, jump:'acoes' },
     { label:'Conhecer sua alocação', feito: alloc.rfTotal>0 && alloc.rvTotal>0, jump:'alocacao' },
-    { label:'Fazer sua primeira conferência patrimonial', feito: (DATA.reconciliations||[]).length>0, jump:'dashboard' },
   ];
 }
 function renderPrimeirosPassos(){
@@ -4554,20 +4804,6 @@ function renderDashboard(){
   setRecon('reconResultadoTotal', patr.ganhoTotal);
   document.getElementById('reconPatrimonioCheck').textContent = fmtMoney(patr.aportesExternos + patr.ganhoTotal);
   document.getElementById('dashRetiradasAcum').textContent = fmtMoney(patr.caixa.retiradas);
-  const diff = round2(patr.patrimonio - (patr.aportesExternos + patr.ganhoTotal));
-  const diffEl = document.getElementById('reconDiff');
-  diffEl.textContent = fmtMoney(diff);
-  diffEl.style.color = Math.abs(diff)<0.05 ? 'var(--positive)' : 'var(--negative)';
-  diffEl.title = Math.abs(diff)<0.05 ? 'Equação fecha corretamente.' : 'Se diferente de zero, normalmente é caixa não reinvestido (dinheiro de dividendos/vendas ainda disponível, que já está no patrimônio mas não é "aporte" nem "resultado").';
-
-  const lastRecon = [...DATA.reconciliations].sort((a,b)=>b.date.localeCompare(a.date))[0];
-  const statusEl = document.getElementById('reconConferenciaStatus');
-  if(lastRecon){
-    const okConciliado = Math.abs(lastRecon.diferenca) < 1;
-    statusEl.innerHTML = `Última conferência em ${fmtDate(lastRecon.date)}: real ${fmtMoney(lastRecon.patrimonioInformado)} vs. calculado ${fmtMoney(lastRecon.patrimonioCalculado)}, diferença de <strong style="color:${okConciliado?'var(--positive)':'var(--negative)'}">${fmtMoneySigned(lastRecon.diferenca)}</strong>${lastRecon.note?' ('+escapeHtml(lastRecon.note)+')':''}.`;
-  } else {
-    statusEl.textContent = 'Você ainda não conferiu o valor calculado com o saldo real das suas contas/apps das corretoras.';
-  }
 
   const priceDates = Object.values(DATA.prices).map(p=>p.updatedAt).filter(Boolean).sort();
   document.getElementById('dashPrecoAtualizado').textContent = priceDates.length ? new Date(priceDates[priceDates.length-1]).toLocaleString('pt-BR') : 'nunca atualizado';
@@ -6191,6 +6427,7 @@ function alertasNaoLidos(){
 function renderCentralAlertas(){
   const alerts = computeAlerts();
   const naoLidos = alertasNaoLidos();
+  const lidosSet = new Set(DATA.settings.alertasLidos||[]);
   const badge = document.getElementById('bellBadgeCount');
   if(naoLidos.length===0){ badge.classList.add('hidden'); }
   else { badge.classList.remove('hidden'); badge.textContent = naoLidos.length>99?'99+':naoLidos.length; }
@@ -6201,10 +6438,11 @@ function renderCentralAlertas(){
   const lista = document.getElementById('centralAlertasLista');
   lista.innerHTML = alerts.length ? sorted.map((a,i)=>{
     const tab = ALERT_CATEGORY_TAB[a.category] || 'alertas';
-    return `<div class="alert-central-item" data-tab-destino="${tab}" data-idx="${i}">
+    const lido = lidosSet.has(alertSignature(a));
+    return `<div class="alert-central-item" data-tab-destino="${tab}" data-idx="${i}" data-sig="${escapeHtml(alertSignature(a))}" style="${lido?'opacity:.55;':''}">
       <span class="alert-central-dot" style="background:${dotColor[a.level]||'var(--line)'};"></span>
       <div style="flex:1;">
-        <div class="text-faint small" style="text-transform:uppercase; letter-spacing:.03em; margin-bottom:2px;">${escapeHtml(a.category)}</div>
+        <div class="text-faint small" style="text-transform:uppercase; letter-spacing:.03em; margin-bottom:2px;">${escapeHtml(a.category)}${lido?' · lido':''}</div>
         <div style="font-size:13.5px;">${icons[a.level]||'•'} ${a.text}</div>
         ${a.action?`<div class="text-faint small" style="margin-top:3px;">→ ${escapeHtml(a.action)}</div>`:''}
       </div>
@@ -6212,7 +6450,16 @@ function renderCentralAlertas(){
     </div>`;
   }).join('') : `<div class="empty"><div class="empty-icon">🔔</div><h3>Sem alertas no momento</h3><p>Tudo tranquilo por aqui.</p></div>`;
   lista.querySelectorAll('.alert-central-item').forEach(el=>{
-    el.addEventListener('click', ()=>{
+    el.addEventListener('click', async ()=>{
+      // Marca este alerta específico como lido antes de navegar — o sino já
+      // reduz na próxima vez que for aberto, sem depender do botão "Marcar
+      // como lido" (que continua existindo para marcar tudo de uma vez).
+      const sig = el.dataset.sig;
+      if(!DATA.settings.alertasLidos.includes(sig)){
+        DATA.settings.alertasLidos.push(sig);
+        await Store.save(DATA);
+        updateBellBadge();
+      }
       closeModal('modalCentralAlertas');
       const tabBtn = document.querySelector(`.tab-btn[data-tab="${el.dataset.tabDestino}"]`);
       if(tabBtn) tabBtn.click();
@@ -6687,15 +6934,190 @@ const RF_TIPOS = [
   {val:'Fundo de Renda Fixa', icon:'🧺'}, {val:'Outro', icon:'✏️'},
 ];
 const RV_CATALOG = {
-  acao: ['PETR4','VALE3','ITUB4','BBAS3','BBDC4','ABEV3','WEGE3','ITSA4','RENT3','MGLU3','B3SA3','SUZB3','JBSS3','RADL3','PRIO3','GGBR4','EQTL3','LREN3','RAIL3','CSAN3','ELET3','CPLE6','TOTS3','HAPV3','CMIG4'],
-  fii: ['MXRF11','HGLG11','KNRI11','XPML11','VISC11','BCFF11','KNCR11','HGRU11','VILG11','XPLG11','BTLG11','HGRE11','RECT11','VGIP11'],
-  etf: ['BOVA11','IVVB11','SMAL11','SPXI11','HASH11','GOLD11','ECOO11','DIVO11'],
-  bdr: ['AAPL34','MSFT34','GOGL34','AMZO34','TSLA34','NVDC34','META34','DISB34','NFLX34','JPMC34'],
-  fundo: ['Fundo Multimercado','Fundo de Ações','Fundo Cambial','Fundo Imobiliário Fechado'],
-  cripto: ['BTC','ETH','SOL','BNB','XRP','ADA','DOGE','AVAX'],
-  previdencia: ['PGBL','VGBL'],
-  outros: [],
+  acao: ['PETR4','VALE3','ITUB4','BBAS3','BBDC4','ABEV3','WEGE3','ITSA4','RENT3','MGLU3','B3SA3','SUZB3','JBSS3','RADL3','PRIO3','GGBR4','EQTL3','LREN3','RAIL3','CSAN3','ELET3','CPLE6','TOTS3','HAPV3','CMIG4','CYRE3','EGIE3','SBSP3','UGPA3','VIVT3','TIMS3','BRFS3','NTCO3','CSNA3','CCRO3','ENEV3','MULT3','AZUL4','GOAU4','BEEF3','SLCE3','ASAI3','CRFB3'],
+  fii: ['MXRF11','HGLG11','KNRI11','XPML11','VISC11','BCFF11','KNCR11','HGRU11','VILG11','XPLG11','BTLG11','HGRE11','RECT11','VGIP11','HGBS11','IRDM11','RBRR11','VRTA11','ALZR11','VINO11','TGAR11','HFOF11','PVBI11','BRCO11','GGRC11','XPCI11','CPTS11','HSML11','TRXF11','JSRE11','KNIP11','RECR11','MALL11'],
+  etf: ['BOVA11','IVVB11','SMAL11','SPXI11','HASH11','GOLD11','ECOO11','DIVO11','BBSD11','FIND11','MATB11','ISUS11','XINA11','NASD11','EURP11','WRLD11','BRAX11','BOVV11','PIBB11'],
+  bdr: ['AAPL34','MSFT34','GOGL34','AMZO34','TSLA34','NVDC34','META34','DISB34','NFLX34','JPMC34','KOOO34','MCDC34','NIKE34','WALM34','BOAC34','PYPL34','ADBE34','INTC34','CSCO34','VISA34','MSCD34','PFIZ34','JNJB34','BABA34','UBER34','SBUB34','IBMB34','ORCL34','QCOM34'],
+  fundo: ['Fundo Multimercado','Fundo de Ações','Fundo Cambial','Fundo Imobiliário Fechado','Fundo de Renda Fixa Crédito Privado','Fundo de Renda Fixa Simples','Fundo de Investimento em Participações (FIP)','Fundo de Investimento no Exterior (BDR/ações globais)','Fundo Long & Short','Fundo Quantitativo','Fundo de Índice Ativo','Fundo Previdenciário Multimercado'],
+  cripto: ['BTC','ETH','SOL','BNB','XRP','ADA','DOGE','AVAX','LTC','LINK','DOT','MATIC','TRX','SHIB','ATOM','UNI','XLM','ETC','BCH','NEAR'],
+  previdencia: ['PGBL Renda Fixa','PGBL Multimercado','PGBL Ações','VGBL Renda Fixa','VGBL Multimercado','VGBL Ações','VGBL Data-Alvo'],
+  outros: ['Poupança','CDB de banco não listado','Consórcio','Imóvel para renda','Terreno/Land banking','Ouro físico','Debênture incentivada','Nota promissória','COE (Certificado de Operações Estruturadas)','Clube de investimento','Precatório','Participação em empresa (private equity/sócio)'],
 };
+const ASSET_DESC = {
+  // ---- Ações ----
+  PETR4:'Petrobras · petróleo e gás', VALE3:'Vale · mineração e minério de ferro', ITUB4:'Itaú Unibanco · maior banco privado do país',
+  BBAS3:'Banco do Brasil · banco público federal', BBDC4:'Bradesco · banco privado', ABEV3:'Ambev · bebidas (cervejas e refrigerantes)',
+  WEGE3:'WEG · motores e equipamentos elétricos', ITSA4:'Itaúsa · holding com participação no Itaú', RENT3:'Localiza · aluguel e gestão de frotas',
+  MGLU3:'Magazine Luiza · varejo e e-commerce', B3SA3:'B3 · a própria bolsa de valores brasileira', SUZB3:'Suzano · papel e celulose',
+  JBSS3:'JBS · processamento de carnes e alimentos', RADL3:'Raia Drogasil · rede de farmácias', PRIO3:'PetroRio · exploração de petróleo',
+  GGBR4:'Gerdau · siderurgia e aço', EQTL3:'Equatorial Energia · distribuição de energia elétrica', LREN3:'Lojas Renner · varejo de moda',
+  RAIL3:'Rumo · logística ferroviária', CSAN3:'Cosan · energia e distribuição de combustíveis', ELET3:'Eletrobras · geração e transmissão de energia',
+  CPLE6:'Copel · energia elétrica no Paraná', TOTS3:'Totvs · software de gestão empresarial', HAPV3:'Hapvida · planos de saúde',
+  CMIG4:'Cemig · energia elétrica em Minas Gerais', CYRE3:'Cyrela · construção civil e incorporação', EGIE3:'Engie Brasil · geração de energia',
+  SBSP3:'Sabesp · saneamento básico em São Paulo', UGPA3:'Ultrapar · distribuição de combustíveis (Ipiranga)', VIVT3:'Vivo (Telefônica) · telecomunicações',
+  TIMS3:'TIM · telecomunicações', BRFS3:'BRF · alimentos processados', NTCO3:'Natura &Co · cosméticos', CSNA3:'CSN · siderurgia e mineração',
+  CCRO3:'CCR · concessões de rodovias', ENEV3:'Eneva · geração de energia (térmica e gás)', MULT3:'Multiplan · shopping centers',
+  AZUL4:'Azul · companhia aérea', GOAU4:'Gerdau Metalúrgica · siderurgia', BEEF3:'Minerva Foods · frigorífico e carnes',
+  SLCE3:'SLC Agrícola · produção agrícola', ASAI3:'Assaí · atacarejo', CRFB3:'Carrefour Brasil · varejo e supermercados',
+  // ---- FIIs ----
+  MXRF11:'FII de papel (CRIs) e renda urbana', HGLG11:'FII de galpões logísticos', KNRI11:'FII híbrido (lajes corporativas e logística)',
+  XPML11:'FII de shopping centers', VISC11:'FII de shopping centers', BCFF11:'FII de fundo de fundos imobiliários',
+  KNCR11:'FII de recebíveis (CRI) pós-fixado CDI', HGRU11:'FII urbano de agências e imóveis comerciais', VILG11:'FII de galpões logísticos',
+  XPLG11:'FII de galpões logísticos', BTLG11:'FII de galpões logísticos', HGRE11:'FII de lajes corporativas (escritórios)',
+  RECT11:'FII de lajes corporativas e recebíveis', VGIP11:'FII de papel (CRIs) indexado ao IPCA', HGBS11:'FII de shopping centers',
+  IRDM11:'FII de papel (recebíveis imobiliários)', RBRR11:'FII de papel (CRIs)', VRTA11:'FII de papel (recebíveis)',
+  ALZR11:'FII híbrido (galpões e lajes triple net)', VINO11:'FII de lajes corporativas', TGAR11:'FII de renda garantida (agências bancárias)',
+  HFOF11:'FII de fundo de fundos imobiliários', PVBI11:'FII de lajes corporativas de alto padrão', BRCO11:'FII de galpões logísticos',
+  GGRC11:'FII de galpões logísticos (contratos atípicos)', XPCI11:'FII de papel (CRIs)', CPTS11:'FII de papel (crédito estruturado)',
+  HSML11:'FII de shopping centers', TRXF11:'FII de logística e renda urbana', JSRE11:'FII de lajes corporativas',
+  KNIP11:'FII de papel (CRIs) indexado ao IPCA', RECR11:'FII de papel (recebíveis high grade)', MALL11:'FII de shopping centers',
+  // ---- ETFs ----
+  BOVA11:'ETF que replica o Ibovespa', IVVB11:'ETF que replica o S&P 500 (dólar)', SMAL11:'ETF de empresas de menor valor de mercado (small caps)',
+  SPXI11:'ETF que replica o S&P 500', HASH11:'ETF de criptoativos', GOLD11:'ETF que replica o preço do ouro',
+  ECOO11:'ETF de empresas com critérios ESG', DIVO11:'ETF de empresas boas pagadoras de dividendos', BBSD11:'ETF de dividendos (IDIV)',
+  FIND11:'ETF do setor financeiro brasileiro', MATB11:'ETF do setor de materiais básicos', ISUS11:'ETF de sustentabilidade empresarial',
+  XINA11:'ETF de empresas chinesas', NASD11:'ETF que replica o Nasdaq 100', EURP11:'ETF de empresas europeias',
+  WRLD11:'ETF de ações globais', BRAX11:'ETF do índice Brasil Amplo (IBrA)', BOVV11:'ETF que replica o Ibovespa',
+  PIBB11:'ETF de empresas de grande liquidez (IBrX-50)',
+  // ---- BDRs ----
+  AAPL34:'Apple · tecnologia e eletrônicos', MSFT34:'Microsoft · software e nuvem', GOGL34:'Alphabet (Google) · tecnologia e publicidade',
+  AMZO34:'Amazon · e-commerce e nuvem', TSLA34:'Tesla · veículos elétricos', NVDC34:'Nvidia · semicondutores e IA',
+  META34:'Meta (Facebook/Instagram) · redes sociais', DISB34:'Disney · entretenimento e mídia', NFLX34:'Netflix · streaming de vídeo',
+  JPMC34:'JPMorgan Chase · banco americano', KOOO34:'Coca-Cola · bebidas', MCDC34:'McDonald\'s · alimentação',
+  NIKE34:'Nike · artigos esportivos', WALM34:'Walmart · varejo', BOAC34:'Bank of America · banco americano',
+  PYPL34:'PayPal · pagamentos digitais', ADBE34:'Adobe · software criativo', INTC34:'Intel · semicondutores',
+  CSCO34:'Cisco · redes e infraestrutura de TI', VISA34:'Visa · meios de pagamento', MSCD34:'Mastercard · meios de pagamento',
+  PFIZ34:'Pfizer · farmacêutica', JNJB34:'Johnson & Johnson · saúde e farmacêutica', BABA34:'Alibaba · e-commerce chinês',
+  UBER34:'Uber · mobilidade e entregas', SBUB34:'Starbucks · cafeterias', IBMB34:'IBM · tecnologia e consultoria',
+  ORCL34:'Oracle · software e banco de dados', QCOM34:'Qualcomm · semicondutores para telecom',
+  // ---- Cripto ----
+  BTC:'Bitcoin · a primeira e maior criptomoeda', ETH:'Ethereum · contratos inteligentes e apps descentralizados', SOL:'Solana · blockchain de alta velocidade',
+  BNB:'BNB · token da Binance', XRP:'XRP (Ripple) · pagamentos internacionais', ADA:'Cardano · blockchain com foco acadêmico',
+  DOGE:'Dogecoin · criptomoeda originada como meme', AVAX:'Avalanche · blockchain para apps descentralizados', LTC:'Litecoin · pagamentos rápidos, "prata digital"',
+  LINK:'Chainlink · oráculos de dados para blockchain', DOT:'Polkadot · interoperabilidade entre blockchains', MATIC:'Polygon · escalabilidade para Ethereum',
+  TRX:'Tron · blockchain para conteúdo digital', SHIB:'Shiba Inu · criptomoeda originada como meme', ATOM:'Cosmos · rede de blockchains interoperáveis',
+  UNI:'Uniswap · exchange descentralizada (DEX)', XLM:'Stellar · pagamentos e remessas internacionais', ETC:'Ethereum Classic · versão original do Ethereum',
+  BCH:'Bitcoin Cash · bifurcação do Bitcoin', NEAR:'NEAR Protocol · blockchain para desenvolvedores',
+};
+/* Explicações individuais — cada tipo de Renda Fixa, cada tipo de Fundo e
+   cada tipo de Previdência tem a SUA PRÓPRIA explicação, nunca reaproveita
+   o texto genérico da categoria (foi um bug real corrigido: fundos e
+   previdência mostravam o mesmo texto para itens diferentes). */
+const ITEM_EXPLAIN = {
+  'CDB':{ oque:'Certificado de Depósito Bancário, você empresta dinheiro a um banco em troca de uma remuneração combinada, protegido pelo FGC até o limite legal.', como:'Pode ser prefixado, pós-fixado (% do CDI) ou híbrido (IPCA+). O rendimento e o risco dependem principalmente da saúde do banco emissor.', perfil:'Conservador: base da carteira, priorizando bancos grandes ou o limite do FGC em bancos menores. Moderado: parte relevante da RF, aceitando bancos médios por taxas melhores. Arrojado: usado mais como reserva tática do que como núcleo da carteira.', dica:'Bancos menores costumam pagar mais, mas fique sempre dentro do limite do FGC (R$ 250 mil por CPF e instituição) se a garantia for importante para você.' },
+  'RDB':{ oque:'Recibo de Depósito Bancário, muito parecido com o CDB, mas sem possibilidade de negociar ou transferir o título antes do vencimento.', como:'Mesma lógica de remuneração do CDB (pré, pós ou híbrido), coberto pelo FGC, porém com liquidez ainda mais restrita.', perfil:'Conservador: só se o prazo já for compatível com os seus planos. Moderado: aceitável por uma taxa melhor. Arrojado: raramente prioritário, dada a baixa liquidez.', dica:'Confirme sempre se existe resgate antecipado e em que condições, antes de aplicar um valor que talvez precise usar antes do vencimento.' },
+  'LCI':{ oque:'Letra de Crédito Imobiliário, título de Renda Fixa isento de Imposto de Renda para pessoa física, usado por bancos para financiar o setor imobiliário.', como:'A isenção de IR pode fazer uma taxa nominal menor render, na prática, mais do que um CDB tributado, sempre compare a taxa líquida equivalente.', perfil:'Conservador: excelente opção pela isenção fiscal e proteção do FGC. Moderado: parte relevante da RF. Arrojado: usado mais pela eficiência tributária do que pelo retorno absoluto.', dica:'Costuma ter prazo de carência mínimo, verifique antes se o prazo é compatível com quando você pode precisar do dinheiro.' },
+  'LCA':{ oque:'Letra de Crédito do Agronegócio, título de Renda Fixa isento de Imposto de Renda para pessoa física, usado para financiar o setor agrícola.', como:'Funciona como a LCI (mesma isenção fiscal e cobertura do FGC), mas os recursos captados vão para o financiamento do agronegócio.', perfil:'Conservador: boa opção pela isenção fiscal. Moderado: parte relevante da RF. Arrojado: usado mais pela eficiência tributária.', dica:'Assim como a LCI, costuma ter carência mínima, confirme o prazo antes de aplicar.' },
+  'Tesouro Selic':{ oque:'Título público pós-fixado que acompanha a taxa Selic, considerado um dos investimentos mais seguros e líquidos do país (risco soberano).', como:'O valor da cota sobe praticamente todo dia útil, acompanhando os juros, com baixíssima oscilação de preço mesmo se vendido antes do vencimento.', perfil:'Conservador: base natural da reserva de emergência. Moderado: parte da RF de alta liquidez. Arrojado: usado como "caixa" entre outras alocações.', dica:'É a referência mais indicada para reserva de emergência, por unir segurança, liquidez diária e baixíssima oscilação de preço.' },
+  'Tesouro IPCA+':{ oque:'Título público híbrido que paga a inflação (IPCA) mais uma taxa fixa, protegendo o poder de compra no longo prazo.', como:'Se vendido antes do vencimento, o preço pode oscilar bastante (marcação a mercado); levado até o vencimento, garante o retorno combinado acima da inflação.', perfil:'Conservador: ótimo para objetivos de longo prazo como aposentadoria. Moderado: parte relevante da RF de longo prazo. Arrojado: pode usar prazos mais longos, aceitando mais oscilação no meio do caminho.', dica:'Faz mais sentido quando você pode levar o título até o vencimento, evitando vender num momento de preço desfavorável.' },
+  'Tesouro Prefixado':{ oque:'Título público com taxa de juros fixa definida no momento da compra, sem depender de índices futuros.', como:'Você já sabe exatamente quanto vai render se levar até o vencimento; o preço de mercado antes disso varia conforme a expectativa de juros futuros.', perfil:'Conservador: só quando o prazo é compatível com os planos. Moderado: interessante quando os juros estão altos e devem cair. Arrojado: pode usar para "travar" uma taxa alta apostando na queda dos juros.', dica:'Mais indicado quando você acredita que os juros vão cair, travar uma taxa alta hoje pode compensar bastante no futuro.' },
+  'Tesouro RendA+':{ oque:'Título público pensado para complementar a aposentadoria, paga uma renda mensal ao investidor a partir de uma data futura combinada.', como:'Durante a fase de acumulação, rende IPCA + juros como o Tesouro IPCA+; depois, converte o saldo em pagamentos mensais por 20 anos.', perfil:'Conservador: alinhado a quem já pensa especificamente em complementar a aposentadoria. Moderado/Arrojado: mais um item de planejamento de longo prazo do que de retorno máximo.', dica:'Pense nele como parte do planejamento de aposentadoria, não como uma reserva de curto prazo.' },
+  'Tesouro Educa+':{ oque:'Título público criado para ajudar a planejar os custos de educação, também paga IPCA + juros e depois converte em parcelas mensais.', como:'Funciona de forma parecida ao RendA+, mas voltado a um objetivo de educação (própria ou de terceiros) numa data futura definida.', perfil:'Alinhado a qualquer perfil que tenha esse objetivo específico de custear educação numa data futura conhecida.', dica:'Escolha a data de vencimento de acordo com quando o custo educacional realmente vai acontecer.' },
+  'Poupança':{ oque:'A aplicação mais tradicional e simples do país, com liquidez imediata e isenção de Imposto de Renda para pessoa física.', como:'Rende 70% da Selic + TR quando a Selic está em 8,5% ou menos, ou 0,5% ao mês + TR quando está acima disso, com crédito só no "aniversário" mensal da aplicação.', perfil:'Todos os perfis: geralmente supera-se em rentabilidade líquida usando Tesouro Selic ou CDBs de liquidez diária, mas a poupança ainda serve como reserva imediata simples.', dica:'Compare sempre com o Tesouro Selic, na maioria dos cenários recentes ele rende mais líquido do que a poupança, com risco semelhante.' },
+  'Debênture':{ oque:'Título de dívida emitido por uma empresa (não um banco), você empresta dinheiro diretamente à empresa em troca de juros.', como:'Não é coberta pelo FGC, o risco depende inteiramente da capacidade da empresa emissora de pagar a dívida.', perfil:'Conservador: só emissores muito sólidos, em pequena proporção. Moderado: uma fatia diversificada de crédito privado. Arrojado: pode aceitar emissores menores por taxas mais altas.', dica:'Sem a proteção do FGC, avalie o risco de crédito da empresa (rating, saúde financeira) antes de investir.' },
+  'Debênture Incentivada':{ oque:'Debênture de projetos de infraestrutura (energia, saneamento, transporte), isenta de Imposto de Renda para pessoa física.', como:'Mesma lógica de risco de crédito da debênture comum, mas com o benefício fiscal da isenção, o que costuma compensar uma taxa nominal um pouco menor.', perfil:'Conservador: só emissores sólidos. Moderado: parte do crédito privado, aproveitando a isenção fiscal. Arrojado: pode aceitar mais risco de crédito por retorno líquido maior.', dica:'A isenção de IR é o grande diferencial, compare sempre a taxa líquida equivalente frente a uma debênture comum ou um CDB.' },
+  'CRI':{ oque:'Certificado de Recebíveis Imobiliários, título lastreado em créditos do setor imobiliário (financiamentos, aluguéis), isento de IR para pessoa física.', como:'O retorno vem dos pagamentos dos devedores dos créditos imobiliários que lastreiam o título; o risco depende da qualidade desses recebíveis.', perfil:'Conservador: só CRIs de alta qualidade de crédito, se houver conforto com o risco. Moderado: parte do crédito privado isento. Arrojado: pode aceitar CRIs de maior risco/retorno.', dica:'Não é coberto pelo FGC, avalie a qualidade dos devedores e das garantias por trás do título.' },
+  'CRA':{ oque:'Certificado de Recebíveis do Agronegócio, título lastreado em créditos do setor agrícola, isento de Imposto de Renda para pessoa física.', como:'Funciona como o CRI, mas os recebíveis vêm de operações do agronegócio, o risco depende da qualidade desses créditos.', perfil:'Conservador: só emissões de alta qualidade. Moderado: parte do crédito privado isento. Arrojado: pode aceitar mais risco por retorno maior.', dica:'Assim como o CRI, não tem cobertura do FGC, avalie a qualidade do lastro antes de investir.' },
+  'LC':{ oque:'Letra de Câmbio, título de crédito emitido por financeiras (não bancos), com funcionamento parecido ao CDB.', como:'Remuneração pré, pós ou híbrida, coberta pelo FGC, mas o emissor costuma ser uma financeira, não um banco tradicional.', perfil:'Conservador: aceitável dentro do limite do FGC. Moderado: uma opção a mais de diversificação de emissor. Arrojado: usado por taxas geralmente um pouco mais altas.', dica:'Confirme sempre se o emissor está coberto pelo FGC antes de aplicar.' },
+  'LF':{ oque:'Letra Financeira, título de Renda Fixa de prazo mais longo (mínimo 2 anos), geralmente com valores mínimos mais altos.', como:'Costuma pagar taxas melhores do que um CDB comum, mas NÃO é coberta pelo FGC, o risco depende inteiramente da instituição emissora.', perfil:'Conservador: só bancos muito sólidos. Moderado: uma fatia pequena por diversificação. Arrojado: pode aceitar pela taxa mais alta, ciente do risco maior.', dica:'A ausência de FGC é o ponto mais importante aqui, avalie bem a solidez do banco emissor.' },
+  'LIG':{ oque:'Letra Imobiliária Garantida, título de Renda Fixa lastreado numa carteira de créditos imobiliários, com garantias adicionais.', como:'Costuma unir a segurança de garantias reais com a cobertura do FGC, dependendo da estrutura específica da emissão.', perfil:'Conservador: opção de segurança adicional dentro da Renda Fixa. Moderado: parte da diversificação de crédito. Arrojado: geralmente não é o foco por ter retorno mais moderado.', dica:'Verifique sempre as condições específicas de liquidez e garantia de cada emissão, elas variam bastante.' },
+  'DPGE':{ oque:'Depósito a Prazo com Garantia Especial, criado para dar mais segurança a depósitos em instituições menores, com cobertura do FGC ampliada.', como:'Costuma pagar taxas atrativas de instituições menores, com uma camada extra de proteção em relação a um CDB comum dessas mesmas instituições.', perfil:'Conservador: alternativa para acessar taxas de bancos menores com mais segurança. Moderado/Arrojado: usado mais pela taxa do que pelo perfil de risco em si.', dica:'Verifique o limite de cobertura específico do DPGE, que pode ser diferente do limite padrão do FGC.' },
+  'Fundo de Renda Fixa':{ oque:'Fundo que reúne o dinheiro de vários investidores para aplicar predominantemente em títulos de Renda Fixa, gerido por um profissional.', como:'O valor da cota varia conforme o resultado da carteira do fundo, descontada a taxa de administração (e eventual performance).', perfil:'Conservador: fundos de RF simples e de baixo risco. Moderado: fundos de RF com um pouco mais de crédito privado. Arrojado: geralmente prefere alternativas com potencial maior de retorno.', dica:'Compare sempre a taxa de administração com o retorno do CDI no mesmo período, taxas altas corroem bastante o resultado líquido.' },
+  'Outro':{ oque:'Categoria para um título de Renda Fixa que não se encaixa exatamente nos tipos listados acima.', como:'As regras de rentabilidade, risco e tributação dependem inteiramente do título específico, vale sempre ler as condições antes de aplicar.', perfil:'Depende do título específico, pesquise as características antes de classificar aqui.', dica:'Ao cadastrar, use a observação do lançamento para anotar detalhes importantes deste título específico.' },
+  'Fundo Multimercado':{ oque:'Fundo que pode investir em várias classes de ativos ao mesmo tempo (Renda Fixa, câmbio, ações, derivativos), buscando retorno em diferentes cenários de mercado.', como:'O gestor tem liberdade para mudar a alocação conforme a visão de mercado, o que pode gerar tanto retornos acima do CDI quanto perdas, dependendo do resultado das apostas.', perfil:'Conservador: multimercados de baixa volatilidade. Moderado: multimercados com estratégia diversificada. Arrojado: multimercados mais agressivos ou concentrados numa tese.', dica:'Olhe sempre a volatilidade histórica do fundo, não só o retorno, dois fundos com o mesmo retorno podem ter tido caminhos muito diferentes até lá.' },
+  'Fundo de Ações':{ oque:'Fundo que investe predominantemente em ações, com um gestor escolhendo as empresas conforme a estratégia do fundo.', como:'O valor da cota acompanha o desempenho da carteira de ações escolhida pelo gestor, com mais oscilação do que fundos de Renda Fixa ou multimercado.', perfil:'Conservador: exposição pequena, se houver. Moderado: parte da fatia de Renda Variável. Arrojado: pode ser uma parte relevante da carteira.', dica:'Compare o desempenho do fundo com um índice de referência (ex.: Ibovespa) no mesmo período antes de decidir.' },
+  'Fundo Cambial':{ oque:'Fundo que investe principalmente em ativos atrelados a moedas estrangeiras, como o dólar.', como:'O valor da cota varia principalmente conforme a variação cambial, servindo como proteção (hedge) contra a desvalorização do real.', perfil:'Conservador: pequena fatia para proteção cambial. Moderado: uma parcela de diversificação internacional. Arrojado: pode usar de forma mais tática, aproveitando movimentos de câmbio.', dica:'Pense nele mais como proteção de moeda do que como uma fonte principal de retorno.' },
+  'Fundo Imobiliário Fechado':{ oque:'Fundo que investe em imóveis ou recebíveis imobiliários, mas com prazo fechado, sem resgate a qualquer momento (diferente de um FII negociado em bolsa).', como:'O investidor entra durante uma oferta específica e só recupera o capital na venda das cotas a terceiros ou no encerramento do fundo, conforme o regulamento.', perfil:'Conservador: menos indicado pela baixa liquidez. Moderado: aceitável para uma fatia de longo prazo. Arrojado: pode aceitar pela busca de retorno maior em troca da iliquidez.', dica:'Avalie com atenção o prazo e as regras de saída antes de entrar, a liquidez aqui é bem menor do que um FII listado em bolsa.' },
+  'Fundo de Renda Fixa Crédito Privado':{ oque:'Fundo de Renda Fixa focado em títulos de crédito privado (CDBs, debêntures, CRIs/CRAs), buscando um retorno acima do CDI em troca de mais risco de crédito.', como:'O gestor escolhe os títulos de empresas e instituições privadas; o retorno tende a ser maior do que um fundo de RF simples, mas com risco de calote maior.', perfil:'Conservador: fatia pequena, com fundos de crédito privado de alta qualidade. Moderado: parte relevante da RF. Arrojado: pode aceitar fundos com crédito de risco mais elevado por retorno maior.', dica:'Observe a diversificação de emissores dentro do fundo, concentração excessiva num único devedor aumenta bastante o risco.' },
+  'Fundo de Renda Fixa Simples':{ oque:'Fundo de Renda Fixa com regras mais simples e conservadoras de composição, geralmente com taxas de administração menores.', como:'Investe majoritariamente em títulos públicos e de baixo risco, com liquidez tipicamente mais rápida do que fundos de crédito privado.', perfil:'Conservador: boa opção de baixo custo e baixo risco. Moderado: parte da RF de liquidez. Arrojado: geralmente não é o foco, dado o potencial de retorno mais limitado.', dica:'Compare a taxa de administração com o retorno líquido, esse tipo de fundo só compensa se a taxa for realmente baixa.' },
+  'Fundo de Investimento em Participações (FIP)':{ oque:'Fundo que investe em participações societárias de empresas, geralmente não listadas em bolsa (private equity).', como:'O retorno vem da valorização e eventual venda das empresas investidas, com prazo de investimento tipicamente longo (vários anos) e baixíssima liquidez.', perfil:'Geralmente reservado a investidores qualificados/profissionais, dado o alto risco, iliquidez e valores mínimos elevados.', dica:'Exige análise aprofundada de cada operação, não é um investimento para quem busca liquidez ou baixo risco.' },
+  'Fundo de Investimento no Exterior (BDR/ações globais)':{ oque:'Fundo que investe em ativos internacionais (ações globais, ETFs estrangeiros), oferecendo exposição a mercados de fora do Brasil.', como:'O valor da cota varia conforme o desempenho dos ativos internacionais e também a variação cambial entre o real e as moedas estrangeiras.', perfil:'Conservador: fatia pequena de diversificação internacional. Moderado: parte relevante para diversificar geograficamente. Arrojado: pode ter uma fatia maior, buscando crescimento global.', dica:'Diversificação internacional reduz a dependência de um único país/economia, mas soma o risco cambial ao risco dos ativos em si.' },
+  'Fundo Long & Short':{ oque:'Fundo que compra ações que espera que subam (posição comprada) e simultaneamente vende ações que espera que caiam (posição vendida).', como:'Busca lucrar com a diferença de desempenho entre os dois grupos de ações, tentando reduzir a dependência da direção geral do mercado.', perfil:'Estratégia sofisticada, geralmente mais adequada a perfis moderados/arrojados que já entendem bem o funcionamento de operações vendidas.', dica:'É uma estratégia mais complexa do que parece, entenda bem como o gestor opera antes de investir.' },
+  'Fundo Quantitativo':{ oque:'Fundo que usa modelos matemáticos e estatísticos automatizados para decidir as operações, com pouca ou nenhuma intervenção humana direta.', como:'As decisões seguem regras e algoritmos pré-definidos, buscando identificar padrões e oportunidades que um investidor manual dificilmente identificaria.', perfil:'Moderado/Arrojado: normalmente usado como parte de uma estratégia diversificada, complementando gestão discricionária tradicional.', dica:'O histórico de um fundo quantitativo pode não se repetir se as condições de mercado mudarem, avalie o processo, não só o retorno passado.' },
+  'Fundo de Índice Ativo':{ oque:'Fundo que usa um índice como referência, mas com liberdade do gestor para se afastar dele buscando um retorno adicional.', como:'Diferente de um ETF passivo, o gestor pode ajustar pesos e posições, tentando superar o índice de referência ao longo do tempo.', perfil:'Moderado: alternativa entre um ETF passivo puro e um fundo de ações totalmente discricionário. Arrojado: pode aceitar desvios maiores do índice.', dica:'Compare sempre o retorno líquido de taxas contra o próprio índice de referência, a gestão ativa só compensa se realmente superar o índice.' },
+  'Fundo Previdenciário Multimercado':{ oque:'Fundo multimercado estruturado especificamente para ser usado dentro de um plano de previdência privada (PGBL ou VGBL).', como:'Funciona como um multimercado comum, mas com o "invólucro" tributário e sucessório da previdência privada por cima.', perfil:'Conservador: fatia menor dentro do plano. Moderado: alocação central de um plano de previdência com apetite a mais retorno. Arrojado: pode ter alocação relevante para o longo prazo da aposentadoria.', dica:'Avalie a taxa de administração do fundo E a taxa de carregamento do plano de previdência, as duas juntas impactam o resultado final.' },
+  'PGBL Renda Fixa':{ oque:'Plano de previdência PGBL com a carteira investida majoritariamente em Renda Fixa, permite deduzir as contribuições do IR (até 12% da renda tributável, para quem declara pelo modelo completo).', como:'O rendimento acompanha títulos de Renda Fixa; no resgate, o Imposto de Renda incide sobre o valor TOTAL resgatado (não só o rendimento), já que as contribuições foram deduzidas antes.', perfil:'Conservador: perfil natural para quem quer previdência de baixo risco. Indicado especialmente para quem declara IR pelo modelo completo e quer o benefício da dedução.', dica:'A dedução fiscal do PGBL só vale a pena para quem declara pelo modelo completo, confirme isso antes de escolher entre PGBL e VGBL.' },
+  'PGBL Multimercado':{ oque:'Plano de previdência PGBL com a carteira investida em multimercado (várias classes de ativos), com a mesma dedução fiscal do PGBL de Renda Fixa.', como:'O rendimento varia conforme a estratégia multimercado do fundo por trás do plano; no resgate, o IR incide sobre o valor total resgatado.', perfil:'Moderado: equilíbrio entre a dedução fiscal do PGBL e um potencial de retorno um pouco maior do que a Renda Fixa pura.', dica:'Avalie o histórico e a volatilidade do fundo multimercado por trás do plano antes de contratar.' },
+  'PGBL Ações':{ oque:'Plano de previdência PGBL com a carteira investida em ações, unindo a dedução fiscal do PGBL a uma exposição maior à Renda Variável.', como:'O rendimento acompanha o desempenho de uma carteira de ações; no resgate, o IR incide sobre o valor total, com mais oscilação no caminho por causa da Renda Variável.', perfil:'Arrojado: para quem já tem um horizonte longo até a aposentadoria e aceita mais oscilação em busca de retorno maior.', dica:'Por ter mais oscilação, faz mais sentido para quem está longe da aposentadoria e não vai precisar resgatar tão cedo.' },
+  'VGBL Renda Fixa':{ oque:'Plano de previdência VGBL com a carteira investida em Renda Fixa, sem a dedução fiscal do PGBL, mas o IR no resgate incide só sobre o rendimento, não sobre o total aportado.', como:'Funciona de forma parecida com um investimento comum de Renda Fixa, mas com o "invólucro" de sucessão e tributação da previdência por cima.', perfil:'Conservador: indicado para quem já declara pelo modelo simplificado (sem benefício de dedução) ou quer diversificar o tipo de previdência.', dica:'Para quem não pode ou não quer deduzir contribuições do IR, o VGBL costuma ser mais vantajoso do que o PGBL.' },
+  'VGBL Multimercado':{ oque:'Plano de previdência VGBL com a carteira investida em multimercado, sem dedução fiscal, com IR no resgate incidindo só sobre o rendimento.', como:'O rendimento varia conforme a estratégia multimercado do fundo por trás do plano.', perfil:'Moderado: equilíbrio entre diversificação de estratégia e a tributação mais favorável do VGBL sobre o total aportado.', dica:'Avalie o histórico e a volatilidade do fundo multimercado por trás do plano antes de contratar.' },
+  'VGBL Ações':{ oque:'Plano de previdência VGBL com a carteira investida em ações, unindo exposição à Renda Variável à tributação favorável do VGBL sobre o valor total aportado.', como:'O rendimento acompanha o desempenho de uma carteira de ações; no resgate, o IR incide só sobre o rendimento obtido.', perfil:'Arrojado: para quem tem horizonte longo e aceita mais oscilação, buscando crescimento patrimonial de longo prazo dentro da previdência.', dica:'Como em qualquer previdência com ações, faz mais sentido para quem está longe da data de resgate.' },
+  'VGBL Data-Alvo':{ oque:'Plano de previdência VGBL que ajusta automaticamente a composição da carteira ao longo do tempo, ficando mais conservador conforme se aproxima da data-alvo definida (ex.: ano de aposentadoria).', como:'No início, a carteira tem mais Renda Variável; à medida que a data-alvo se aproxima, o fundo migra automaticamente para uma composição mais conservadora.', perfil:'Qualquer perfil que prefira não precisar rebalancear manualmente ao longo dos anos, o ajuste já é feito pelo próprio fundo.', dica:'Escolha a data-alvo de acordo com quando você realmente pretende começar a usar o dinheiro, não necessariamente a idade "oficial" de aposentadoria.' },
+};
+function abrirExplorarAtivo(idOrTicker, categoria){
+  const item = idOrTicker ? (ITEM_EXPLAIN[idOrTicker] || null) : null;
+  const isTicker = !!ASSET_DESC[idOrTicker];
+  const desc = ASSET_DESC[idOrTicker] || null;
+  const catInfo = CAT_EXPLORE[categoria] || null;
+  document.getElementById('explorarModalTitulo').textContent = idOrTicker ? idOrTicker : (CAT_LABEL[categoria]||idOrTicker);
+  document.getElementById('explorarModalSub').textContent = isTicker ? (desc||'') : (item ? 'O que é e como funciona' : 'O que é esta classe de ativo');
+  const body = document.getElementById('explorarModalBody');
+  if(item){
+    // Item específico com explicação própria (tipos de RF, Fundos, Previdência) — nunca reaproveita o texto da categoria.
+    body.innerHTML = `
+      <div class="explorar-block explorar-block-1"><span class="explorar-block-icon">🏷️</span><div><div class="explorar-block-title">O que é</div><p>${escapeHtml(item.oque)}</p></div></div>
+      <div class="explorar-block explorar-block-2"><span class="explorar-block-icon">⚖️</span><div><div class="explorar-block-title">Como funciona</div><p>${escapeHtml(item.como)}</p></div></div>
+      <div class="explorar-block explorar-block-3"><span class="explorar-block-icon">🧭</span><div><div class="explorar-block-title">Peso sugerido por perfil</div><p>${escapeHtml(item.perfil)}</p></div></div>
+      <div class="explorar-block explorar-block-4"><span class="explorar-block-icon">💡</span><div><div class="explorar-block-title">Dica</div><p>${escapeHtml(item.dica)}</p></div></div>
+      <p class="explorar-disclaimer">Conteúdo educativo geral, nunca uma recomendação de investimento específico. Pesquise sempre antes de investir.</p>`;
+  } else if(isTicker && catInfo){
+    body.innerHTML = `
+      <div class="explorar-block explorar-block-1"><span class="explorar-block-icon">🏷️</span><div><div class="explorar-block-title">O que é</div><p>${escapeHtml(desc)}, faz parte da categoria <strong>${escapeHtml(CAT_LABEL[categoria])}</strong>. ${escapeHtml(catInfo.oque)}</p></div></div>
+      <div class="explorar-block explorar-block-2"><span class="explorar-block-icon">⚖️</span><div><div class="explorar-block-title">Como funciona</div><p>${escapeHtml(catInfo.como)}</p></div></div>
+      <div class="explorar-block explorar-block-3"><span class="explorar-block-icon">🧭</span><div><div class="explorar-block-title">Peso sugerido por perfil</div><p>${escapeHtml(catInfo.perfil)}</p></div></div>
+      <div class="explorar-block explorar-block-4"><span class="explorar-block-icon">💡</span><div><div class="explorar-block-title">Dica</div><p>${escapeHtml(catInfo.dica)}</p></div></div>
+      <p class="explorar-disclaimer">Conteúdo educativo geral, nunca uma recomendação de compra deste ativo específico. Pesquise sempre antes de investir.</p>`;
+  } else if(catInfo){
+    body.innerHTML = `
+      <div class="explorar-block explorar-block-1"><span class="explorar-block-icon">🏷️</span><div><div class="explorar-block-title">O que é</div><p>${escapeHtml(catInfo.oque)}</p></div></div>
+      <div class="explorar-block explorar-block-2"><span class="explorar-block-icon">⚖️</span><div><div class="explorar-block-title">Como funciona</div><p>${escapeHtml(catInfo.como)}</p></div></div>
+      <div class="explorar-block explorar-block-3"><span class="explorar-block-icon">🧭</span><div><div class="explorar-block-title">Peso sugerido por perfil</div><p>${escapeHtml(catInfo.perfil)}</p></div></div>
+      <div class="explorar-block explorar-block-4"><span class="explorar-block-icon">💡</span><div><div class="explorar-block-title">Dica</div><p>${escapeHtml(catInfo.dica)}</p></div></div>
+      <p class="explorar-disclaimer">Conteúdo educativo geral, nunca uma recomendação de investimento específico. Pesquise sempre antes de investir.</p>`;
+  } else {
+    body.innerHTML = `<p class="text-soft small">Ainda não temos uma explicação detalhada para este item.</p>`;
+  }
+  openModal('modalExplorarAtivo');
+}
+const CAT_EXPLORE = {
+  rf:{ oque:'Renda Fixa é quando você empresta dinheiro (a um banco, ao governo ou a uma empresa) em troca de uma remuneração combinada previamente, seja uma taxa fixa, um percentual do CDI, ou a inflação mais um adicional.',
+    como:'Cada tipo de título (CDB, Tesouro Direto, LCI/LCA, debênture etc.) tem regras próprias de risco, liquidez e tributação, veja a explicação de cada tipo específico clicando em "Explorar" dentro dele.',
+    perfil:'Conservador: costuma ser a maior parte da carteira. Moderado: base sólida, complementada por Renda Variável. Arrojado: ainda importante para a reserva de emergência e estabilidade, mesmo com menor peso proporcional.',
+    dica:'Diversificar entre emissores e tipos de título dentro da própria Renda Fixa reduz a dependência de uma única instituição ou regra de rentabilidade.' },
+  acao:{ oque:'Uma ação é uma fração do capital social de uma empresa, ao comprar, você passa a ser sócio dela, proporcionalmente à quantidade que possui.',
+    como:'O retorno vem de duas formas: valorização do preço da ação ao longo do tempo e distribuição de dividendos/JCP quando a empresa reparte parte do lucro.',
+    perfil:'Conservador: exposição menor, priorizando empresas grandes e estáveis. Moderado: exposição intermediária, com alguma diversificação setorial. Arrojado: exposição maior, incluindo empresas de menor porte com mais potencial de crescimento.',
+    dica:'Diversificar entre setores diferentes reduz o impacto de um problema isolado numa única empresa ou indústria.' },
+  fii:{ oque:'Um Fundo de Investimento Imobiliário reúne recursos de vários investidores para aplicar em imóveis físicos ou em títulos de crédito ligados ao setor imobiliário.',
+    como:'A maior parte da renda gerada (aluguéis ou juros de recebíveis) é distribuída mensalmente aos cotistas, geralmente isenta de Imposto de Renda para pessoa física.',
+    perfil:'Conservador: prioriza FIIs de papel (CRIs) com renda mais previsível. Moderado: mistura FIIs de tijolo e papel. Arrojado: pode incluir FIIs de tijolo com mais potencial de valorização, aceitando mais oscilação de preço.',
+    dica:'Observe a vacância (imóveis desocupados) e a qualidade dos inquilinos/devedores antes de investir.' },
+  etf:{ oque:'Um ETF (Exchange Traded Fund) é um fundo negociado em bolsa como uma ação, que replica o desempenho de um índice (ex.: Ibovespa, S&P 500).',
+    como:'Uma única compra já oferece exposição a dezenas ou centenas de ativos de uma vez, uma forma simples e de baixo custo de diversificar.',
+    perfil:'Conservador: ETFs de dividendos ou índices amplos e estáveis. Moderado: combinação de índices nacionais e internacionais. Arrojado: pode incluir ETFs de setores específicos ou mais voláteis (ex.: criptoativos, small caps).',
+    dica:'Como o ETF segue o índice, o seu desempenho tende a ser o "resultado médio" do mercado que ele representa, sem escolher vencedores individuais.' },
+  bdr:{ oque:'Um BDR (Brazilian Depositary Receipt) é um recibo negociado na B3 que representa uma ação de uma empresa listada no exterior.',
+    como:'Permite investir em empresas estrangeiras em reais, direto pela sua corretora brasileira, sem precisar de uma conta internacional.',
+    perfil:'Conservador: exposição menor, com empresas grandes e consolidadas. Moderado: uma fatia para diversificação internacional. Arrojado: exposição maior, podendo incluir setores de maior crescimento.',
+    dica:'O preço do BDR reflete tanto o desempenho da empresa quanto a variação do câmbio (dólar/real), são dois fatores diferentes juntos no mesmo preço.' },
+  fundo:{ oque:'Um fundo de investimento reúne o dinheiro de vários investidores, geridos por um profissional que aplica conforme a estratégia declarada do fundo.',
+    como:'Você compra cotas do fundo; o valor da cota sobe ou desce conforme o resultado da carteira gerida, descontadas as taxas de administração (e eventual performance).',
+    perfil:'Conservador: fundos de renda fixa ou multimercado de baixo risco. Moderado: multimercados com estratégia diversificada. Arrojado: fundos de ações ou multimercados mais agressivos.',
+    dica:'Compare sempre a taxa de administração e o histórico do fundo com um índice de referência (benchmark) antes de investir.' },
+  cripto:{ oque:'Uma criptomoeda é um ativo digital baseado em blockchain, sem controle de um governo ou instituição central.',
+    como:'O valor é determinado inteiramente pela oferta e demanda no mercado, sem lastro em ativos físicos ou fluxo de caixa de uma empresa, o que costuma gerar oscilações muito mais intensas.',
+    perfil:'Conservador: normalmente evita ou usa uma fatia mínima. Moderado: uma pequena parcela da carteira, se houver apetite para o risco. Arrojado: pode ter uma exposição maior, sempre ciente da alta volatilidade.',
+    dica:'Por causa da volatilidade extrema, é comum a recomendação de nunca alocar mais do que uma pequena fração do patrimônio total em criptoativos.' },
+  previdencia:{ oque:'Previdência privada (PGBL ou VGBL) é um investimento de longo prazo com foco em aposentadoria, com regras próprias de tributação e sucessão.',
+    como:'PGBL permite deduzir as contribuições do Imposto de Renda (até um limite, para quem declara pelo modelo completo); VGBL não tem essa dedução, mas o imposto no resgate incide só sobre o rendimento, não sobre o total.',
+    perfil:'A escolha entre PGBL e VGBL depende mais da sua forma de declarar o IR do que do seu perfil de risco; dentro de cada um, existem opções de renda fixa, multimercado ou ações.',
+    dica:'A escolha entre a tabela regressiva e a progressiva de IR na previdência é uma decisão importante, vale entender bem antes de contratar.' },
+  outros:{ oque:'Categoria para ativos que não se encaixam nas classes tradicionais acima, mas que também fazem parte do seu patrimônio.',
+    como:'Cada tipo tem regras próprias de liquidez, tributação e risco, desde uma poupança simples até um consórcio ou uma participação societária.',
+    perfil:'Depende inteiramente do tipo específico de ativo, pesquise as características de cada um antes de classificar aqui.',
+    dica:'Ativos de baixa liquidez (imóveis, consórcios, participações) normalmente não devem representar a sua reserva de emergência.' },
+};
+
 const CAT_ICON = {acao:'📈', fii:'🏢', etf:'📊', bdr:'🌎', fundo:'🧺', cripto:'₿', previdencia:'🌅', outros:'✏️'};
 const CAT_LABEL = {acao:'Ação', fii:'FII', etf:'ETF', bdr:'BDR', fundo:'Fundo', cripto:'Criptomoeda', previdencia:'Previdência', outros:'Outro ativo'};
 let wizState = { categoria:null, rfTipo:null, ticker:null };
@@ -6722,6 +7144,12 @@ document.querySelectorAll('#wizCategoriaCards .wiz-card[data-cat]').forEach(card
     else { renderTickerStep(wizState.categoria); goToStep('wizPassoTicker'); }
   });
 });
+document.querySelectorAll('.wiz-card-explorar').forEach(btn=>{
+  btn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    abrirExplorarAtivo(null, btn.dataset.explorarCat);
+  });
+});
 document.getElementById('wizCardRetirada').addEventListener('click', ()=>{
   closeModal('modalAporte');
   document.getElementById('caixaData').value = todayISO();
@@ -6730,9 +7158,18 @@ document.getElementById('wizCardRetirada').addEventListener('click', ()=>{
   openModal('modalCaixa');
 });
 function renderRfTipoCards(){
-  document.getElementById('wizRfTipoCards').innerHTML = RF_TIPOS.map(t=>`<button type="button" class="wiz-card" data-tipo="${escapeHtml(t.val)}"><span class="wiz-card-icon">${t.icon}</span><span>${escapeHtml(t.val)}</span></button>`).join('');
-  document.querySelectorAll('#wizRfTipoCards .wiz-card').forEach(card=>{
+  document.getElementById('wizRfTipoCards').innerHTML = RF_TIPOS.map(t=>`<button type="button" class="wiz-card wiz-card-ativo" data-tipo="${escapeHtml(t.val)}">
+      <span class="wiz-card-icon">${t.icon}</span><span class="wiz-card-ativo-nome">${escapeHtml(t.val)}</span>
+      <span class="wiz-card-explorar" data-explorar-ticker="${escapeHtml(t.val)}" data-explorar-cat="rf">Explorar ✦</span>
+    </button>`).join('');
+  document.querySelectorAll('#wizRfTipoCards .wiz-card-ativo').forEach(card=>{
     card.addEventListener('click', ()=>{ wizState.rfTipo = card.dataset.tipo; abrirFormularioRf(); });
+  });
+  document.querySelectorAll('#wizRfTipoCards .wiz-card-explorar').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      abrirExplorarAtivo(btn.dataset.explorarTicker, btn.dataset.explorarCat);
+    });
   });
 }
 function abrirFormularioRf(){
@@ -6759,9 +7196,20 @@ function renderTickerStep(categoria){
 }
 function renderTickerCards(categoria, search){
   const list = (RV_CATALOG[categoria]||[]).filter(t=>t.toUpperCase().includes(search.toUpperCase()));
-  document.getElementById('wizTickerCards').innerHTML = list.length ? list.slice(0,15).map(t=>`<button type="button" class="wiz-card" data-ticker="${t}"><span class="wiz-card-icon">${CAT_ICON[categoria]}</span><span>${t}</span></button>`).join('') : '<p class="text-soft small" style="grid-column:1/-1; margin:0;">Nenhum resultado, cadastre personalizado abaixo.</p>';
-  document.querySelectorAll('#wizTickerCards .wiz-card').forEach(card=>{
+  document.getElementById('wizTickerCards').innerHTML = list.length ? list.slice(0,40).map(t=>`<button type="button" class="wiz-card wiz-card-ativo" data-ticker="${escapeHtml(t)}">
+      <span class="wiz-card-icon">${CAT_ICON[categoria]}</span>
+      <span class="wiz-card-ativo-nome">${escapeHtml(t)}</span>
+      ${ASSET_DESC[t]?`<span class="wiz-card-ativo-desc">${escapeHtml(ASSET_DESC[t])}</span>`:''}
+      <span class="wiz-card-explorar" data-explorar-ticker="${escapeHtml(t)}" data-explorar-cat="${categoria}">Explorar ✦</span>
+    </button>`).join('') : '<p class="text-soft small" style="grid-column:1/-1; margin:0;">Nenhum resultado, cadastre personalizado abaixo.</p>';
+  document.querySelectorAll('#wizTickerCards .wiz-card-ativo').forEach(card=>{
     card.addEventListener('click', ()=> abrirFormularioRv(card.dataset.ticker, categoria));
+  });
+  document.querySelectorAll('#wizTickerCards .wiz-card-explorar').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      abrirExplorarAtivo(btn.dataset.explorarTicker, btn.dataset.explorarCat);
+    });
   });
 }
 document.getElementById('wizTickerSearch').addEventListener('input', (e)=> renderTickerCards(wizState.categoria, e.target.value));
@@ -6881,7 +7329,30 @@ function recalcRvTotal(){
 function updateRvPreview(){
   const ticker = (wizState.ticker || document.getElementById('rvTicker').value || '').toUpperCase().trim();
   const isVenda = document.querySelector('#segOperacaoRv button.active')?.dataset.val === 'venda';
-  const qty = parseFloat(document.getElementById('rvQtd').value)||0;
+  const qtyInput = document.getElementById('rvQtd');
+  let qty = parseFloat(qtyInput.value)||0;
+  // Impede vender mais do que a posição atual ANTES de calcular o resto do
+  // preview, para nunca deixar "disponível para venda" além do que existe
+  // de fato na carteira (reaproveita computePositions(), a mesma fonte de
+  // verdade de toda a carteira, nenhum cálculo paralelo).
+  const hint = document.getElementById('rvQtdHint');
+  if(isVenda && ticker){
+    const posAtual = computePositions().find(p=>p.ticker===ticker && p.qty>0.0000001);
+    const disponivel = posAtual ? posAtual.qty : 0;
+    qtyInput.max = disponivel>0 ? disponivel : 0;
+    if(disponivel<=0){
+      hint.innerHTML = `<span style="color:var(--negative);">Você não possui ${escapeHtml(ticker)} para vender.</span>`;
+    } else if(qty>disponivel){
+      qty = disponivel;
+      qtyInput.value = disponivel;
+      hint.innerHTML = `<span style="color:var(--warning);">Ajustado para o máximo disponível: <strong class="mono">${fmtNum(disponivel)}</strong> unidades.</span>`;
+    } else {
+      hint.innerHTML = `Disponível para venda: <strong class="mono">${fmtNum(disponivel)}</strong> unidades`;
+    }
+  } else {
+    qtyInput.removeAttribute('max');
+    hint.innerHTML = '';
+  }
   const preco = parseFloat(document.getElementById('rvPreco').value)||0;
   const custos = parseFloat(document.getElementById('rvCustos').value)||0;
   const total = qty*preco+custos;
@@ -7139,31 +7610,6 @@ function atualizarPreviewConferir(){
   document.getElementById('conferirTotalCalculado').textContent = fmtMoney(calculado);
   document.getElementById('conferirTotalNovo').textContent = fmtMoney(novo);
 }
-document.getElementById('btnConferirPatrimonio').addEventListener('click', ()=>{
-  document.getElementById('conferirDataGeral').value = todayISO();
-  renderConferirLista();
-  openModal('modalConferir');
-});
-document.getElementById('btnSalvarConferencia').addEventListener('click', async ()=>{
-  const date = document.getElementById('conferirDataGeral').value;
-  if(!date){ addToast('Informe a data.'); return; }
-  const calculadoAntes = computePatrimonio().patrimonio;
-  let registados = 0;
-  document.querySelectorAll('.conferir-input').forEach(inp=>{
-    const v = parseFloat(inp.value);
-    if(isNaN(v) || v<0) return;
-    if(inp.dataset.kind==='rf') registarSaldoRealRf(inp.dataset.id, 0, String(v), date);
-    else registarSaldoRealPosicao(inp.dataset.id, v, date);
-    registados++;
-  });
-  if(registados===0){ addToast('Informe pelo menos um saldo real diferente do calculado.'); return; }
-  const calculadoDepois = computePatrimonio().patrimonio;
-  DATA.reconciliations.push({ id:uid(), date, patrimonioInformado:round2(calculadoDepois), patrimonioCalculado:round2(calculadoAntes), diferenca:round2(calculadoDepois-calculadoAntes), note:`${registados} posição(ões) atualizada(s) manualmente` });
-  await Store.save(DATA);
-  renderAll();
-  closeModal('modalConferir');
-  addToast(`${registados} saldo(s) real(is) registado(s), patrimônio total e rendimentos atualizados. ✓`);
-});
 document.getElementById('btnSalvarCaixa').addEventListener('click', async ()=>{
   const date = document.getElementById('caixaData').value;
   const valor = parseFloat(document.getElementById('caixaValor').value)||0;
@@ -7841,6 +8287,40 @@ function runInternalTests(){
 /* ===================== INIT ===================== */
 async function init(){
   document.getElementById('headerLogoSlot').outerHTML = patriumLogoHTML({height:36});
+  document.getElementById('footerLogoSlot').outerHTML = patriumLogoHTML({height:34});
+  document.getElementById('footerAno').textContent = new Date().getFullYear();
+  function wireCopyEmail(id){
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.addEventListener('click', (e)=>{
+      if(navigator.clipboard){
+        e.preventDefault();
+        navigator.clipboard.writeText('suporte@bussolafinanceirays.com').then(()=>{
+          addToast('E-mail copiado: suporte@bussolafinanceirays.com');
+          setTimeout(()=>{ window.location.href = 'mailto:suporte@bussolafinanceirays.com'; }, 300);
+        }).catch(()=>{ window.location.href = 'mailto:suporte@bussolafinanceirays.com'; });
+      }
+    });
+  }
+  wireCopyEmail('footerEmailLink');
+  wireCopyEmail('ajudaSuporteEmailLink');
+  // Logo do Patrium (com o mesmo efeito de luz contínuo) em todos os
+  // modais/telas que abrem separadamente, para manter a identidade visual
+  // consistente em qualquer "card" que o utilizador abra.
+  function inserirLogoMiniModal(modalId){
+    const head = document.querySelector('#'+modalId+' .modal-head');
+    if(!head) return;
+    const primeiro = head.firstElementChild;
+    if(!primeiro || primeiro.classList.contains('patrium-logo-mini-wrap')) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'patrium-logo-mini-wrap';
+    head.insertBefore(wrap, primeiro);
+    wrap.appendChild(document.createRange().createContextualFragment(patriumLogoHTML({height:20})));
+    wrap.appendChild(primeiro);
+  }
+  ['modalAporte','modalGlossarioTermo','modalCentralAjuda','modalCentralAlertas','modalSeloDetalhe','modalDividendo','modalSaldoRf','modalCaixa','modalMetaQtd','modalAtivoDetalhe','modalEditarMovimento','modalBackup'].forEach(inserirLogoMiniModal);
+  const onboardLogoSlot = document.getElementById('onboardLogoSlot');
+  if(onboardLogoSlot) onboardLogoSlot.innerHTML = patriumLogoHTML({height:30});
   document.getElementById('rfDataAporte') && (document.getElementById('rfDataAporte').max = todayISO());
   let stored = await Store.load();
   if(!stored){ stored = buildDemoData(); await Store.save(stored); }
