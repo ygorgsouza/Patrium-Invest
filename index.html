@@ -476,33 +476,82 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
   <section class="tab-panel active" id="tab-dashboard">
     <div id="demoBanner"></div>
 
+    <!-- 1. PATRIMÔNIO ATUAL -->
     <div class="hero">
       <p class="hero-label"><span class="dot" style="background:var(--emerald); box-shadow:0 0 8px var(--emerald-glow);"></span>Patrimônio total</p>
       <p class="hero-value mono" id="dashPatrimonio">R$ 0,00</p>
       <div class="hero-row">
         <div class="hero-item"><div class="l">Dinheiro colocado por mim</div><div class="v mono" id="dashAportado">—</div></div>
         <div class="hero-item"><div class="l">Resultado total</div><div class="v mono" id="dashGanho">—</div></div>
-        <div class="hero-item"><div class="l">Rentabilidade sobre aportes</div><div class="v mono" id="dashRentab">—</div></div>
+        <div class="hero-item"><div class="l">Rentabilidade sobre aportes <span class="text-faint" style="font-weight:400;">(auxiliar — ver Performance abaixo)</span></div><div class="v mono" id="dashRentab">—</div></div>
         <div class="hero-item"><div class="l">Dividendos recebidos</div><div class="v mono" id="dashDivRecebidos">—</div></div>
         <div class="hero-item"><div class="l">Preços atualizados em</div><div class="v" id="dashPrecoAtualizado" style="font-size:13px;">—</div></div>
       </div>
     </div>
 
-    <!-- Resultado do mês/ano e retiradas — reaproveita computePeriodoAnalise() e
-         computeCaixa(), já validados; nenhum cálculo novo aqui. -->
+    <!-- 2. PERFORMANCE: TWR x XIRR — duas métricas diferentes, nunca confundidas.
+         Reaproveita computeTWR() e computeXIRR() sem nenhuma alteração de cálculo. -->
     <div class="card" style="margin-bottom:20px;">
-      <h3 style="margin:0 0 14px; font-size:15px;">Como estou indo agora</h3>
-      <div class="grid grid-3">
-        <div><div class="stat-label" style="margin-bottom:2px;">Resultado do mês</div><div class="mono" id="dashResultadoMes" style="font-weight:700; font-size:18px;">—</div></div>
-        <div><div class="stat-label" style="margin-bottom:2px;">Resultado do ano</div><div class="mono" id="dashResultadoAno" style="font-weight:700; font-size:18px;">—</div></div>
-        <div><div class="stat-label" style="margin-bottom:2px;">Retiradas acumuladas</div><div class="mono" id="dashRetiradasAcum" style="font-weight:700; font-size:18px;">—</div></div>
+      <h3 style="margin:0 0 4px; font-size:15px;">Performance</h3>
+      <p class="section-hint" style="margin-bottom:16px;">Duas métricas diferentes — não confunda uma com a outra.</p>
+      <div class="grid grid-2" style="gap:0; border:1px solid var(--line-soft); border-radius:var(--radius); overflow:hidden;">
+        <div style="padding:18px 20px; border-right:1px solid var(--line-soft);">
+          <div class="stat-label" style="margin-bottom:4px;">TWR — Performance da carteira</div>
+          <p class="mono" id="dashTWR" style="font-weight:800; font-size:22px; margin:0 0 6px;">—</p>
+          <p class="small text-faint" style="margin:0;">Mede o desempenho dos seus investimentos, ignorando quando e quanto você aportou ou retirou.</p>
+        </div>
+        <div style="padding:18px 20px;">
+          <div class="stat-label" style="margin-bottom:4px;">XIRR — Retorno anualizado</div>
+          <p class="mono" id="dashXIRR" style="font-weight:800; font-size:22px; margin:0 0 6px;">—</p>
+          <p class="small text-faint" style="margin:0;">Considera o valor e a data exata de cada aporte/retirada — o retorno que você de fato obteve sobre o seu dinheiro.</p>
+        </div>
       </div>
     </div>
 
-    <!-- Renda Fixa x Renda Variável — bloco único, não dois cards separados -->
+    <!-- 3. DE ONDE VEIO O CRESCIMENTO — "Quanto ganhei de verdade" como equação visual.
+         Reaproveita patr.* (computePatrimonio()) sem alteração de cálculo. -->
+    <div class="card" style="margin-bottom:20px; background:linear-gradient(160deg, var(--surface-2), var(--surface));">
+      <div class="flex-between" style="margin-bottom:6px;">
+        <h3 style="margin:0; font-size:16px;">De onde veio o crescimento?</h3>
+        <span class="text-faint small">nada aqui é contado duas vezes</span>
+      </div>
+      <div class="flex" style="flex-wrap:wrap; gap:0; margin-top:20px; row-gap:16px;">
+        <div style="min-width:130px;"><div class="stat-label">Aportado</div><div class="mono" id="reconAportado" style="font-weight:700; font-size:19px;">—</div></div>
+        <div class="text-faint" style="font-size:20px; padding:0 16px; align-self:center;">+</div>
+        <div style="min-width:130px;"><div class="stat-label">Valorização</div><div class="mono" id="reconValorizacao" style="font-weight:700; font-size:19px;">—</div></div>
+        <div class="text-faint" style="font-size:20px; padding:0 16px; align-self:center;">+</div>
+        <div style="min-width:130px;"><div class="stat-label">Resultado realizado</div><div class="mono" id="reconRealizado" style="font-weight:700; font-size:19px;">—</div></div>
+        <div class="text-faint" style="font-size:20px; padding:0 16px; align-self:center;">+</div>
+        <div style="min-width:130px;"><div class="stat-label">Dividendos</div><div class="mono" id="reconDividendos" style="font-weight:700; font-size:19px;">—</div></div>
+        <div class="text-faint" style="font-size:20px; padding:0 16px; align-self:center;">+</div>
+        <div style="min-width:130px;"><div class="stat-label">Rendimento RF</div><div class="mono" id="reconRfRendimento" style="font-weight:700; font-size:19px;">—</div></div>
+        <div style="font-size:20px; padding:0 16px; align-self:center; color:var(--accent);">=</div>
+        <div style="min-width:150px;"><div class="stat-label">Patrimônio total</div><div class="mono" id="reconPatrimonioCheck" style="font-weight:800; font-size:19px; color:var(--accent);">—</div></div>
+      </div>
+      <div class="flex-between" style="margin-top:20px; padding-top:16px; border-top:1px solid var(--line-soft); flex-wrap:wrap; gap:10px;">
+        <span class="small text-faint">Resultado total: <strong class="mono" id="reconResultadoTotal">—</strong> · Retiradas acumuladas: <strong class="mono" id="dashRetiradasAcum">—</strong> · Diferença de conferência: <strong class="mono" id="reconDiff">—</strong></span>
+      </div>
+      <hr class="line">
+      <div class="flex-between" style="flex-wrap:wrap; gap:10px;">
+        <div>
+          <p class="stat-label" style="margin-bottom:4px;">Conferência com o patrimônio real</p>
+          <p class="small text-faint mb-0" id="reconConferenciaStatus">Você ainda não conferiu o valor calculado com o saldo real das suas contas/apps das corretoras.</p>
+        </div>
+        <button class="btn btn-sm" id="btnConferirPatrimonio">Conferir patrimônio real</button>
+      </div>
+    </div>
+
+    <!-- Insights curtos — reaproveita computeDiagnostico(); só os 2 primeiros,
+         a lista completa continua em Análises. -->
+    <div class="card" id="dashInsightsCard" style="margin-bottom:20px;">
+      <div id="dashInsightsLista"></div>
+    </div>
+
+    <!-- 4. ONDE MEU DINHEIRO ESTÁ — RF×RV (como já era) + visão por tipo (nova),
+         reaproveitando computeAllocation() e computeAlocacaoPorTipo() sem alteração. -->
     <div class="card" style="margin-bottom:20px;">
       <div class="flex-between" style="margin-bottom:18px;">
-        <h3 style="margin:0; font-size:15.5px;">Como o patrimônio está dividido</h3>
+        <h3 style="margin:0; font-size:15.5px;">Onde meu dinheiro está</h3>
       </div>
       <div class="grid grid-2" style="gap:0; border:1px solid var(--line-soft); border-radius:var(--radius); overflow:hidden;">
         <div style="padding:20px 22px; border-right:1px solid var(--line-soft);">
@@ -531,38 +580,9 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
           <div class="text-faint small" style="margin-top:10px;">Dividendos recebidos: <strong class="mono" id="dashRvDividendos">—</strong></div>
         </div>
       </div>
-    </div>
-
-    <!-- "Quanto ganhei de verdade" como uma equação visual, não uma grelha de caixas -->
-    <div class="card" style="margin-bottom:20px; background:linear-gradient(160deg, var(--surface-2), var(--surface));">
-      <div class="flex-between" style="margin-bottom:6px;">
-        <h3 style="margin:0; font-size:16px;">Quanto ganhei de verdade?</h3>
-        <span class="text-faint small">nada aqui é contado duas vezes</span>
-      </div>
-      <div class="flex" style="flex-wrap:wrap; gap:0; margin-top:20px; row-gap:16px;">
-        <div style="min-width:130px;"><div class="stat-label">Aportado</div><div class="mono" id="reconAportado" style="font-weight:700; font-size:19px;">—</div></div>
-        <div class="text-faint" style="font-size:20px; padding:0 16px; align-self:center;">+</div>
-        <div style="min-width:130px;"><div class="stat-label">Valorização</div><div class="mono" id="reconValorizacao" style="font-weight:700; font-size:19px;">—</div></div>
-        <div class="text-faint" style="font-size:20px; padding:0 16px; align-self:center;">+</div>
-        <div style="min-width:130px;"><div class="stat-label">Lucro realizado</div><div class="mono" id="reconRealizado" style="font-weight:700; font-size:19px;">—</div></div>
-        <div class="text-faint" style="font-size:20px; padding:0 16px; align-self:center;">+</div>
-        <div style="min-width:130px;"><div class="stat-label">Dividendos</div><div class="mono" id="reconDividendos" style="font-weight:700; font-size:19px;">—</div></div>
-        <div class="text-faint" style="font-size:20px; padding:0 16px; align-self:center;">+</div>
-        <div style="min-width:130px;"><div class="stat-label">Rendimento RF</div><div class="mono" id="reconRfRendimento" style="font-weight:700; font-size:19px;">—</div></div>
-        <div style="font-size:20px; padding:0 16px; align-self:center; color:var(--accent);">=</div>
-        <div style="min-width:150px;"><div class="stat-label">Patrimônio total</div><div class="mono" id="reconPatrimonioCheck" style="font-weight:800; font-size:19px; color:var(--accent);">—</div></div>
-      </div>
-      <div class="flex-between" style="margin-top:20px; padding-top:16px; border-top:1px solid var(--line-soft); flex-wrap:wrap; gap:10px;">
-        <span class="small text-faint">Resultado total: <strong class="mono" id="reconResultadoTotal">—</strong> · Diferença de conferência: <strong class="mono" id="reconDiff">—</strong></span>
-      </div>
       <hr class="line">
-      <div class="flex-between" style="flex-wrap:wrap; gap:10px;">
-        <div>
-          <p class="stat-label" style="margin-bottom:4px;">Conferência com o patrimônio real</p>
-          <p class="small text-faint mb-0" id="reconConferenciaStatus">Você ainda não conferiu o valor calculado com o saldo real das suas contas/apps das corretoras.</p>
-        </div>
-        <button class="btn btn-sm" id="btnConferirPatrimonio">Conferir patrimônio real</button>
-      </div>
+      <p class="stat-label" style="margin:16px 0 10px;">Por tipo de ativo</p>
+      <div id="dashPorTipoLista"></div>
     </div>
 
     <div class="card" style="margin-bottom:16px;">
@@ -572,6 +592,7 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
       <div class="chart-box short"><canvas id="chartAlocacaoTopo"></canvas></div>
     </div>
 
+    <!-- 5. EVOLUÇÃO PATRIMONIAL — gráfico mantido exatamente como estava. -->
     <div class="grid grid-2" style="margin-bottom:16px;">
       <div class="card">
         <div class="flex-between" style="margin-bottom:10px;"><h3 style="margin:0; font-size:15px;">Evolução do patrimônio</h3></div>
@@ -584,17 +605,54 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
       </div>
     </div>
 
-    <div class="grid grid-2">
+    <!-- 6. MELHORES/PIORES CONTRIBUIÇÕES — substitui o antigo "Ganhando/Perdendo"
+         (que só olhava unrealizedPLPct). Reaproveita computeDesempenhoConsolidado(). -->
+    <div class="grid grid-2" style="margin-bottom:16px;">
       <div class="card">
-        <h3 style="margin:0 0 12px; font-size:15px;">🟢 Onde estou ganhando</h3>
-        <div id="ganhandoList"></div>
+        <h3 style="margin:0 0 4px; font-size:15px;">🟢 Melhores contribuições</h3>
+        <p class="small text-faint" style="margin:0 0 12px;">"Melhor rentabilidade" pode não ser "quem mais gerou dinheiro" — por isso mostramos os dois.</p>
+        <div id="dashMelhoresList"></div>
       </div>
       <div class="card">
-        <h3 style="margin:0 0 12px; font-size:15px;">🔴 Onde estou perdendo</h3>
-        <div id="perdendoList"></div>
+        <h3 style="margin:0 0 4px; font-size:15px;">🔴 Piores contribuições</h3>
+        <p class="small text-faint" style="margin:0 0 12px;">Inclui resultado realizado, não realizado e dividendos — o resultado completo, não só a variação de preço.</p>
+        <div id="dashPioresList"></div>
       </div>
     </div>
+
+    <!-- 7. CONCENTRAÇÃO — resumo compacto. Reaproveita computeConcentracaoAtivo(). -->
+    <div class="card" style="margin-bottom:16px;">
+      <h3 style="margin:0 0 14px; font-size:15px;">Concentração</h3>
+      <div id="dashConcentracaoResumo"></div>
+    </div>
+
+    <!-- 8. COMPARAÇÃO COM PERÍODO ANTERIOR — reaproveita computeComparacaoPeriodos('mes'). -->
+    <div class="card" style="margin-bottom:16px;">
+      <h3 style="margin:0 0 14px; font-size:15px;">Este mês × mês anterior</h3>
+      <div id="dashComparacaoMes"></div>
+    </div>
+
+    <!-- 9. DIVIDENDOS — resumo curto. Reaproveita patr.rv.dividends e computeDividendsByMonth(). -->
+    <div class="card" style="margin-bottom:16px;">
+      <h3 style="margin:0 0 14px; font-size:15px;">Dividendos</h3>
+      <div id="dashDividendosResumo"></div>
+    </div>
+
+    <!-- 10. SAÚDE DA CARTEIRA — indicador único e compacto. Reaproveita computeSaudeCarteira(). -->
+    <div class="card" style="margin-bottom:16px;">
+      <h3 style="margin:0 0 14px; font-size:15px;">Saúde da carteira</h3>
+      <div id="dashSaudeResumo"></div>
+    </div>
+
+    <!-- 11. METAS — resumo curto. Reaproveita computeQuantityGoals(); posição sempre real. -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="flex-between" style="margin-bottom:14px;">
+        <h3 style="margin:0; font-size:15px;">Metas de carteira</h3>
+      </div>
+      <div id="dashMetasResumo"></div>
+    </div>
   </section>
+
 
   <!-- ===================== AÇÕES ===================== -->
   <section class="tab-panel" id="tab-acoes">
@@ -3184,7 +3242,18 @@ function renderDashboard(){
   rentEl.style.color = patr.rentabPct>=0 ? 'var(--positive)' : 'var(--negative)';
   document.getElementById('dashDivRecebidos').textContent = fmtMoney(patr.rv.dividends);
 
-  // Painel "Quanto ganhei de verdade?" — conferência: aportes + resultado deve bater com o patrimônio
+  // 2. Performance: TWR x XIRR — reaproveita computeTWR()/computeXIRR() sem
+  // nenhuma alteração de cálculo (mesmas funções já testadas em Histórico).
+  const twrEl = document.getElementById('dashTWR');
+  const twr = computeTWR();
+  if(twr===null || twr.annualized===null){ twrEl.textContent = 'Dados insuficientes'; twrEl.style.color = 'var(--text-faint)'; }
+  else { twrEl.textContent = fmtPct(twr.annualized,2); twrEl.style.color = twr.annualized>=0?'var(--positive)':'var(--negative)'; }
+  const xirrEl = document.getElementById('dashXIRR');
+  const xirr = computeXIRR();
+  if(xirr===null){ xirrEl.textContent = 'Dados insuficientes'; xirrEl.style.color = 'var(--text-faint)'; }
+  else { xirrEl.textContent = fmtPct(xirr,2); xirrEl.style.color = xirr>=0?'var(--positive)':'var(--negative)'; }
+
+  // 3. Painel "De onde veio o crescimento?" — conferência: aportes + resultado deve bater com o patrimônio
   document.getElementById('reconAportado').textContent = fmtMoney(patr.aportesExternos);
   const setRecon = (id, v)=>{ const el=document.getElementById(id); el.textContent = fmtMoneySigned(v); el.style.color = v>=0?'var(--positive)':'var(--negative)'; };
   setRecon('reconValorizacao', patr.rv.unrealized);
@@ -3193,6 +3262,7 @@ function renderDashboard(){
   setRecon('reconRfRendimento', patr.rf.rendimento);
   setRecon('reconResultadoTotal', patr.ganhoTotal);
   document.getElementById('reconPatrimonioCheck').textContent = fmtMoney(patr.aportesExternos + patr.ganhoTotal);
+  document.getElementById('dashRetiradasAcum').textContent = fmtMoney(patr.caixa.retiradas);
   const diff = round2(patr.patrimonio - (patr.aportesExternos + patr.ganhoTotal));
   const diffEl = document.getElementById('reconDiff');
   diffEl.textContent = fmtMoney(diff);
@@ -3211,6 +3281,19 @@ function renderDashboard(){
   const priceDates = Object.values(DATA.prices).map(p=>p.updatedAt).filter(Boolean).sort();
   document.getElementById('dashPrecoAtualizado').textContent = priceDates.length ? new Date(priceDates[priceDates.length-1]).toLocaleString('pt-BR') : 'nunca atualizado';
 
+  // Insights curtos — reaproveita computeDiagnostico(), só os 2 primeiros.
+  const frasesInsight = computeDiagnostico().slice(0,2);
+  const insightsCard = document.getElementById('dashInsightsCard');
+  if(frasesInsight.length===0){ insightsCard.style.display = 'none'; }
+  else {
+    insightsCard.style.display = '';
+    document.getElementById('dashInsightsLista').innerHTML = frasesInsight.map(f=>`
+      <div class="flex gap-8" style="padding:4px 0; align-items:flex-start;">
+        <span style="flex:none;">💡</span><span style="flex:1;">${f}</span>
+      </div>`).join('');
+  }
+
+  // 4. Onde meu dinheiro está — RF×RV (como já era) + por tipo (nova).
   const alloc = computeAllocation();
   document.getElementById('dashRfPeso').textContent = fmtNum(alloc.rfPct.toFixed(1))+'% da carteira';
   document.getElementById('dashRvPeso').textContent = fmtNum(alloc.rvPct.toFixed(1))+'% da carteira';
@@ -3223,16 +3306,15 @@ function renderDashboard(){
   document.getElementById('dashRvValorizacao').textContent = fmtMoneySigned(patr.rv.unrealized);
   document.getElementById('dashRvDividendos').textContent = fmtMoney(patr.rv.dividends);
   document.getElementById('dashRvRentab').textContent = fmtPct(patr.rv.rentabPct);
-
-  const resMes = computePeriodoAnalise('mes');
-  const elMes = document.getElementById('dashResultadoMes'); elMes.textContent = fmtMoneySigned(resMes.ganhosPeriodo); elMes.style.color = resMes.ganhosPeriodo>=0?'var(--positive)':'var(--negative)';
-  const resAno = computePeriodoAnalise('ano');
-  const elAno = document.getElementById('dashResultadoAno'); elAno.textContent = fmtMoneySigned(resAno.ganhosPeriodo); elAno.style.color = resAno.ganhosPeriodo>=0?'var(--positive)':'var(--negative)';
-  document.getElementById('dashRetiradasAcum').textContent = fmtMoney(patr.caixa.retiradas);
+  const porTipo = computeAlocacaoPorTipo();
+  document.getElementById('dashPorTipoLista').innerHTML = porTipo.length
+    ? porTipo.map((t,i)=>rankRowGeneric(i+1, t.categoria, fmtMoney(t.valor)+' ('+fmtNum(t.peso.toFixed(1))+'%)')).join('')
+    : listaVazia('Ainda sem patrimônio para distribuir.');
 
   const c = chartColors();
   deferChartRender('chartAlocacaoTopo', ()=> renderDoughnut('chartAlocacaoTopo', ['Renda Fixa','Renda Variável'], [alloc.rfTotal, alloc.rvTotal], [c.rf, c.rv]));
 
+  // 5. Evolução patrimonial — gráfico mantido exatamente como estava.
   const series = buildTimeline();
   const patrPointColors = series.map((p,i)=> i===0 ? c.rf : (i===series.length-1 ? c.accent : 'transparent'));
   const patrPointRadius = series.map((p,i)=> (i===0 || i===series.length-1) ? 5 : 0);
@@ -3255,18 +3337,99 @@ function renderDashboard(){
     {label:'Patrimônio', data:patrByMonth, backgroundColor:c.accent+'AA', borderRadius:5, borderSkipped:false}
   ]));
 
-  // ganhando/perdendo
-  const positions = computePositions().filter(p=>p.qty>0.0000001 && p.hasRealPrice);
-  const ganhando = positions.filter(p=>p.unrealizedPL>0).sort((a,b)=>b.unrealizedPLPct-a.unrealizedPLPct);
-  const perdendo = positions.filter(p=>p.unrealizedPL<0).sort((a,b)=>a.unrealizedPLPct-b.unrealizedPLPct);
-  document.getElementById('ganhandoList').innerHTML = ganhando.length ? ganhando.slice(0,5).map(p=>rowGanhoPerda(p,true)).join('') : '<p class="text-soft small">Nenhuma posição em alta com preço atualizado.</p>';
-  document.getElementById('perdendoList').innerHTML = perdendo.length ? perdendo.slice(0,5).map(p=>rowGanhoPerda(p,false)).join('') : '<p class="text-soft small">Nenhuma posição em baixa com preço atualizado. 🎉</p>';
-}
-function rowGanhoPerda(p, pos){
-  return `<div class="flex-between" style="padding:8px 0; border-bottom:1px solid var(--line-soft);">
+  // 6. Melhores/piores contribuições — reaproveita computeDesempenhoConsolidado(),
+  // que já combina rentabilidade %, resultado R$ e dividendos (não só unrealizedPLPct).
+  const desempenho = computeDesempenhoConsolidado();
+  const linhaContrib = (p)=> `<div class="flex-between" style="padding:8px 0; border-bottom:1px solid var(--line-soft);">
     <span class="mono" style="font-weight:600;">${p.ticker}</span>
-    <span class="delta ${pos?'pos':'neg'}">${fmtPct(p.unrealizedPLPct)} · ${fmtMoneySigned(p.unrealizedPL)}</span>
+    <span class="delta ${p.unrealizedPL>=0?'pos':'neg'}">${fmtPct(p.unrealizedPLPct)} · ${fmtMoneySigned(p.unrealizedPL)}</span>
   </div>`;
+  document.getElementById('dashMelhoresList').innerHTML = desempenho.melhores.length ? desempenho.melhores.slice(0,5).map(linhaContrib).join('') : listaVazia('Nenhuma posição no verde ainda.');
+  document.getElementById('dashPioresList').innerHTML = desempenho.piores.length ? desempenho.piores.slice(0,5).map(linhaContrib).join('') : listaVazia('Nenhuma posição no vermelho — carteira saudável. 🎉');
+
+  // 7. Concentração — resumo compacto, reaproveita computeConcentracaoAtivo().
+  const conc = computeConcentracaoAtivo();
+  const concEl = document.getElementById('dashConcentracaoResumo');
+  if(conc.length===0){
+    concEl.innerHTML = listaVazia('Ainda sem ativos de renda variável para avaliar concentração.');
+  } else {
+    const maior = conc[0];
+    const top3Pct = conc.slice(0,3).reduce((s,p)=>s+p.peso,0);
+    const alerta = maior.peso>=40
+      ? `<p class="small" style="color:var(--negative); margin:10px 0 0;">🔴 Concentração elevada — ${maior.ticker} sozinho é ${fmtNum(maior.peso.toFixed(0))}% da renda variável.</p>`
+      : maior.peso>=25
+      ? `<p class="small" style="color:var(--warning); margin:10px 0 0;">🟡 Atenção — ${maior.ticker} representa ${fmtNum(maior.peso.toFixed(0))}% da renda variável.</p>`
+      : '';
+    concEl.innerHTML = `<div class="grid grid-3" style="margin-bottom:${alerta?'0':'0'};">
+      <div><div class="stat-label" style="margin-bottom:2px;">Maior posição</div><div class="mono" style="font-weight:700;">${maior.ticker} (${fmtNum(maior.peso.toFixed(1))}%)</div></div>
+      <div><div class="stat-label" style="margin-bottom:2px;">Top 3 juntos</div><div class="mono" style="font-weight:700;">${fmtNum(top3Pct.toFixed(1))}%</div></div>
+      <div><div class="stat-label" style="margin-bottom:2px;">Nº de ativos</div><div class="mono" style="font-weight:700;">${fmtNum(conc.length)}</div></div>
+    </div>${alerta}`;
+  }
+
+  // 8. Comparação com período anterior — reaproveita computeComparacaoPeriodos('mes').
+  const comp = computeComparacaoPeriodos('mes');
+  const compEl = document.getElementById('dashComparacaoMes');
+  if(!comp || !comp.suficiente){
+    compEl.innerHTML = listaVazia('Ainda não há histórico suficiente para comparar este mês com o anterior.');
+  } else {
+    const linhaComp = (label, atual, anterior, isPct)=>{
+      const variacao = isPct ? (atual-anterior) : (anterior!==0 ? ((atual-anterior)/Math.abs(anterior))*100 : null);
+      const cor = variacao===null ? 'var(--text-faint)' : (variacao>=0?'var(--positive)':'var(--negative)');
+      const texto = variacao===null ? '—' : (isPct ? `${variacao>=0?'+':''}${fmtNum(variacao.toFixed(1))} p.p.` : `${variacao>=0?'+':''}${fmtNum(variacao.toFixed(1))}%`);
+      return `<div style="min-width:150px;">
+        <div class="stat-label" style="margin-bottom:2px;">${label}</div>
+        <div class="small text-faint mono">${isPct?fmtPct(anterior):fmtMoney(anterior)} → ${isPct?fmtPct(atual):fmtMoney(atual)}</div>
+        <div class="mono" style="font-weight:700; color:${cor};">${texto}</div>
+      </div>`;
+    };
+    compEl.innerHTML = `<div class="flex" style="flex-wrap:wrap; gap:24px;">
+      ${linhaComp('Patrimônio', comp.atual.patrFinal, comp.anterior.patrFinal, false)}
+      ${linhaComp('Resultado', comp.atual.ganhosPeriodo, comp.anterior.ganhosPeriodo, false)}
+      ${linhaComp('Aportes', comp.atual.aportesPeriodo, comp.anterior.aportesPeriodo, false)}
+      ${comp.atual.rentabTWR!==null && comp.anterior.rentabTWR!==null ? linhaComp('Performance (TWR)', comp.atual.rentabTWR, comp.anterior.rentabTWR, true) : ''}
+    </div>`;
+  }
+
+  // 9. Dividendos — resumo curto (acumulado + média mensal + último período), sem projeção.
+  const divPorMes = computeDividendsByMonth();
+  const divEl = document.getElementById('dashDividendosResumo');
+  const mediaMensalDiv = divPorMes.length ? divPorMes.reduce((s,m)=>s+m.total,0)/divPorMes.length : null;
+  const ultimoMes = divPorMes.length ? divPorMes[divPorMes.length-1] : null;
+  divEl.innerHTML = `<div class="grid grid-3">
+    <div><div class="stat-label" style="margin-bottom:2px;">Total recebido</div><div class="mono" style="font-weight:700;">${fmtMoney(patr.rv.dividends)}</div></div>
+    <div><div class="stat-label" style="margin-bottom:2px;">Média mensal histórica</div><div class="mono" style="font-weight:700;">${mediaMensalDiv===null?'Dados insuficientes':fmtMoney(mediaMensalDiv)}</div></div>
+    <div><div class="stat-label" style="margin-bottom:2px;">Último mês com dividendo</div><div class="mono" style="font-weight:700;">${ultimoMes?monthLabel(ultimoMes.month)+' · '+fmtMoney(ultimoMes.total):'Dados insuficientes'}</div></div>
+  </div>`;
+
+  // 10. Saúde da carteira — indicador único, reaproveita computeSaudeCarteira()
+  // (as 7 dimensões completas continuam só em Análises).
+  const dims = computeSaudeCarteira();
+  const saudeEl = document.getElementById('dashSaudeResumo');
+  const relevantes = dims.filter(d=>d.nivel!=='insuficiente');
+  if(relevantes.length===0){
+    saudeEl.innerHTML = listaVazia('Dados insuficientes para avaliar a saúde da carteira.');
+  } else {
+    const pior = relevantes.find(d=>d.nivel==='critica') || relevantes.find(d=>d.nivel==='atencao') || relevantes[0];
+    const nivelGeral = relevantes.some(d=>d.nivel==='critica') ? 'critica' : relevantes.some(d=>d.nivel==='atencao') ? 'atencao' : 'boa';
+    const icone = {boa:'🟢', atencao:'🟡', critica:'🔴'}[nivelGeral];
+    const rotulo = {boa:'Boa', atencao:'Atenção', critica:'Elevada atenção'}[nivelGeral];
+    saudeEl.innerHTML = `<div class="flex-between" style="flex-wrap:wrap; gap:10px;">
+      <div><strong style="font-size:16px;">${icone} ${rotulo}</strong><div class="small text-faint" style="margin-top:4px;">${escapeHtml(pior.motivo)}</div></div>
+      <span class="text-faint small">Ver detalhes em Análises →</span>
+    </div>`;
+  }
+
+  // 11. Metas de carteira — resumo curto, reaproveita computeQuantityGoals()
+  // (a posição atual vem sempre de computePositions(), nunca da meta).
+  const metas = computeQuantityGoals();
+  const metasEl = document.getElementById('dashMetasResumo');
+  metasEl.innerHTML = metas.length
+    ? metas.slice(0,5).map(m=>`<div class="flex-between" style="padding:8px 0; border-bottom:1px solid var(--line-soft);">
+        <span class="mono" style="font-weight:600;">${escapeHtml(m.ticker)}</span>
+        <span class="small text-soft mono">${fmtNum(m.currentQty)} / ${fmtNum(m.targetQty)} ${escapeHtml(m.unit)} · <strong style="color:${m.concluida?'var(--positive)':'var(--text)'};">${fmtNum(m.pctComplete.toFixed(0))}%</strong></span>
+      </div>`).join('') + (metas.length>5?`<p class="small text-faint" style="margin:8px 0 0;">+${metas.length-5} meta(s) — ver aba Ações →</p>`:'')
+    : listaVazia('Nenhuma meta definida ainda — crie metas de quantidade na aba Ações.');
 }
 
 function renderAcoes(){
