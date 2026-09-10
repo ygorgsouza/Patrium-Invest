@@ -9,6 +9,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 <style>
 /* ============================================================================
    PATRIUM INVEST, DESIGN SYSTEM
@@ -75,7 +77,7 @@
   --shadow-emerald:0 12px 28px -12px var(--emerald-glow);
 }
 *{box-sizing:border-box;}
-html,body{margin:0; padding:0;}
+html,body{margin:0; padding:0; overflow-x:hidden; max-width:100%;}
 body{
   background:
     radial-gradient(1100px 480px at 12% -8%, color-mix(in srgb, var(--emerald) 7%, transparent), transparent 60%),
@@ -96,15 +98,16 @@ button{ font-family:inherit; cursor:pointer; }
 ::-webkit-scrollbar-track{ background:transparent; }
 
 /* ===== Layout shell ===== */
-.app-shell{ max-width:1360px; margin:0 auto; padding:0 28px 8px; }
-@media (max-width:640px){ .app-shell{ padding:0 16px 100px; } }
+.app-shell{ max-width:1360px; margin:0 auto; padding:0 28px 8px; padding-left:max(28px, env(safe-area-inset-left, 0px)); padding-right:max(28px, env(safe-area-inset-right, 0px)); }
+@media (max-width:640px){ .app-shell{ padding-top:0; padding-bottom:calc(40px + env(safe-area-inset-bottom, 0px)); padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); } }
 
 header.top{
   position:sticky; top:0; z-index:40; background:color-mix(in srgb, var(--bg) 82%, transparent);
   backdrop-filter:blur(14px) saturate(1.4); border-bottom:1px solid var(--line-soft);
+  padding-top:env(safe-area-inset-top, 0px);
 }
-.top-inner{ max-width:1360px; margin:0 auto; padding:18px 28px 14px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
-@media (max-width:640px){ .top-inner{ padding:14px 16px 10px; } }
+.top-inner{ max-width:1360px; margin:0 auto; padding:18px 28px 14px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding-left:max(28px, env(safe-area-inset-left, 0px)); padding-right:max(28px, env(safe-area-inset-right, 0px)); }
+@media (max-width:640px){ .top-inner{ padding-top:14px; padding-bottom:10px; padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); gap:10px; } }
 .brand{ display:flex; align-items:center; gap:13px; }
 /* =========================================================================
    MARCA OFICIAL, Patrium Invest (arquivo fornecido pelo utilizador, 07/09/2026)
@@ -150,7 +153,13 @@ header.top{
 
 .brand-text h1{ font-size:20px; margin:0; line-height:1.1; letter-spacing:-.01em; }
 .brand-text p{ margin:2px 0 0; font-size:11px; color:var(--text-soft); letter-spacing:.03em; text-transform:uppercase; }
-.top-actions{ display:flex; align-items:center; gap:8px; }
+@media (max-width:480px){ .brand-text p{ display:none; } .brand-text h1{ font-size:17px; } }
+.top-actions{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+@media (max-width:640px){
+  .top-actions{ width:100%; gap:7px; }
+  .top-actions .btn-primary{ flex:1 1 100%; justify-content:center; order:10; }
+}
+@media (max-width:374px){ .icon-btn{ width:36px; height:36px; } }
 .icon-btn{
   width:38px; height:38px; border-radius:11px; border:1px solid var(--line); background:var(--surface);
   color:var(--text-soft); display:flex; align-items:center; justify-content:center; transition:.18s var(--ease);
@@ -161,7 +170,9 @@ header.top{
   border:1px solid var(--line); background:var(--surface); color:var(--text);
   padding:10px 17px; border-radius:11px; font-size:13.5px; font-weight:600; display:inline-flex; align-items:center; gap:7px;
   transition:border-color .15s ease, color .15s ease, background .15s ease, transform .12s ease, box-shadow .2s ease; white-space:nowrap;
+  min-height:40px;
 }
+@media (max-width:640px){ .btn{ min-height:44px; padding:11px 16px; } }
 .btn:hover{ border-color:var(--accent); color:var(--accent); }
 .btn:active{ transform:scale(.97); }
 .btn-primary{ background:linear-gradient(155deg, var(--accent), var(--emerald-deep)); border-color:var(--emerald-deep); color:var(--accent-ink); box-shadow:0 8px 20px -10px var(--emerald-glow); font-weight:700; }
@@ -170,11 +181,21 @@ header.top{
 .btn-ghost:hover{ background:var(--surface-2); color:var(--text); border-color:var(--line); }
 .btn-danger{ color:var(--negative); }
 .btn-danger:hover{ border-color:var(--negative); color:var(--negative); }
-.btn-sm{ padding:7px 12px; font-size:12.5px; }
+.btn-sm{ padding:7px 12px; font-size:12.5px; min-height:34px; }
+@media (max-width:640px){ .btn-sm{ min-height:38px; } }
 .btn-block{ width:100%; justify-content:center; }
 
 /* ===== Navegação ===== */
-nav.tabs{ display:flex; gap:2px; overflow-x:auto; padding:6px; scrollbar-width:none; position:relative; background:var(--surface-2); border:1px solid var(--line); border-radius:var(--radius); margin-top:6px; box-shadow:inset 0 1px 3px rgba(0,0,0,.15); }
+nav.tabs{
+  display:flex; gap:2px; overflow-x:auto; padding:6px; scrollbar-width:none; position:relative; background:var(--surface-2);
+  border:1px solid var(--line); border-radius:var(--radius); margin-top:6px; box-shadow:inset 0 1px 3px rgba(0,0,0,.15);
+  scroll-snap-type:x proximity; -webkit-overflow-scrolling:touch;
+  /* Esmaece as bordas quando há mais abas fora da viewport, para o
+     utilizador perceber que dá para rolar (funciona em qualquer largura,
+     não só mobile). */
+  mask-image:linear-gradient(to right, transparent 0, black 16px, black calc(100% - 16px), transparent 100%);
+  -webkit-mask-image:linear-gradient(to right, transparent 0, black 16px, black calc(100% - 16px), transparent 100%);
+}
 nav.tabs::-webkit-scrollbar{ display:none; }
 .tab-indicator{
   position:absolute; top:6px; left:6px; height:calc(100% - 12px); border-radius:calc(var(--radius) - 6px);
@@ -184,10 +205,11 @@ nav.tabs::-webkit-scrollbar{ display:none; }
   z-index:0; pointer-events:none;
 }
 .tab-btn{
-  position:relative; z-index:1; border:none; background:transparent; color:var(--text-soft); padding:10px 16px; border-radius:calc(var(--radius) - 6px);
+  position:relative; z-index:1; border:none; background:transparent; color:var(--text-soft); padding:11px 16px; border-radius:calc(var(--radius) - 6px);
   font-size:13.5px; font-weight:600; white-space:nowrap; display:inline-flex; align-items:center; gap:7px;
-  transition:color .2s ease, transform .15s ease;
+  transition:color .2s ease, transform .15s ease; scroll-snap-align:start; min-height:40px;
 }
+@media (max-width:640px){ .tab-btn{ padding:11px 13px; font-size:12.8px; } }
 .tab-ico{
   font-size:15px; line-height:1; opacity:.75; font-weight:400; display:inline-flex; align-items:center; justify-content:center;
   min-width:15px; color:var(--warning); transition:opacity .2s ease, filter .2s ease, transform .25s cubic-bezier(.34,1.56,.64,1);
@@ -211,11 +233,21 @@ section.tab-panel.active{ display:block; animation:fadeIn .4s var(--ease); }
 
 /* ===== Grids & cards ===== */
 .grid{ display:grid; gap:18px; }
+/* Item de grid tem min-width:auto implícito por padrão, o que impede
+   texto/conteúdo de encolher abaixo do seu tamanho intrínseco, mesmo
+   quando a faixa do grid é mais estreita, isso força a faixa toda a ficar
+   mais larga que o espaço disponível (a causa raiz do overflow horizontal
+   em vários cards do produto). Corrigido de uma vez para todo grid. */
+.grid > *{ min-width:0; }
 .grid-2{ grid-template-columns:1fr 1fr; }
 .grid-3{ grid-template-columns:repeat(3,1fr); }
 .grid-4{ grid-template-columns:repeat(4,1fr); }
-@media (max-width:900px){ .grid-3,.grid-4{ grid-template-columns:1fr 1fr; } }
-@media (max-width:560px){ .grid-2,.grid-3,.grid-4{ grid-template-columns:1fr; } }
+/* Breakpoints padronizados do produto, usados em toda a folha de estilos:
+   1024px = limite de tablet (portrait+landscape) / início do desktop;
+   768px  = limite de tablet portrait / início de tablet landscape;
+   480px  = limite de mobile / início de tablet portrait. */
+@media (max-width:1024px){ .grid-3,.grid-4{ grid-template-columns:1fr 1fr; } }
+@media (max-width:480px){ .grid-2,.grid-3,.grid-4{ grid-template-columns:1fr; } }
 
 .card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-lg); padding:24px; box-shadow:var(--shadow-sm); }
 .card-tight{ padding:18px; }
@@ -248,12 +280,15 @@ section.tab-panel.active{ display:block; animation:fadeIn .4s var(--ease); }
   background:radial-gradient(circle, var(--emerald-glow), transparent 70%); filter:blur(4px);
 }
 .hero-label{ font-size:13px; color:var(--text-soft); margin:0 0 8px; text-transform:uppercase; letter-spacing:.08em; font-weight:700; display:flex; align-items:center; gap:8px; }
-.hero-value{ font-family:var(--font-display); font-size:52px; font-weight:600; margin:0; letter-spacing:-0.015em; position:relative; z-index:1; }
-@media (max-width:560px){ .hero-value{ font-size:36px; } .hero{ padding:26px 22px; } }
-.hero-row{ display:flex; flex-wrap:wrap; gap:30px; margin-top:24px; position:relative; z-index:1; }
-.hero-item{ padding-left:14px; border-left:2px solid var(--line); }
+.hero-value{ font-family:var(--font-display); font-size:52px; font-weight:600; margin:0; letter-spacing:-0.015em; position:relative; z-index:1; overflow-wrap:break-word; }
+@media (max-width:560px){ .hero-value{ font-size:34px; } .hero{ padding:24px 20px; } }
+@media (max-width:374px){ .hero-value{ font-size:28px; } .hero{ padding:20px 16px; } }
+.hero-row{ display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:22px 30px; margin-top:24px; position:relative; z-index:1; }
+@media (max-width:480px){ .hero-row{ grid-template-columns:1fr 1fr; gap:16px 14px; } }
+@media (max-width:374px){ .hero-row{ grid-template-columns:1fr; } }
+.hero-item{ padding-left:14px; border-left:2px solid var(--line); min-width:0; }
 .hero-item .l{ font-size:11px; color:var(--text-soft); text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; font-weight:600; }
-.hero-item .v{ font-family:var(--font-mono); font-size:17px; font-weight:700; }
+.hero-item .v{ font-family:var(--font-mono); font-size:17px; font-weight:700; overflow-wrap:break-word; }
 
 /* ===== Badges/pills ===== */
 .pill{ display:inline-flex; align-items:center; gap:5px; padding:4px 11px; border-radius:99px; font-size:11.5px; font-weight:700; letter-spacing:.01em; }
@@ -274,7 +309,13 @@ section.tab-panel.active{ display:block; animation:fadeIn .4s var(--ease); }
 @media (prefers-reduced-motion: reduce){ .dot-pulse, .dot-pulse::after{ animation:none; } }
 
 /* ===== Tabelas ===== */
-.table-wrap{ overflow-x:auto; border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow-sm); }
+.table-wrap{ overflow-x:auto; border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow-sm); -webkit-overflow-scrolling:touch; }
+@media (max-width:768px){
+  .table-wrap{
+    mask-image:linear-gradient(to right, black calc(100% - 20px), transparent 100%);
+    -webkit-mask-image:linear-gradient(to right, black calc(100% - 20px), transparent 100%);
+  }
+}
 table.data{ width:100%; border-collapse:collapse; min-width:660px; }
 table.data th{ text-align:right; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-soft); padding:14px 16px; border-bottom:1px solid var(--line); background:var(--surface-2); white-space:nowrap; cursor:pointer; user-select:none; font-weight:700; }
 table.data th:first-child{ text-align:left; }
@@ -295,6 +336,11 @@ table.data tbody tr[data-ticker]{ cursor:pointer; }
   background:var(--surface-2); border:1.5px solid var(--line); border-radius:10px; padding:11px 13px;
   color:var(--text); font-family:inherit; font-size:14px; width:100%; transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
 }
+/* Em iOS, um input com menos de 16px de fonte força o Safari a dar zoom
+   automático ao focar o campo, uma experiência ruim e conhecida. Mantém
+   14px no desktop (design original) e só sobe para 16px em telas de
+   toque, onde o problema realmente acontece. */
+@media (max-width:768px){ .field input, .field select, .field textarea{ font-size:16px; padding:12px 13px; } }
 .field input:focus, .field select:focus, .field textarea:focus{
   outline:none; border-color:var(--accent); background:var(--surface); box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent);
 }
@@ -308,17 +354,31 @@ table.data tbody tr[data-ticker]{ cursor:pointer; }
 
 /* ===== Modais ===== */
 .modal-overlay{ position:fixed; inset:0; background:rgba(3,6,14,.68); backdrop-filter:blur(5px); display:none; align-items:flex-start; justify-content:center; z-index:100; padding:5vh 16px; overflow-y:auto; transition:background .2s ease; }
+@media (max-width:640px){ .modal-overlay{ padding:14px 10px; } }
 .modal-overlay.open{ display:flex; }
-.modal{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-xl); width:100%; max-width:580px; box-shadow:var(--shadow-lg); animation:modalIn2 .28s var(--ease); margin-bottom:5vh; }
+/* Estrutura de modal em coluna, com altura máxima travada à viewport e
+   scroll interno só no corpo — cabeçalho (com o X) e rodapé (com as ações)
+   ficam sempre visíveis, nunca somem ao rolar um formulário longo. Vale
+   para TODOS os modais do produto, não é uma regra por modal. */
+.modal{ position:relative; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-xl); width:100%; max-width:580px; max-height:90vh; display:flex; flex-direction:column; box-shadow:var(--shadow-lg); animation:modalIn2 .28s var(--ease); margin-bottom:5vh; }
+@media (max-width:640px){ .modal{ max-height:calc(100vh - 28px); margin-bottom:0; border-radius:16px; } }
 .modal.wide{ max-width:840px; }
 @keyframes modalIn2{ from{opacity:0; transform:translateY(18px) scale(.96);} to{opacity:1; transform:translateY(0) scale(1);} }
-.modal-head{ display:flex; align-items:center; justify-content:space-between; padding:22px 26px; border-bottom:1px solid var(--line); }
-.modal-head h3{ margin:0; font-size:19px; }
-.modal-body{ padding:26px; }
-.modal-foot{ padding:18px 26px; border-top:1px solid var(--line); display:flex; justify-content:flex-end; gap:10px; }
+.modal-head{ flex:none; display:flex; align-items:center; justify-content:space-between; padding:22px 26px; border-bottom:1px solid var(--line); gap:12px; }
+.modal-head h3{ margin:0; font-size:19px; overflow-wrap:break-word; min-width:0; }
+.modal-body{ padding:26px; overflow-y:auto; flex:1 1 auto; -webkit-overflow-scrolling:touch; min-height:0; }
+.modal-foot{ flex:none; padding:18px 26px; border-top:1px solid var(--line); display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
+@media (max-width:640px){
+  .modal-head{ padding:16px 18px; }
+  .modal-head h3{ font-size:16.5px; }
+  .modal-body{ padding:18px; }
+  .modal-foot{ padding:14px 18px; }
+  .modal-foot .btn{ flex:1 1 auto; justify-content:center; }
+}
 
 /* ===== Toast ===== */
-.toast-wrap{ position:fixed; bottom:22px; right:22px; z-index:200; display:flex; flex-direction:column; gap:9px; }
+.toast-wrap{ position:fixed; bottom:calc(22px + env(safe-area-inset-bottom, 0px)); right:calc(22px + env(safe-area-inset-right, 0px)); z-index:200; display:flex; flex-direction:column; gap:9px; }
+@media (max-width:640px){ .toast-wrap{ left:12px; right:12px; bottom:calc(12px + env(safe-area-inset-bottom, 0px)); } }
 .toast{ background:var(--surface-3); border:1px solid var(--line); color:var(--text); padding:13px 18px; border-radius:12px; font-size:13.5px; box-shadow:var(--shadow-lg); animation:toastIn .25s var(--ease); max-width:330px; display:flex; align-items:center; gap:10px; overflow:hidden; position:relative; padding-right:22px; backdrop-filter:blur(8px); }
 @keyframes toastIn{ from{opacity:0; transform:translateY(10px) translateX(4px);} to{opacity:1; transform:translateY(0) translateX(0);} }
 .toast::after{ content:""; position:absolute; left:0; bottom:0; height:2px; background:var(--accent); width:100%; transform-origin:left; animation:toastProgress 3.2s linear forwards; }
@@ -335,12 +395,20 @@ table.data tbody tr[data-ticker]{ cursor:pointer; }
 .alert-item + .alert-item{ margin-top:8px; }
 
 /* ===== Gráficos ===== */
-.chart-box{ position:relative; height:290px; }
+.chart-box{ position:relative; height:290px; max-width:100%; overflow:hidden; }
+.chart-box canvas{ max-width:100% !important; max-height:100% !important; }
 .chart-box.short{ height:210px; }
+@media (max-width:640px){ .chart-box{ height:230px; } .chart-box.short{ height:180px; } }
+@media (max-width:374px){ .chart-box{ height:200px; } .chart-box.short{ height:160px; } }
 
 /* ===== Utilitários ===== */
-.flex{ display:flex; align-items:center; } .flex-between{ display:flex; align-items:center; justify-content:space-between; }
-.gap-8{ gap:8px; } .gap-12{ gap:12px; }
+.flex{ display:flex; align-items:center; } .flex-between{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+/* Mesmo problema do min-width:auto implícito em itens flex, desta vez em
+   .flex-between (usado em dezenas de linhas com texto + valor à direita,
+   como os eventos do calendário). Sem isto, um texto longo à esquerda
+   empurra a linha inteira para fora do cartão. */
+.flex-between > *{ min-width:0; }
+.gap-6{ gap:6px; } .gap-8{ gap:8px; } .gap-10{ gap:10px; } .gap-12{ gap:12px; }
 .mt-0{margin-top:0;} .mb-0{margin-bottom:0;}
 .text-soft{ color:var(--text-soft); } .text-faint{ color:var(--text-faint); }
 .small{ font-size:12.5px; }
@@ -450,15 +518,18 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
 
 /* ===================== SELOS / CONQUISTAS (medalha com fitinha) ===================== */
 .achv-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); gap:14px; }
-@media (max-width:640px){
-  .achv-grid{ grid-template-columns:repeat(3, 1fr); gap:8px; }
-  .achv-badge{ padding:10px 4px 8px; border-radius:12px; max-width:none; }
-  .achv-medal{ width:44px; height:44px; font-size:18px; }
-  .achv-badge .achv-label{ font-size:10px; }
-  .achv-badge .achv-hint{ font-size:9px; }
+@media (max-width:768px){
+  .achv-grid{ grid-template-columns:repeat(auto-fill, minmax(128px,1fr)); gap:10px; }
+}
+@media (max-width:480px){
+  .achv-grid{ grid-template-columns:1fr 1fr; gap:10px; }
+  .achv-badge{ padding:16px 10px 14px; max-width:none; }
+  .achv-medal{ width:52px; height:52px; font-size:20px; }
+  .achv-badge .achv-label{ font-size:11.5px; }
+  .achv-badge .achv-hint{ font-size:10px; }
 }
 .achv-badge{
-  display:flex; flex-direction:column; align-items:center; text-align:center; width:100%;
+  display:flex; flex-direction:column; align-items:center; text-align:center; width:100%; min-width:0;
   padding:20px 12px 16px; border-radius:16px; border:1px solid var(--line); background:var(--surface);
   cursor:pointer; transition:transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .22s ease, border-color .22s ease;
 }
@@ -488,9 +559,9 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
   box-shadow:inset 0 1px 2px rgba(255,255,255,.15); filter:grayscale(.6); opacity:.6;
 }
 .achv-badge.locked .achv-medal-ribbon-l, .achv-badge.locked .achv-medal-ribbon-r{ background:var(--line); }
-.achv-badge .achv-label{ font-size:12.5px; font-weight:700; color:var(--text); line-height:1.3; }
+.achv-badge .achv-label{ font-size:12.5px; font-weight:700; color:var(--text); line-height:1.3; width:100%; overflow-wrap:break-word; word-break:break-word; }
 .achv-badge.locked .achv-label{ color:var(--text-soft); }
-.achv-badge .achv-hint{ font-size:10.5px; color:var(--text-faint); margin-top:5px; line-height:1.4; }
+.achv-badge .achv-hint{ font-size:10.5px; color:var(--text-faint); margin-top:5px; line-height:1.4; width:100%; overflow-wrap:break-word; word-break:break-word; }
 .achv-badge .achv-tap-hint{ font-size:9.5px; color:var(--warning); margin-top:6px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; opacity:.8; }
 @keyframes achvPop{ 0%{transform:scale(.6); opacity:0;} 60%{transform:scale(1.08); opacity:1;} 100%{transform:scale(1);} }
 .achv-badge.just-unlocked{ animation:achvPop .5s cubic-bezier(.34,1.56,.64,1); }
@@ -583,6 +654,20 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
 }
 .alert-central-item:hover{ border-color:var(--accent); transform:translateX(2px); }
 .alert-central-dot{ flex:none; width:9px; height:9px; border-radius:50%; margin-top:5px; }
+.alert-central-dot-pulse{ position:relative; animation:dotPulseGlow 2s ease-in-out infinite; }
+.alert-central-dot-pulse::after{
+  content:""; position:absolute; inset:-4px; border-radius:50%; background:inherit; opacity:.55;
+  animation:dotPulseRing 2s ease-out infinite;
+}
+@media (prefers-reduced-motion: reduce){ .alert-central-dot-pulse, .alert-central-dot-pulse::after{ animation:none; } }
+.alert-central-grupo{ margin-bottom:6px; }
+.alert-central-grupo-titulo{
+  font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint);
+  padding:10px 2px 6px; border-bottom:1px solid var(--line-soft); margin-bottom:4px; display:flex; align-items:center; gap:7px;
+}
+.alert-central-grupo-count{
+  background:var(--negative); color:#fff; font-size:9.5px; font-weight:800; padding:1px 6px; border-radius:99px; line-height:1.4;
+}
 .info-dot{
   display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:50%;
   background:var(--surface-3); color:var(--text-faint); font-size:10px; font-weight:800; border:1px solid var(--line);
@@ -633,8 +718,9 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
 
 /* ===================== MODAL EXPLORAR (premium) ===================== */
 .explorar-modal{ max-width:640px; overflow:hidden; padding:0 !important; }
+.explorar-modal-logo{ display:flex; justify-content:center; margin-bottom:10px; position:relative; }
 .explorar-modal-hero{
-  position:relative; padding:34px 30px 26px; text-align:center; overflow:hidden;
+  flex:none; position:relative; padding:34px 30px 26px; text-align:center; overflow:hidden;
   background:linear-gradient(150deg, var(--navy, #0B1224), var(--surface-2) 120%);
   border-bottom:1px solid var(--line-soft);
 }
@@ -672,28 +758,78 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
 .patrium-logo-mini-wrap h3{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .onboard-logo-slot{ display:flex; justify-content:center; margin-bottom:18px; }
 
+/* ===================== ÍNDICE DE SAÚDE PATRIMONIAL ===================== */
+.indice-saude-score-wrap{ display:flex; align-items:center; gap:18px; margin-bottom:20px; padding-bottom:18px; border-bottom:1px solid var(--line-soft); }
+.indice-saude-score-ring{
+  flex:none; width:76px; height:76px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:22px; font-weight:800; font-family:var(--font-mono, monospace); color:#fff;
+  background:conic-gradient(var(--accent) calc(var(--pct,0) * 1%), var(--surface-3) 0);
+  position:relative;
+}
+.indice-saude-score-ring::before{ content:""; position:absolute; inset:6px; border-radius:50%; background:var(--surface); }
+.indice-saude-score-ring span{ position:relative; color:var(--text); }
+.indice-saude-status{ font-weight:800; font-size:16px; }
+.indice-saude-sec-title{ font-weight:800; font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; margin:16px 0 8px; display:flex; align-items:center; gap:8px; }
+.indice-saude-item{ display:flex; gap:8px; align-items:flex-start; padding:6px 0; font-size:13px; line-height:1.5; }
+.indice-saude-item span{ flex:none; }
+.dash-saude-mini-ring{
+  flex:none; width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:15px; font-weight:800; font-family:var(--font-mono, monospace);
+  background:conic-gradient(var(--accent) calc(var(--pct,0) * 1%), var(--surface-3) 0); position:relative; cursor:pointer;
+}
+.dash-saude-mini-ring::before{ content:""; position:absolute; inset:4px; border-radius:50%; background:var(--surface); }
+.dash-saude-mini-ring span{ position:relative; color:var(--text); }
+
+/* ===================== RADAR DO INVESTIDOR + EVOLUÇÃO DO PERFIL ===================== */
+.perfil-radar{ display:flex; flex-direction:column; gap:14px; }
+.perfil-radar-row{ display:flex; flex-direction:column; gap:6px; }
+.perfil-radar-label{ font-size:12.5px; color:var(--text-soft); display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+.perfil-radar-pct{ margin-left:auto; font-family:var(--font-mono); font-weight:700; color:var(--text); font-size:12px; }
+.perfil-radar-track{ height:8px; background:var(--surface-3); border-radius:99px; overflow:hidden; }
+.perfil-radar-fill{ height:100%; border-radius:99px; transition:width .5s cubic-bezier(.34,1.56,.64,1); }
+.perfil-evolucao{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:16px; padding:14px 16px; border-radius:12px; background:var(--surface-2); }
+.perfil-comparacao-chips{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:12px; }
+.perfil-comparacao-chip{ flex:1; min-width:170px; padding:14px 16px; border-radius:12px; background:var(--surface-2); border:1px solid var(--line-soft); }
+.perfil-comparacao-chip strong{ display:block; font-size:15px; margin-top:3px; }
+.perfil-comparacao-versus{ flex:none; font-size:17px; font-weight:800; color:var(--text-faint); }
+.perfil-evolucao-item{ text-align:center; }
+.perfil-evolucao-arrow{ color:var(--text-faint); font-size:16px; }
+.dash-saudacao{ margin-bottom:18px; padding:16px 20px; border-radius:16px; background:linear-gradient(120deg, var(--surface-2), var(--surface)); border:1px solid var(--line-soft); animation:saudacaoIn .4s cubic-bezier(.34,1.56,.64,1); }
+@keyframes saudacaoIn{ from{ opacity:0; transform:translateY(-6px); } to{ opacity:1; transform:translateY(0); } }
+.dash-saudacao-linha{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+.dash-saudacao-esq{ display:flex; align-items:center; gap:12px; }
+.dash-saudacao-icone{ font-size:26px; line-height:1; flex:none; filter:drop-shadow(0 2px 6px rgba(0,0,0,.15)); }
+.dash-saudacao-texto{ font-family:var(--font-display); font-size:20px; font-weight:500; letter-spacing:-.01em; }
+.dash-saudacao-texto strong{ font-weight:600; }
+.dash-saudacao-sub{ font-size:11.5px; color:var(--text-faint); margin-top:2px; }
+.dash-saudacao-data{ font-size:12px; color:var(--text-faint); text-transform:capitalize; font-weight:600; padding:6px 12px; border-radius:99px; background:var(--surface-3); flex:none; }
+.dash-saudacao-editar{ background:none; border:none; cursor:pointer; color:var(--text-faint); font-size:11px; text-decoration:underline; padding:0; margin-top:2px; }
+.dash-saudacao-editar:hover{ color:var(--accent); }
+
 /* ===================== RODAPÉ INSTITUCIONAL ===================== */
-.patrium-footer{ margin-top:4px; border-top:1px solid var(--line-soft); background:var(--surface-2); }
-.patrium-footer-inner{ max-width:1180px; margin:0 auto; padding:36px 20px 24px; }
-.patrium-footer-brand{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px; margin-bottom:26px; }
-.patrium-footer-tagline{ color:var(--text-faint); font-size:12.5px; margin:0; }
-.patrium-footer-grid{ display:grid; grid-template-columns:1.2fr 1.3fr 1fr; gap:28px; margin-bottom:24px; }
+.patrium-footer{ margin-top:4px; border-top:1px solid var(--line-soft); background:linear-gradient(180deg, var(--surface-2), var(--surface)); }
+.patrium-footer-inner{ max-width:1180px; margin:0 auto; padding:40px 20px calc(24px + env(safe-area-inset-bottom, 0px)); }
+.patrium-footer-brand{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:7px; margin-bottom:30px; }
+.patrium-footer-tagline{ color:var(--text-soft); font-size:12.5px; margin:0; font-style:italic; letter-spacing:.01em; }
+.patrium-footer-copyright{ color:var(--text-faint); font-size:11px; margin:2px 0 0; opacity:.8; }
+.patrium-footer-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:28px; margin-bottom:24px; }
 @media (max-width:720px){ .patrium-footer-grid{ grid-template-columns:1fr; } }
-.patrium-footer-col{ text-align:center; display:flex; flex-direction:column; align-items:center; }
-.patrium-footer-col h4{ margin:0 0 10px; font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-soft); }
-.patrium-footer-col p{ margin:0; font-size:12.5px; color:var(--text-faint); line-height:1.6; }
-.patrium-footer-list{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; align-items:center; gap:6px; }
+.patrium-footer-col{ text-align:center; display:flex; flex-direction:column; align-items:center; min-width:0; }
+.patrium-footer-col h4{ margin:0 0 12px; font-size:11.5px; text-transform:uppercase; letter-spacing:.09em; color:var(--accent); font-weight:800; }
+.patrium-footer-col p{ margin:0; font-size:12.5px; color:var(--text-faint); line-height:1.65; max-width:260px; }
+.patrium-footer-list{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; align-items:center; gap:7px; }
 .patrium-footer-list li{ font-size:12.5px; color:var(--text-faint); line-height:1.5; }
 .patrium-footer-list li::before{ content:"✓ "; color:var(--positive); font-weight:800; }
-.patrium-footer-support-hint{ margin:0 0 10px !important; }
+.patrium-footer-support-hint{ margin:0 0 12px !important; }
 .patrium-footer-email{
   display:inline-flex; align-items:center; gap:8px; padding:9px 14px; border-radius:11px; border:1.5px solid var(--line);
   background:var(--surface); color:var(--text); text-decoration:none; font-size:12.5px; font-weight:600; transition:all .18s ease;
+  max-width:100%; flex-wrap:wrap; justify-content:center; row-gap:2px;
 }
-.patrium-footer-email:hover{ border-color:var(--accent); background:color-mix(in srgb, var(--accent) 8%, var(--surface)); transform:translateY(-1px); }
+.patrium-footer-email span{ overflow-wrap:anywhere; }
+.patrium-footer-email:hover{ border-color:var(--accent); background:color-mix(in srgb, var(--accent) 8%, var(--surface)); transform:translateY(-1px); box-shadow:var(--shadow-sm); }
 .patrium-footer-email-icon{ font-size:14px; }
-.patrium-footer-email-copy{ font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; color:var(--text-faint); opacity:0; transition:opacity .18s ease; }
-.patrium-footer-email:hover .patrium-footer-email-copy{ opacity:1; }
+.patrium-footer-email-copy{ font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; color:var(--text-faint); padding-left:6px; border-left:1px solid var(--line); margin-left:2px; }
 .patrium-footer-bottom{ display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:8px; padding-top:18px; border-top:1px solid var(--line-soft); font-size:11.5px; color:var(--text-faint); text-align:center; }
 .patrium-footer-version{ font-family:var(--font-mono, monospace); opacity:.7; }
 
@@ -736,6 +872,8 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
     <div class="top-actions">
       <button class="icon-btn bell-wrap" id="btnCentralAlertas" title="Central de Alertas">🔔<span class="bell-badge hidden" id="bellBadgeCount">0</span></button>
       <button class="icon-btn" id="btnCentralAjuda" title="Central de Ajuda">❓</button>
+      <button class="icon-btn" id="btnConfiguracoes" title="Configurações">⚙️</button>
+      <button class="icon-btn" id="btnRelatorioMensal" title="Relatório mensal em PDF">📄</button>
       <button class="icon-btn" id="themeToggle" title="Alternar tema">🌓</button>
       <button class="icon-btn" id="backupToggle" title="Backup e dados">⇅</button>
       <button class="btn btn-primary" id="btnNovoAporte">+ Novo investimento</button>
@@ -765,6 +903,7 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
 
   <!-- ===================== DASHBOARD ===================== -->
   <section class="tab-panel active" id="tab-dashboard">
+    <div class="dash-saudacao" id="dashSaudacao"></div>
     <div id="demoBanner"></div>
     <div id="backupReminderCard"></div>
     <div id="primeirosPassosCard"></div>
@@ -929,7 +1068,7 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
 
     <!-- 10. SAÚDE DA CARTEIRA — indicador único e compacto. Reaproveita computeSaudeCarteira(). -->
     <div class="card" style="margin-bottom:16px;">
-      <h3 style="margin:0 0 14px; font-size:15px;">Saúde da carteira<span class="info-dot" data-help-cat="Análises">?</span></h3>
+      <h3 style="margin:0 0 14px; font-size:15px;">Índice de Saúde Patrimonial<span class="info-dot" data-help-cat="Análises">?</span></h3>
       <div id="dashSaudeResumo"></div>
     </div>
 
@@ -954,8 +1093,8 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
           <h3 style="margin:0 0 4px; font-size:15px;">Pesquisar um ativo</h3>
           <p class="small text-faint" style="margin:0;">Veja a análise de qualquer ticker, mesmo que você ainda não tenha essa posição.</p>
         </div>
-        <div class="flex gap-8">
-          <input type="text" id="pesquisaAtivoInput" placeholder="Ex.: PETR4" style="background:var(--surface); border:1.5px solid var(--line); border-radius:11px; padding:10px 14px; color:var(--text); font-size:13.5px; width:160px; text-transform:uppercase;">
+        <div class="flex gap-8" style="flex-wrap:wrap;">
+          <input type="text" id="pesquisaAtivoInput" placeholder="Ex.: PETR4" style="background:var(--surface); border:1.5px solid var(--line); border-radius:11px; padding:10px 14px; color:var(--text); font-size:16px; flex:1 1 140px; min-width:0; max-width:160px; text-transform:uppercase;">
           <button class="btn btn-primary" id="btnPesquisarAtivo">Analisar</button>
         </div>
       </div>
@@ -966,9 +1105,9 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
         <h2 class="section-title">Carteira de ações</h2>
         <p class="section-hint mb-0">Posição consolidada por empresa, calculada a partir do seu histórico de compras e vendas. Clique numa linha para ver o detalhe e registar o saldo real dessa posição a qualquer momento.</p>
       </div>
-      <div class="flex gap-8">
+      <div class="flex gap-8" style="flex-wrap:wrap;">
         <button class="btn" id="btnAtualizarPrecos">↻ Atualizar preços</button>
-        <input type="text" id="acoesSearch" placeholder="Buscar ticker…" style="background:var(--surface); border:1.5px solid var(--line); border-radius:11px; padding:10px 14px; color:var(--text); font-size:13.5px; width:170px; transition:border-color .18s ease;">
+        <input type="text" id="acoesSearch" placeholder="Buscar ticker…" style="background:var(--surface); border:1.5px solid var(--line); border-radius:11px; padding:10px 14px; color:var(--text); font-size:16px; flex:1 1 140px; min-width:0; max-width:170px; transition:border-color .18s ease;">
       </div>
     </div>
 
@@ -1565,9 +1704,9 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
   <section class="tab-panel" id="tab-calendario">
     <div class="flex-between" style="flex-wrap:wrap; gap:12px; margin-bottom:6px;">
       <h2 class="section-title mb-0">Calendário de investimentos</h2>
-      <div class="flex gap-8">
+      <div class="flex gap-8" style="flex-wrap:wrap; justify-content:center;">
         <button class="btn btn-sm" id="calPrev">← Mês anterior</button>
-        <span class="mono" id="calLabel" style="font-weight:700; padding:0 8px; min-width:130px; text-align:center;">—</span>
+        <span class="mono" id="calLabel" style="font-weight:700; padding:0 8px; min-width:110px; text-align:center;">—</span>
         <button class="btn btn-sm" id="calNext">Próximo mês →</button>
       </div>
     </div>
@@ -1720,11 +1859,12 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
     <div class="patrium-footer-brand">
       <div class="patrium-logo" id="footerLogoSlot" style="--logo-h:34px;" aria-label="Patrium Invest"></div>
       <p class="patrium-footer-tagline">Inteligência para construir o seu patrimônio.</p>
+      <p class="patrium-footer-copyright">© <span id="footerAno"></span> Patrium Invest. Todos os cálculos são feitos localmente no seu dispositivo.</p>
     </div>
     <div class="patrium-footer-grid">
       <div class="patrium-footer-col">
         <h4>Sobre o Patrium</h4>
-        <p>O Patrium Invest é uma ferramenta pessoal de organização e cálculo financeiro. Todos os seus dados ficam guardados só neste navegador, nunca em um servidor.</p>
+        <p>Construído para quem leva o próprio patrimônio a sério. O Patrium Invest une precisão de cálculo financeiro com uma experiência pensada nos mínimos detalhes, e os seus dados nunca saem do seu dispositivo.</p>
       </div>
       <div class="patrium-footer-col">
         <h4>Transparência</h4>
@@ -1737,7 +1877,7 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
       </div>
       <div class="patrium-footer-col">
         <h4>Suporte</h4>
-        <p class="patrium-footer-support-hint">Dúvidas, sugestões ou algo não funcionou como esperado?</p>
+        <p class="patrium-footer-support-hint">A nossa equipa está pronta para ajudar, sempre que precisar.</p>
         <a href="mailto:suporte@bussolafinanceirays.com" class="patrium-footer-email" id="footerEmailLink">
           <span class="patrium-footer-email-icon">✉️</span>
           <span>suporte@bussolafinanceirays.com</span>
@@ -1746,11 +1886,47 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
       </div>
     </div>
     <div class="patrium-footer-bottom">
-      <span>© <span id="footerAno"></span> Patrium Invest. Todos os cálculos são feitos localmente no seu dispositivo.</span>
       <span class="patrium-footer-version">v1.0</span>
     </div>
   </div>
 </footer>
+
+<!-- ===================== MODAL: RELATÓRIO MENSAL PDF ===================== -->
+<div class="modal-overlay" id="modalRelatorioMensal">
+  <div class="modal">
+    <div class="modal-head"><h3>Relatório mensal em PDF</h3><button class="icon-btn" data-close="modalRelatorioMensal">✕</button></div>
+    <div class="modal-body">
+      <p class="section-hint">Um relatório completo do mês escolhido, com os mesmos dados e cálculos do Patrium, pronto para guardar ou imprimir.</p>
+      <div class="field" style="max-width:220px;">
+        <label>Mês de referência</label>
+        <input type="month" id="relatorioMesInput">
+      </div>
+      <div id="relatorioStatus" class="small text-faint" style="margin-top:10px;"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" data-close="modalRelatorioMensal">Cancelar</button>
+      <button class="btn btn-primary" id="btnGerarRelatorioPDF">📄 Gerar PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: CONFIGURAÇÕES ===================== -->
+<div class="modal-overlay" id="modalConfiguracoes">
+  <div class="modal">
+    <div class="modal-head"><h3>Configurações</h3><button class="icon-btn" data-close="modalConfiguracoes">✕</button></div>
+    <div class="modal-body">
+      <div class="field">
+        <label>O seu nome</label>
+        <input type="text" id="configUserName" placeholder="Como podemos te chamar?" maxlength="40">
+        <p class="small text-faint" style="margin:6px 0 0;">Usado na saudação do Dashboard e no relatório mensal em PDF. Fica guardado só neste navegador. Deixe em branco para uma saudação neutra.</p>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" data-close="modalConfiguracoes">Cancelar</button>
+      <button class="btn btn-primary" id="btnSalvarConfiguracoes">Guardar</button>
+    </div>
+  </div>
+</div>
 
 <!-- ===================== MODAL: NOVO APORTE ===================== -->
 <div class="modal-overlay" id="modalAporte">
@@ -1978,6 +2154,26 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
 </div>
 
 <!-- ===================== MODAL: DETALHE DO SELO ===================== -->
+<!-- ===================== MODAL: ÍNDICE DE SAÚDE PATRIMONIAL ===================== -->
+<div class="modal-overlay" id="modalIndiceSaude" style="align-items:center;">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-head"><h3>Índice de Saúde Patrimonial</h3><button class="icon-btn" data-close="modalIndiceSaude">✕</button></div>
+    <div class="modal-body">
+      <div class="indice-saude-score-wrap">
+        <div class="indice-saude-score-ring" id="indiceSaudeRing">
+          <span id="indiceSaudeNumero">—</span>
+        </div>
+        <div>
+          <div class="indice-saude-status" id="indiceSaudeStatus">—</div>
+          <p class="small text-faint" style="margin:2px 0 0;">Indicador de organização da sua carteira, baseado só nos seus dados. Não é uma nota de investimento nem uma recomendação.</p>
+        </div>
+      </div>
+      <div id="indiceSaudeDetalhe"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-primary" data-close="modalIndiceSaude">Fechar</button></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalSeloDetalhe" style="align-items:center;">
   <div class="modal" style="max-width:380px; text-align:center;">
     <div class="modal-head" style="border-bottom:none;"><span></span><button class="icon-btn" data-close="modalSeloDetalhe">✕</button></div>
@@ -2014,6 +2210,7 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
   <div class="modal explorar-modal">
     <div class="explorar-modal-hero">
       <span class="explorar-modal-hero-glow"></span>
+      <div class="patrium-logo explorar-modal-logo" id="explorarModalLogoSlot" style="--logo-h:26px;"></div>
       <h3 id="explorarModalTitulo">—</h3>
       <p id="explorarModalSub"></p>
     </div>
@@ -2441,7 +2638,7 @@ function showSaveSuccess(modalId, message, afterFn){
    funções por chamadas Supabase (ex.: supabase.from('patrium_data')...)
    sem precisar de tocar no resto do app. */
 const STORAGE_KEY = 'patrium_invest_v1';
-const SCHEMA_VERSION = 8;
+const SCHEMA_VERSION = 10;
 const Store = {
   async load(){
     try{
@@ -2542,6 +2739,20 @@ function migrateData(data){
     data.settings.lastBackupAt = data.settings.lastBackupAt || null;
     data.schemaVersion = 8;
   }
+  if(data.schemaVersion < 9){
+    // v8 -> v9: histórico de avaliações do perfil de investidor — array
+    // novo, vazio por padrão. Se já existe um perfil (de antes desta
+    // versão), guarda-o como a primeira entrada do histórico, sem perder
+    // essa informação.
+    data.settings.investorProfileHistory = data.settings.investorProfileHistory || (data.settings.investorProfile ? [data.settings.investorProfile] : []);
+    data.schemaVersion = 9;
+  }
+  if(data.schemaVersion < 10){
+    // v9 -> v10: nome do utilizador — nulo por padrão, não altera nenhum
+    // dado existente. Usado na saudação do Dashboard e no relatório PDF.
+    data.settings.userName = data.settings.userName || null;
+    data.schemaVersion = 10;
+  }
   // ---- Reconciliação defensiva (roda sempre, independente de versão) ----
   // Garante uma invariante crítica para os gráficos: todo ticker com um preço
   // em cache (DATA.prices) tem pelo menos um snapshot correspondente. Sem
@@ -2557,6 +2768,8 @@ function migrateData(data){
   if(data.settings) data.settings.investorProfile = data.settings.investorProfile || null;
   if(data.settings) data.settings.alertasLidos = data.settings.alertasLidos || [];
   if(data.settings) data.settings.lastBackupAt = data.settings.lastBackupAt || null;
+  if(data.settings) data.settings.investorProfileHistory = data.settings.investorProfileHistory || [];
+  if(data.settings) data.settings.userName = data.settings.userName || null;
   Object.keys(data.prices||{}).forEach(tk=>{
     const p = data.prices[tk];
     const snaps = data.priceSnapshots[tk] = data.priceSnapshots[tk] || [];
@@ -2584,7 +2797,7 @@ function emptyData(){
     positionAdjustments: [], // {id, ticker, date, valorCalculado, valorReal, ajuste, note}, saldo real por posição de ação/FII/ETF/cripto
     quantityGoals: [],       // {id, ticker, targetQty, unit:'ações'|'cotas', note}, meta de QUANTIDADE, nunca de valor; nunca altera a posição real
     unlockedAchievements: [], // array de ids de selos já vistos (evita re-disparar o toast de "novo selo")
-    settings: { allocationTarget: { rf:80, rv:20 }, theme:'dark', investorProfile:null, onboardingDone:false, alertasLidos:[], lastBackupAt:null }
+    settings: { allocationTarget: { rf:80, rv:20 }, theme:'dark', investorProfile:null, onboardingDone:false, alertasLidos:[], lastBackupAt:null, investorProfileHistory:[], userName:null }
   };
 }
 
@@ -2873,6 +3086,42 @@ function buildTimeline(){
     return { date, patrimonio: round2(rfValue+rvValue+caixaValue), estimated: anyEstimated };
   });
   return points;
+}
+/* Alocação RF×RV numa data específica no passado — reaproveita exatamente
+   as mesmas fontes que buildTimeline() já usa internamente (rfSaldoAtDate,
+   priceAtDate, computeCaixaUpTo), só devolvendo a divisão RF/RV que
+   buildTimeline() descarta. Nenhuma lógica nova de cálculo. */
+function computeAllocacaoAsOf(dateISO){
+  const txsUpTo = DATA.transactions.filter(t=>t.date<=dateISO).sort((a,b)=>a.date.localeCompare(b.date));
+  const byTicker = {};
+  for(const t of txsUpTo){
+    const tk = t.ticker.toUpperCase();
+    if(!byTicker[tk]) byTicker[tk] = {qty:0, investedBasis:0};
+    const p = byTicker[tk];
+    if(t.type==='compra'){ p.investedBasis += t.qty*t.price+(t.fees||0); p.qty += t.qty; }
+    else { const avg = p.qty>0?p.investedBasis/p.qty:0; p.investedBasis -= avg*t.qty; p.qty -= t.qty; }
+  }
+  let rvValue = 0;
+  Object.keys(byTicker).forEach(tk=>{
+    const pos = byTicker[tk];
+    if(pos.qty<=0.0000001) return;
+    const avg = pos.investedBasis/pos.qty;
+    const { price } = priceAtDate(tk, dateISO, avg);
+    let posValue = pos.qty * price;
+    const adjUpTo = (DATA.positionAdjustments||[]).filter(a=>a.ticker===tk && a.date<=dateISO).sort((a,b)=>a.date.localeCompare(b.date));
+    if(adjUpTo.length) posValue = adjUpTo[adjUpTo.length-1].valorReal;
+    rvValue += posValue;
+  });
+  let rfValue = 0;
+  DATA.rf.products.forEach(prod=>{
+    const entries = DATA.rf.entries.filter(e=>e.productId===prod.id).sort((a,b)=>a.date.localeCompare(b.date));
+    const r = rfSaldoAtDate(entries, dateISO);
+    if(r) rfValue += r.saldo;
+  });
+  const caixaValue = computeCaixaUpTo(dateISO).saldo;
+  const total = round2(rfValue+rvValue+caixaValue);
+  return { rf: round2(rfValue), rv: round2(rvValue), caixa: round2(caixaValue), total,
+    rfPct: total>0 ? (rfValue/total)*100 : null, rvPct: total>0 ? (rvValue/total)*100 : null };
 }
 
 function computeDrawdown(series){
@@ -3240,6 +3489,35 @@ function computeAlerts(){
     }
   });
 
+  // ---- Backup ----
+  if(patr.patrimonio>0){
+    if(!DATA.settings.lastBackupAt){
+      push('warn','Dados', `Você ainda não exportou nenhum backup dos seus dados.`, 'Exporte um backup em "Backup e dados" (ícone ⇅), leva poucos segundos.');
+    } else {
+      const diasSemBackup = daysBetween(DATA.settings.lastBackupAt.slice(0,10), today);
+      if(diasSemBackup>=1) push('info','Dados', `Já se passaram ${diasSemBackup} dia(s) desde o seu último backup.`, 'Exporte um novo backup em "Backup e dados".');
+    }
+  }
+
+  // ---- Metas ----
+  computeQuantityGoals().forEach(m=>{
+    if(!m.concluida && m.pctComplete>=80) push('pos','Carteira', `Sua meta de ${m.ticker} está ${fmtNum(m.pctComplete.toFixed(0))}% concluída, muito perto do fim.`, 'Confira o progresso na aba Ações.');
+  });
+
+  // ---- Perfil × carteira ----
+  if(DATA.settings.investorProfile){
+    const bucket = computeCarteiraBucket();
+    if(bucket && bucket!==DATA.settings.investorProfile.tipo){
+      push('info','Carteira', `A composição atual da carteira está mais próxima de um perfil ${PERFIS_INVESTIDOR[bucket].nome.toLowerCase()}, diferente do perfil ${PERFIS_INVESTIDOR[DATA.settings.investorProfile.tipo].nome.toLowerCase()} que você declarou.`, 'Veja o comparativo completo na aba Educação.');
+    }
+  }
+
+  // ---- Histórico insuficiente ----
+  const mesesHistAlert = [...new Set(timeline.map(p=>p.date.slice(0,7)))];
+  if(mesesHistAlert.length>0 && mesesHistAlert.length<3){
+    push('info','Dados', `Ainda há só ${mesesHistAlert.length} mês(es) de histórico, algumas análises (como TWR e comparação de períodos) só ficam confiáveis com mais dados.`, 'Continue registando os seus lançamentos normalmente, isso se resolve sozinho com o tempo.');
+  }
+
   return alerts;
 }
 
@@ -3424,6 +3702,46 @@ function computeSaudeCarteira(){
   }
 
   return dims;
+}
+/* Índice de Saúde Patrimonial — indicador de ORGANIZAÇÃO da carteira (não
+   uma recomendação financeira), 0-100, calculado só a partir de dados que
+   o Patrium já possui. Reaproveita as 7 dimensões de computeSaudeCarteira()
+   e acrescenta Metas, Histórico e Atualização de preços (substitui a antiga
+   "Reconciliação", que deixou de existir como funcionalidade do produto). */
+function computeIndiceSaudePatrimonial(){
+  const dims = computeSaudeCarteira().slice();
+
+  const metas = computeQuantityGoals();
+  if(metas.length===0) dims.push({ dimensao:'Metas', nivel:'insuficiente', motivo:'Nenhuma meta de quantidade criada ainda.' });
+  else {
+    const mediaProgresso = metas.reduce((s,m)=>s+m.pctComplete,0)/metas.length;
+    if(mediaProgresso>=50) dims.push({ dimensao:'Metas', nivel:'boa', motivo:`Progresso médio de ${fmtNum(mediaProgresso.toFixed(0))}% nas suas ${metas.length} meta(s).` });
+    else if(mediaProgresso>=15) dims.push({ dimensao:'Metas', nivel:'atencao', motivo:`Progresso médio de ${fmtNum(mediaProgresso.toFixed(0))}% nas suas metas, ainda no início.` });
+    else dims.push({ dimensao:'Metas', nivel:'critica', motivo:'Metas criadas, mas com progresso ainda muito baixo.' });
+  }
+
+  const mesesHist = [...new Set(buildTimeline().map(p=>p.date.slice(0,7)))];
+  if(mesesHist.length===0) dims.push({ dimensao:'Histórico', nivel:'insuficiente', motivo:'Ainda sem histórico registado.' });
+  else if(mesesHist.length>=12) dims.push({ dimensao:'Histórico', nivel:'boa', motivo:`${mesesHist.length} meses de histórico acumulado.` });
+  else if(mesesHist.length>=3) dims.push({ dimensao:'Histórico', nivel:'atencao', motivo:`${mesesHist.length} meses de histórico, ainda recente.` });
+  else dims.push({ dimensao:'Histórico', nivel:'critica', motivo:'Menos de 3 meses de histórico registado.' });
+
+  const priceDates = Object.values(DATA.prices).map(p=>p.updatedAt).filter(Boolean).sort();
+  if(priceDates.length===0) dims.push({ dimensao:'Atualização de preços', nivel:'insuficiente', motivo:'Nenhum preço de mercado atualizado ainda.' });
+  else {
+    const dias = daysBetween(priceDates[priceDates.length-1].slice(0,10), todayISO());
+    if(dias<=7) dims.push({ dimensao:'Atualização de preços', nivel:'boa', motivo:'Preços atualizados na última semana.' });
+    else if(dias<=30) dims.push({ dimensao:'Atualização de preços', nivel:'atencao', motivo:`Preços não são atualizados há ${dias} dias.` });
+    else dims.push({ dimensao:'Atualização de preços', nivel:'critica', motivo:`Preços desatualizados há mais de ${dias} dias.` });
+  }
+
+  const relevantes = dims.filter(d=>d.nivel!=='insuficiente');
+  const pontos = { boa:100, atencao:55, critica:15 };
+  const score = relevantes.length ? Math.round(relevantes.reduce((s,d)=>s+pontos[d.nivel],0)/relevantes.length) : null;
+  const status = score===null ? 'Dados insuficientes' : score>=75 ? 'Bom' : score>=50 ? 'Regular' : 'Atenção';
+  const fortes = relevantes.filter(d=>d.nivel==='boa').map(d=>d.dimensao+': '+d.motivo);
+  const melhorar = relevantes.filter(d=>d.nivel!=='boa').map(d=>d.dimensao+': '+d.motivo);
+  return { score, status, dims, fortes, melhorar, totalComponentes:dims.length, componentesAvaliados:relevantes.length };
 }
 /* 4.15 Diagnóstico Patrium — frases dinâmicas calculadas a partir de dados
    já validados (computePeriodoAnalise, computeConcentracaoAtivo,
@@ -3947,8 +4265,18 @@ function computeMilestones(){
       'Você já registou 10 compras de ativos na sua carteira.','Um histórico de compras já bem estabelecido. 🛒'),
     m('compras25','🛒','25 compras registadas','Registe 25 compras de ativos', nCompras>=25,
       'Você já registou 25 compras de ativos na sua carteira.','Uma carteira construída operação a operação. 🛒'),
-    m('operacoes50','📋','50 operações no total','Registe 50 movimentações (compras+vendas+RF+dividendos)', (DATA.transactions.length+DATA.rf.entries.length+DATA.dividends.length)>=50,
+    m('operacoes50','📋','50 operações no total','Registe 50 movimentações', (DATA.transactions.length+DATA.rf.entries.length+DATA.dividends.length)>=50,
       'Você já tem 50 movimentações financeiras registadas no Patrium.','Um histórico rico o suficiente para análises consistentes. 📋'),
+    m('vendas5','💼','5 vendas registadas','Registe 5 vendas de ativos', nVendas>=5,
+      'Você já registou 5 vendas de ativos na sua carteira.','Saber realizar lucro (ou cortar perdas) também é parte da estratégia. 💼'),
+    m('operacoes100','📋','100 operações no total','Registe 100 movimentações', (DATA.transactions.length+DATA.rf.entries.length+DATA.dividends.length)>=100,
+      'Você já tem 100 movimentações financeiras registadas no Patrium.','Um histórico robusto, ótimo para análises de longo prazo. 📋'),
+    m('backup_feito','💾','Primeiro backup exportado','Exporte um backup em "Backup e dados"', !!DATA.settings.lastBackupAt,
+      'Você já exportou pelo menos um backup dos seus dados.','Seus dados protegidos contra qualquer imprevisto. 💾'),
+    m('perfil_reavaliado','🔄','Perfil reavaliado','Refaça o questionário de perfil pelo menos uma vez', (DATA.settings.investorProfileHistory||[]).length>=2,
+      'Você já reavaliou o seu perfil de investidor pelo menos uma vez.','Perfil vivo, acompanhando a sua evolução como investidor. 🔄'),
+    m('saude80','🏅','Índice de Saúde 80+','Alcance 80 ou mais no Índice de Saúde Patrimonial', (function(){ const idx=computeIndiceSaudePatrimonial(); return idx.score!==null && idx.score>=80; })(),
+      'O seu Índice de Saúde Patrimonial atingiu 80 pontos ou mais.','Uma carteira muito bem organizada, nos mínimos detalhes. 🏅'),
   ];
 }
 function achvMedalHtml(m){
@@ -4010,6 +4338,115 @@ const PERFIS_INVESTIDOR = {
   moderado: { nome:'Moderado', icone:'⚖️', cor:'var(--warning)', desc:'Você busca um equilíbrio entre segurança e crescimento, topa alguma oscilação em troca de um potencial de retorno maior, mas sem abrir mão de uma base sólida em Renda Fixa.' },
   arrojado: { nome:'Arrojado', icone:'🚀', cor:'var(--positive)', desc:'Você está confortável com oscilações maiores no curto prazo em troca de buscar um crescimento patrimonial mais acelerado no longo prazo, normalmente com mais peso em Renda Variável.' },
 };
+const ONBOARD_EIXO_LABEL = {
+  horizonte:{ label:'Horizonte', icone:'🎯' }, reacao_queda:{ label:'Reação a quedas', icone:'📉' },
+  objetivo:{ label:'Objetivo', icone:'🏆' }, experiencia:{ label:'Experiência', icone:'🧠' },
+  tolerancia:{ label:'Tolerância à oscilação', icone:'📊' }, prioridade:{ label:'Prioridade', icone:'💰' },
+  reserva:{ label:'Reserva de emergência', icone:'🏛️' }, preocupacao:{ label:'Preocupação principal', icone:'😟' },
+  frequencia_aporte:{ label:'Frequência de aportes', icone:'📅' }, conhecimento_rv:{ label:'Conhecimento em RV', icone:'📈' },
+};
+/* Perfil declarado × carteira atual — nunca diz "está errado", só descreve
+   a diferença (ou a ausência dela) entre o que o utilizador respondeu e a
+   composição real da carteira agora, reaproveitando computeAllocation(). */
+function computeCarteiraBucket(){
+  const alloc = computeAllocation();
+  if(alloc.total<=0) return null;
+  if(alloc.rvPct<20) return 'conservador';
+  if(alloc.rvPct<55) return 'moderado';
+  return 'arrojado';
+}
+/* Comportamento real do investidor — substitui as respostas do onboarding
+   no Radar do Investidor por métricas calculadas a partir do que o
+   utilizador realmente fez (aportes, compras, vendas, retiradas, tempo
+   investido), reaproveitando funções já existentes em todo o Patrium.
+   Cada eixo devolve null quando não há dados suficientes, nunca inventa
+   um número. */
+function computeComportamentoInvestidor(){
+  const eixos = [];
+  const push = (id, icone, label, pct, detalhe)=> eixos.push({ id, icone, label, pct: pct===null?null:Math.max(0,Math.min(100,pct)), detalhe });
+
+  // 1) Consistência de aportes — % dos meses com histórico que tiveram aporte externo.
+  const eventos = computeAportesEventos();
+  if(eventos.length===0){
+    push('consistencia','📅','Consistência de aportes', null, 'Ainda sem aportes registados.');
+  } else {
+    const mesesComAporte = new Set(eventos.map(e=>monthKey(e.date)));
+    const hoje = new Date(todayISO()+'T12:00:00');
+    const primeiroMes = eventos.map(e=>monthKey(e.date)).sort()[0];
+    let mesesJanela = [];
+    for(let i=0;i<6;i++){ const d=new Date(hoje.getFullYear(), hoje.getMonth()-i, 1); mesesJanela.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`); }
+    mesesJanela = mesesJanela.filter(mk=>mk>=primeiroMes);
+    const comAporte = mesesJanela.filter(mk=>mesesComAporte.has(mk)).length;
+    const pct = mesesJanela.length ? (comAporte/mesesJanela.length)*100 : null;
+    push('consistencia','📅','Consistência de aportes', pct, pct===null?'Dados insuficientes.':`Aportou em ${comAporte} dos últimos ${mesesJanela.length} meses.`);
+  }
+
+  // 2) Diversificação — número de ativos distintos em RV, normalizado (8+ ativos = 100%).
+  const conc = computeConcentracaoAtivo();
+  if(conc.length===0){
+    push('diversificacao','🧩','Diversificação', null, 'Ainda sem ativos de renda variável.');
+  } else {
+    push('diversificacao','🧩','Diversificação', Math.min(conc.length/8,1)*100, `${conc.length} ativo(s) diferente(s) em carteira.`);
+  }
+
+  // 3) Apetite a risco demonstrado — % real em Renda Variável sobre o patrimônio.
+  const alloc = computeAllocation();
+  if(alloc.total<=0){
+    push('apetite','🚀','Apetite a risco (RV)', null, 'Ainda sem patrimônio para avaliar.');
+  } else {
+    push('apetite','🚀','Apetite a risco (RV)', alloc.rvPct, `${fmtNum(alloc.rvPct.toFixed(0))}% do patrimônio em Renda Variável.`);
+  }
+
+  // 4) Horizonte demonstrado — tempo médio (ponderado pelo valor) que o
+  // dinheiro está de fato investido, somando Renda Variável (desde a
+  // primeira compra de cada posição) E Renda Fixa (desde o aporte inicial
+  // de cada produto com saldo atual), não só ações/FIIs isoladamente.
+  const hojeISO = todayISO();
+  const positions = computePositions().filter(p=>p.qty>0.0000001);
+  const rfProdsAtivos = computeRfProducts().filter(p=>p.saldoAtual>0.005 && p.dataAporteInicial);
+  const itensHorizonte = [
+    ...positions.map(p=>({ valor:p.marketValue, dias:daysBetween(p.firstDate, hojeISO) })),
+    ...rfProdsAtivos.map(p=>({ valor:p.saldoAtual, dias:daysBetween(p.dataAporteInicial, hojeISO) })),
+  ].filter(i=>i.valor>0);
+  if(itensHorizonte.length===0){
+    push('horizonte','⏳','Horizonte demonstrado', null, 'Ainda sem posições ou saldo de Renda Fixa para avaliar.');
+  } else {
+    const valorTotal = itensHorizonte.reduce((s,i)=>s+i.valor,0);
+    const mediaDias = itensHorizonte.reduce((s,i)=>s+i.dias*i.valor,0)/valorTotal;
+    push('horizonte','⏳','Horizonte demonstrado', Math.min(mediaDias/730,1)*100, `Em média (ponderado pelo valor de cada posição), o seu dinheiro está investido há ${Math.round(mediaDias)} dia(s), somando Renda Fixa e Renda Variável.`);
+  }
+
+  // 5) Preservação de capital — quanto do que entrou permanece investido (pouca retirada frente ao aportado).
+  const aportesTotais = computeAportesExternos();
+  const retiradasTotais = computeCaixa().retiradas;
+  if(aportesTotais<=0){
+    push('preservacao','🛡️','Preservação de capital', null, 'Ainda sem aportes para avaliar.');
+  } else {
+    const pctRetirado = Math.min((retiradasTotais/aportesTotais)*100, 100);
+    push('preservacao','🛡️','Preservação de capital', 100-pctRetirado, retiradasTotais>0 ? `${fmtNum(pctRetirado.toFixed(0))}% do total aportado já foi retirado.` : 'Nenhuma retirada registada até agora.');
+  }
+
+  // 6) Controle de concentração — inverso do peso do maior ativo na RV.
+  if(conc.length===0){
+    push('concentracao','⚖️','Controle de concentração', null, 'Ainda sem ativos de renda variável.');
+  } else {
+    push('concentracao','⚖️','Controle de concentração', 100-conc[0].peso, `Maior posição (${conc[0].ticker}) é ${fmtNum(conc[0].peso.toFixed(0))}% da renda variável.`);
+  }
+
+  // 7) Atividade recente — há quanto tempo desde o último lançamento registado.
+  const todasDatas = [
+    ...DATA.transactions.map(t=>t.date), ...DATA.rf.entries.map(e=>e.date),
+    ...DATA.dividends.map(d=>d.date), ...DATA.cashMovements.map(m=>m.date),
+  ].sort();
+  if(todasDatas.length===0){
+    push('atividade','🔥','Atividade recente', null, 'Ainda sem nenhum lançamento registado.');
+  } else {
+    const diasDesde = daysBetween(todasDatas[todasDatas.length-1], todayISO());
+    push('atividade','🔥','Atividade recente', 100-Math.min(diasDesde/90,1)*100, diasDesde===0?'Último lançamento foi hoje.':`Último lançamento há ${diasDesde} dia(s).`);
+  }
+
+  return eixos;
+}
 function renderPerfilCard(){
   const card = document.getElementById('eduPerfilCard');
   const perfil = DATA.settings.investorProfile;
@@ -4023,17 +4460,74 @@ function renderPerfilCard(){
     return;
   }
   const p = PERFIS_INVESTIDOR[perfil.tipo];
-  card.innerHTML = `<div class="flex-between" style="flex-wrap:wrap; gap:14px; align-items:center;">
+  // Radar do Investidor — agora baseado no comportamento real (aportes,
+  // compras, vendas, retiradas, tempo investido), não nas respostas do
+  // onboarding, que ficam só como o "perfil declarado" para comparação.
+  const eixosComportamento = computeComportamentoInvestidor();
+  const radarHtml = eixosComportamento.length ? `<div class="perfil-radar">
+    ${eixosComportamento.map(e=>`<div class="perfil-radar-row">
+      <span class="perfil-radar-label"><span>${e.icone}</span><span>${escapeHtml(e.label)}</span><span class="info-dot" data-explicar-eixo="${escapeHtml(e.label)}">?</span>${e.pct!==null?`<span class="perfil-radar-pct">${e.pct.toFixed(0)}%</span>`:''}</span>
+      ${e.pct===null
+        ? `<span class="text-faint small">Dados insuficientes</span>`
+        : `<div class="perfil-radar-track"><div class="perfil-radar-fill" style="width:${e.pct.toFixed(0)}%; background:${p.cor};" title="${escapeHtml(e.detalhe)}"></div></div>`}
+    </div>`).join('')}
+  </div>` : '';
+  // Perfil declarado × Perfil identificado pelo Patrium (comportamento real)
+  const bucket = computeCarteiraBucket();
+  let comparacaoHtml = '';
+  if(bucket){
+    const bp = PERFIS_INVESTIDOR[bucket];
+    const alinhados = bucket===perfil.tipo;
+    comparacaoHtml = `<div class="perfil-comparacao-chips">
+      <div class="perfil-comparacao-chip">
+        <div class="stat-label">Perfil declarado</div>
+        <strong style="color:${p.cor};">${p.icone} ${p.nome}</strong>
+        <div class="text-faint" style="font-size:10.5px; margin-top:2px;">O que você respondeu no questionário</div>
+      </div>
+      <div class="perfil-comparacao-versus">${alinhados?'=':'≠'}</div>
+      <div class="perfil-comparacao-chip">
+        <div class="stat-label">Perfil identificado pelo Patrium</div>
+        <strong style="color:${bp.cor};">${bp.icone} ${bp.nome}</strong>
+        <div class="text-faint" style="font-size:10.5px; margin-top:2px;">Calculado a partir da sua carteira real</div>
+      </div>
+    </div>
+    <div class="insight-card" style="border-left-color:${alinhados?'var(--positive)':'var(--info)'}; background:${alinhados?'var(--positive-soft)':'var(--info-soft)'};">
+      <span class="insight-icon">${alinhados?'🟢':'🔵'}</span>
+      <span class="insight-text">${alinhados
+        ? `A composição atual da sua carteira está alinhada com o perfil ${p.nome.toLowerCase()} que você declarou.`
+        : `Existe uma diferença entre o perfil que você declarou (<strong>${p.nome}</strong>) e o que o Patrium identifica pela sua carteira real, hoje mais próxima de um perfil <strong>${bp.nome.toLowerCase()}</strong> (${fmtNum(computeAllocation().rvPct.toFixed(0))}% em Renda Variável). Isso não é um erro, só uma diferença a ter em mente.`}</span>
+    </div>`;
+  }
+  // Evolução do perfil
+  const hist = DATA.settings.investorProfileHistory||[];
+  let evolucaoHtml = '';
+  if(hist.length>=1){
+    const inicial = PERFIS_INVESTIDOR[hist[0].tipo];
+    evolucaoHtml = `<div class="perfil-evolucao">
+      <div class="perfil-evolucao-item"><div class="stat-label">Primeira avaliação</div><strong>${inicial.nome}</strong></div>
+      <div class="perfil-evolucao-arrow">→</div>
+      <div class="perfil-evolucao-item"><div class="stat-label">Perfil declarado (agora)</div><strong style="color:${p.cor};">${p.nome}</strong></div>
+      <div class="perfil-evolucao-item"><div class="stat-label">Última avaliação</div><strong>${fmtDate(perfil.completedAt)}</strong></div>
+    </div>`;
+  }
+  card.innerHTML = `<div class="flex-between" style="flex-wrap:wrap; gap:14px; align-items:center; margin-bottom:14px;">
     <div class="flex gap-12" style="align-items:center;">
       <span style="font-size:34px;">${p.icone}</span>
       <div>
-        <div class="stat-label" style="margin-bottom:2px;">O seu perfil de investidor</div>
-        <div style="font-weight:800; font-size:18px; color:${p.cor};">${p.nome}</div>
+        <div class="stat-label" style="margin-bottom:2px;">Seu perfil de investidor</div>
+        <div style="font-weight:800; font-size:20px; color:${p.cor};">${p.nome.toUpperCase()}</div>
       </div>
     </div>
-    <button class="btn btn-sm" id="btnRefazerPerfil">Refazer questionário</button>
+    <button class="btn btn-sm" id="btnRefazerPerfil">↻ Reavaliar meu perfil</button>
   </div>
-  <p class="small text-soft" style="margin:14px 0 0;">${p.desc}</p>`;
+  <p class="small text-soft" style="margin:0 0 16px;">${p.desc}</p>
+  <div class="stat-label" style="margin-bottom:2px;">🧭 Radar do investidor — comportamento real</div>
+  <p class="text-faint small" style="margin:0 0 12px;">Calculado a partir do que você realmente fez na carteira (aportes, compras, vendas, retiradas, tempo investido), não das respostas do questionário.</p>
+  ${radarHtml}
+  ${comparacaoHtml?`<div style="margin-top:14px;">${comparacaoHtml}</div>`:''}
+  ${hist.length>=1?'<div class="stat-label" style="margin-top:14px; margin-bottom:2px;">Evolução do perfil que você declarou</div>':''}
+  ${evolucaoHtml}
+  <p class="small text-faint" style="margin:14px 0 0;">Recomendamos rever o seu perfil periodicamente ou quando os seus objetivos financeiros mudarem.</p>`;
   document.getElementById('btnRefazerPerfil').addEventListener('click', abrirOnboarding);
 }
 function computeDicasPersonalizadas(){
@@ -4077,7 +4571,7 @@ function renderDicasPersonalizadas(){
   const dicas = computeDicasPersonalizadas();
   document.getElementById('eduDicasPersonalizadas').innerHTML = dicas.map(d=>`
     <div class="edu-tip-card" style="margin-bottom:10px;">
-      <div class="flex gap-10" style="align-items:flex-start;">
+      <div class="flex" style="gap:14px; align-items:flex-start;">
         <span style="font-size:20px; flex:none;">${d.icone}</span>
         <p style="margin:0; font-size:13.5px; line-height:1.6;">${d.texto}</p>
       </div>
@@ -4390,6 +4884,8 @@ document.getElementById('btnCentralAjuda').addEventListener('click', ()=>{ rende
 document.addEventListener('click', (e)=>{
   const dot = e.target.closest('.info-dot[data-help-cat]');
   if(dot){ e.stopPropagation(); renderCentralAjuda(dot.dataset.helpCat); openModal('modalCentralAjuda'); return; }
+  const dotEixo = e.target.closest('.info-dot[data-explicar-eixo]');
+  if(dotEixo){ e.stopPropagation(); abrirExplorarAtivo(dotEixo.dataset.explicarEixo, null); return; }
   const btnSaude = e.target.closest('#btnVerSaudeAnalises');
   if(btnSaude){
     const tabBtn = document.querySelector('.tab-btn[data-tab="analises"]');
@@ -4429,7 +4925,7 @@ const ONBOARD_PERGUNTAS = [
   { id:'experiencia', titulo:'Qual a sua experiência com investimentos?', opts:[
     {label:'Estou começando agora', desc:'Pouca ou nenhuma experiência', score:1},
     {label:'Já invisto há algum tempo', desc:'Tenho uma base razoável', score:2},
-    {label:'Tenho bastante experiência', desc:'Já passei por altos e baixos', score:3},
+    {label:'Tenho uma boa vivência', desc:'Já passei por altos e baixos', score:3},
     {label:'Sou bastante experiente', desc:'Acompanho o mercado de perto', score:4},
   ]},
   { id:'tolerancia', titulo:'Que parte do seu patrimônio você toleraria ver oscilar bastante?', opts:[
@@ -4568,6 +5064,7 @@ function onboardAvancar(){
 function finalizarOnboarding(){
   if(Object.keys(onboardRespostas).length===ONBOARD_PERGUNTAS.length){
     DATA.settings.investorProfile = computeInvestorProfileFromAnswers(onboardRespostas);
+    DATA.settings.investorProfileHistory = (DATA.settings.investorProfileHistory||[]).concat([DATA.settings.investorProfile]);
   }
   DATA.settings.onboardingDone = true;
   Store.save(DATA);
@@ -4627,7 +5124,7 @@ function renderDemoBanner(){
     el.innerHTML = `<div class="card welcome-hero" style="margin-bottom:20px;">
       <div class="welcome-mark">${patriumLogoHTML({height:120, enter:true})}</div>
       <p class="welcome-wordmark welcome-stage">Patrium Invest</p>
-      <h3 class="display welcome-title welcome-stage">Bem-vindo ao Patrium Invest</h3>
+      <h3 class="display welcome-title welcome-stage">Bem-vindo${DATA.settings.userName?', '+escapeHtml(DATA.settings.userName):''}!</h3>
       <p class="welcome-copy welcome-stage">A partir de agora, o seu patrimônio tem um lugar só dele, com cálculos automáticos, histórico real e uma visão clara de tudo o que você construiu.</p>
       <div class="flex gap-10 welcome-cta welcome-stage" style="display:flex;">
         <button class="btn btn-primary" id="btnPrimeiroInvestimento" style="padding:12px 22px;">+ Cadastrar meu primeiro investimento</button>
@@ -4699,6 +5196,32 @@ function computePrimeirosPassos(){
     { label:'Conhecer sua alocação', feito: alloc.rfTotal>0 && alloc.rvTotal>0, jump:'alocacao' },
   ];
 }
+function abrirModalIndiceSaude(){
+  const indice = computeIndiceSaudePatrimonial();
+  if(indice.score===null) return;
+  const cor = indice.score>=75?'var(--positive)':indice.score>=50?'var(--warning)':'var(--negative)';
+  document.getElementById('indiceSaudeRing').style.background = `conic-gradient(${cor} calc(${indice.score} * 1%), var(--surface-3) 0)`;
+  document.getElementById('indiceSaudeNumero').textContent = indice.score+'/100';
+  document.getElementById('indiceSaudeStatus').textContent = indice.status;
+  document.getElementById('indiceSaudeStatus').style.color = cor;
+  const bloco = (titulo, icone, itens, vazio)=> `<div class="indice-saude-sec-title"><span>${icone}</span><span>${titulo}</span></div>` +
+    (itens.length ? itens.map(t=>`<div class="indice-saude-item"><span>•</span><span>${escapeHtml(t)}</span></div>`).join('') : `<p class="text-faint small">${vazio}</p>`);
+  const diagFrases = [];
+  diagFrases.push(`No geral, a sua carteira está com organização "${indice.status.toLowerCase()}" (${indice.score}/100).`);
+  if(indice.fortes.length>0 && indice.melhorar.length>0){
+    diagFrases.push(`Você já consolidou ${indice.fortes.length} ponto${indice.fortes.length===1?'':'s'} forte${indice.fortes.length===1?'':'s'}, e tem ${indice.melhorar.length} ponto${indice.melhorar.length===1?'':'s'} que, se ajustado${indice.melhorar.length===1?'':'s'} aos poucos, tende${indice.melhorar.length===1?'':'m'} a elevar ainda mais esse índice.`);
+  } else if(indice.melhorar.length>0){
+    diagFrases.push(`Ainda não há pontos fortes consolidados, mas os ${indice.melhorar.length} ponto${indice.melhorar.length===1?'':'s'} listado${indice.melhorar.length===1?'':'s'} acima são o caminho mais direto para melhorar.`);
+  } else if(indice.fortes.length>0){
+    diagFrases.push(`Todos os componentes avaliados até agora estão bons, continue com a consistência que já vem tendo.`);
+  }
+  document.getElementById('indiceSaudeDetalhe').innerHTML =
+    bloco('Pontos fortes', '🟢', indice.fortes, 'Nenhum ponto forte identificado ainda.') +
+    bloco('Pontos a melhorar', '🟡', indice.melhorar, 'Nenhum ponto de atenção no momento.') +
+    `<div class="insight-card" style="border-left-color:${cor}; background:color-mix(in srgb, ${cor} 12%, var(--surface-2)); margin-top:14px;"><span class="insight-icon">🧭</span><span class="insight-text">${diagFrases.join(' ')}</span></div>` +
+    `<p class="small text-faint" style="margin-top:14px;">${indice.componentesAvaliados} de ${indice.totalComponentes} componentes já têm dados suficientes para avaliação.</p>`;
+  openModal('modalIndiceSaude');
+}
 function renderPrimeirosPassos(){
   const el = document.getElementById('primeirosPassosCard');
   if(!temDadosReaisParaBackup() && !DATA.meta.demo){ el.innerHTML=''; return; } // nada a mostrar numa conta totalmente vazia (já tem a tela de boas-vindas)
@@ -4737,7 +5260,40 @@ function renderPrimeirosPassos(){
   });
 }
 
+function saudacaoPorHorario(){
+  const h = new Date().getHours();
+  if(h>=5 && h<12) return 'Bom dia';
+  if(h>=12 && h<18) return 'Boa tarde';
+  return 'Boa noite';
+}
+function iconePorHorario(){
+  const h = new Date().getHours();
+  if(h>=5 && h<12) return '☀️';
+  if(h>=12 && h<18) return '🌤️';
+  return '🌙';
+}
+function renderSaudacao(){
+  const el = document.getElementById('dashSaudacao');
+  if(!el) return;
+  const nome = (DATA.settings.userName||'').trim();
+  const dataFormatada = new Date().toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+  el.innerHTML = `<div class="dash-saudacao-linha">
+    <div class="dash-saudacao-esq">
+      <span class="dash-saudacao-icone">${iconePorHorario()}</span>
+      <div>
+        <div class="dash-saudacao-texto">${saudacaoPorHorario()}${nome ? ', <strong>'+escapeHtml(nome)+'</strong>' : ''}</div>
+        ${nome
+          ? '<div class="dash-saudacao-sub">Aqui está o panorama do seu patrimônio hoje.</div>'
+          : `<button type="button" class="dash-saudacao-editar" id="dashSaudacaoEditar">Adicionar o seu nome →</button>`}
+      </div>
+    </div>
+    <span class="dash-saudacao-data">${dataFormatada.charAt(0).toUpperCase()+dataFormatada.slice(1)}</span>
+  </div>`;
+  const btnEditar = document.getElementById('dashSaudacaoEditar');
+  if(btnEditar) btnEditar.addEventListener('click', ()=> document.getElementById('btnConfiguracoes').click());
+}
 function renderDashboard(){
+  renderSaudacao();
   renderDemoBanner();
   renderBackupReminder();
   renderPrimeirosPassos();
@@ -4936,22 +5492,23 @@ function renderDashboard(){
     <div><div class="stat-label" style="margin-bottom:2px;">Último mês com dividendo</div><div class="mono" style="font-weight:700;">${ultimoMes?monthLabel(ultimoMes.month)+' · '+fmtMoney(ultimoMes.total):'Dados insuficientes'}</div></div>
   </div>`;
 
-  // 10. Saúde da carteira — indicador único, reaproveita computeSaudeCarteira()
-  // (as 7 dimensões completas continuam só em Análises).
-  const dims = computeSaudeCarteira();
+  // 10. Saúde da carteira — agora mostra o Índice de Saúde Patrimonial
+  // (0-100), reaproveitando computeIndiceSaudePatrimonial() (que por sua
+  // vez reaproveita computeSaudeCarteira(), nenhum cálculo duplicado).
+  const indice = computeIndiceSaudePatrimonial();
   const saudeEl = document.getElementById('dashSaudeResumo');
-  const relevantes = dims.filter(d=>d.nivel!=='insuficiente');
-  if(relevantes.length===0){
-    saudeEl.innerHTML = listaVazia('Dados insuficientes para avaliar a saúde da carteira.');
+  if(indice.score===null){
+    saudeEl.innerHTML = listaVazia('Dados insuficientes para calcular o índice ainda.');
   } else {
-    const pior = relevantes.find(d=>d.nivel==='critica') || relevantes.find(d=>d.nivel==='atencao') || relevantes[0];
-    const nivelGeral = relevantes.some(d=>d.nivel==='critica') ? 'critica' : relevantes.some(d=>d.nivel==='atencao') ? 'atencao' : 'boa';
-    const icone = {boa:'🟢', atencao:'🟡', critica:'🔴'}[nivelGeral];
-    const rotulo = {boa:'Boa', atencao:'Atenção', critica:'Elevada atenção'}[nivelGeral];
-    saudeEl.innerHTML = `<div class="flex-between" style="flex-wrap:wrap; gap:10px;">
-      <div><strong style="font-size:16px;">${icone} ${rotulo}</strong><div class="small text-faint" style="margin-top:4px;">${escapeHtml(pior.motivo)}</div></div>
-      <button type="button" class="text-faint small" id="btnVerSaudeAnalises" style="background:none; border:none; cursor:pointer; padding:0; text-decoration:underline;">Ver detalhes em Análises →</button>
+    const corIndice = indice.score>=75?'var(--positive)':indice.score>=50?'var(--warning)':'var(--negative)';
+    saudeEl.innerHTML = `<div class="flex" style="gap:18px; align-items:center; cursor:pointer;" id="dashSaudeClick">
+      <div class="dash-saude-mini-ring" style="--pct:${indice.score}; background:conic-gradient(${corIndice} calc(${indice.score} * 1%), var(--surface-3) 0);"><span>${indice.score}</span></div>
+      <div>
+        <strong style="font-size:15px;">${indice.status}</strong>
+        <div class="small text-faint" style="margin-top:2px;">${indice.fortes.length} ponto(s) forte(s) · ${indice.melhorar.length} a melhorar → toque para ver</div>
+      </div>
     </div>`;
+    document.getElementById('dashSaudeClick').addEventListener('click', abrirModalIndiceSaude);
   }
 
   // 11. Metas de carteira — resumo curto, reaproveita computeQuantityGoals()
@@ -6322,6 +6879,12 @@ function renderComparaTempo(){
     ${linha('Aportes', comp.atual.aportesPeriodo, comp.anterior.aportesPeriodo, false)}
     ${linha('Dividendos', comp.atual.divsPeriodo, comp.anterior.divsPeriodo, false)}
   </div>`;
+  const allocAtual = comp.atual.end ? computeAllocacaoAsOf(comp.atual.end) : computeAllocacaoAsOf(todayISO());
+  const allocAnterior = comp.anterior.end ? computeAllocacaoAsOf(comp.anterior.end) : null;
+  const gridAllocHtml = (allocAnterior && allocAnterior.rfPct!==null && allocAtual.rfPct!==null) ? `<div class="grid grid-2" style="gap:12px; margin-bottom:16px;">
+    ${linha('Renda Fixa (% da carteira)', allocAtual.rfPct, allocAnterior.rfPct, true)}
+    ${linha('Renda Variável (% da carteira)', allocAtual.rvPct, allocAnterior.rvPct, true)}
+  </div>` : '';
   // Explicação automática das diferenças, sempre a partir dos mesmos campos já mostrados acima.
   const frases = [];
   const varPatr = comp.anterior.patrFinal>0 ? ((comp.atual.patrFinal-comp.anterior.patrFinal)/comp.anterior.patrFinal)*100 : null;
@@ -6332,7 +6895,7 @@ function renderComparaTempo(){
     const deltaTwr = round2(comp.atual.rentabTWR-comp.anterior.rentabTWR);
     frases.push(`A performance (TWR) foi de ${fmtPct(comp.anterior.rentabTWR)} para ${fmtPct(comp.atual.rentabTWR)} (${deltaTwr>=0?'+':''}${fmtNum(deltaTwr.toFixed(1))} p.p.).`);
   }
-  el.innerHTML = gridHtml + (frases.length ? `<div class="insight-card" style="border-left-color:var(--info); background:var(--info-soft);"><span class="insight-icon">🔵</span><span class="insight-text">${frases.join(' ')}</span></div>` : '');
+  el.innerHTML = gridHtml + gridAllocHtml + (frases.length ? `<div class="insight-card" style="border-left-color:var(--info); background:var(--info-soft);"><span class="insight-icon">🔵</span><span class="insight-text">${frases.join(' ')}</span></div>` : '');
 }
 document.getElementById('comparaTempoFiltro').addEventListener('change', (e)=>{ comparaTempoAtual = e.target.value; renderComparaTempo(); });
 function renderComparar(){
@@ -6434,21 +6997,39 @@ function renderCentralAlertas(){
   const icons = {pos:'🟢', neg:'🔴', warn:'🟡', info:'🔵'};
   const dotColor = {pos:'var(--positive)', neg:'var(--negative)', warn:'var(--warning)', info:'var(--info)'};
   const order = {neg:0, warn:1, pos:2, info:3};
-  const sorted = alerts.slice().sort((a,b)=>(order[a.level]??9)-(order[b.level]??9));
   const lista = document.getElementById('centralAlertasLista');
-  lista.innerHTML = alerts.length ? sorted.map((a,i)=>{
-    const tab = ALERT_CATEGORY_TAB[a.category] || 'alertas';
-    const lido = lidosSet.has(alertSignature(a));
-    return `<div class="alert-central-item" data-tab-destino="${tab}" data-idx="${i}" data-sig="${escapeHtml(alertSignature(a))}" style="${lido?'opacity:.55;':''}">
-      <span class="alert-central-dot" style="background:${dotColor[a.level]||'var(--line)'};"></span>
-      <div style="flex:1;">
-        <div class="text-faint small" style="text-transform:uppercase; letter-spacing:.03em; margin-bottom:2px;">${escapeHtml(a.category)}${lido?' · lido':''}</div>
-        <div style="font-size:13.5px;">${icons[a.level]||'•'} ${a.text}</div>
-        ${a.action?`<div class="text-faint small" style="margin-top:3px;">→ ${escapeHtml(a.action)}</div>`:''}
-      </div>
-      <span class="text-faint" style="flex:none; font-size:16px;">→</span>
+  if(alerts.length===0){
+    lista.innerHTML = `<div class="empty"><div class="empty-icon">🔔</div><h3>Sem alertas no momento</h3><p>Tudo tranquilo por aqui.</p></div>`;
+    return;
+  }
+  // Agrupa por categoria, cada grupo ordenado por severidade — em vez de
+  // uma lista única misturando todos os temas.
+  const categoriasOrdem = ['Ações','Renda Fixa','Carteira','Dividendos','Performance','Dados'];
+  const porCategoria = {};
+  alerts.forEach(a=>{ (porCategoria[a.category]=porCategoria[a.category]||[]).push(a); });
+  const categoriasPresentes = [...new Set(alerts.map(a=>a.category))].sort((a,b)=>{
+    const ia = categoriasOrdem.indexOf(a), ib = categoriasOrdem.indexOf(b);
+    return (ia<0?99:ia)-(ib<0?99:ib);
+  });
+  lista.innerHTML = categoriasPresentes.map(cat=>{
+    const itens = porCategoria[cat].slice().sort((a,b)=>(order[a.level]??9)-(order[b.level]??9));
+    const naoLidosGrupo = itens.filter(a=>!lidosSet.has(alertSignature(a))).length;
+    return `<div class="alert-central-grupo">
+      <div class="alert-central-grupo-titulo">${escapeHtml(cat)}${naoLidosGrupo>0?` <span class="alert-central-grupo-count">${naoLidosGrupo}</span>`:''}</div>
+      ${itens.map((a,i)=>{
+        const tab = ALERT_CATEGORY_TAB[a.category] || 'alertas';
+        const lido = lidosSet.has(alertSignature(a));
+        return `<div class="alert-central-item" data-tab-destino="${tab}" data-idx="${i}" data-sig="${escapeHtml(alertSignature(a))}" style="${lido?'opacity:.55;':''}">
+          <span class="alert-central-dot ${!lido?'alert-central-dot-pulse':''}" style="background:${dotColor[a.level]||'var(--line)'};"></span>
+          <div style="flex:1;">
+            <div style="font-size:13.5px;">${icons[a.level]||'•'} ${a.text}</div>
+            ${a.action?`<div class="text-faint small" style="margin-top:3px;">→ ${escapeHtml(a.action)}</div>`:''}
+          </div>
+          <span class="text-faint" style="flex:none; font-size:16px;">→</span>
+        </div>`;
+      }).join('')}
     </div>`;
-  }).join('') : `<div class="empty"><div class="empty-icon">🔔</div><h3>Sem alertas no momento</h3><p>Tudo tranquilo por aqui.</p></div>`;
+  }).join('');
   lista.querySelectorAll('.alert-central-item').forEach(el=>{
     el.addEventListener('click', async ()=>{
       // Marca este alerta específico como lido antes de navegar — o sino já
@@ -6793,6 +7374,43 @@ function atualizarUltimoBackupLabel(){
     el.style.color = 'var(--positive)';
   }
 }
+document.getElementById('btnConfiguracoes').addEventListener('click', ()=>{
+  document.getElementById('configUserName').value = DATA.settings.userName || '';
+  openModal('modalConfiguracoes');
+});
+document.getElementById('btnSalvarConfiguracoes').addEventListener('click', async ()=>{
+  const v = document.getElementById('configUserName').value.trim();
+  DATA.settings.userName = v || null;
+  await Store.save(DATA);
+  renderSaudacao();
+  closeModal('modalConfiguracoes');
+  addToast(v ? `Prazer, ${v}! ✨` : 'Nome removido, voltando à saudação neutra.');
+});
+document.getElementById('btnRelatorioMensal').addEventListener('click', ()=>{
+  const hoje = new Date();
+  document.getElementById('relatorioMesInput').value = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('relatorioStatus').textContent = '';
+  openModal('modalRelatorioMensal');
+});
+document.getElementById('btnGerarRelatorioPDF').addEventListener('click', async ()=>{
+  const mesAno = document.getElementById('relatorioMesInput').value;
+  if(!mesAno){ addToast('Escolha um mês.'); return; }
+  const btn = document.getElementById('btnGerarRelatorioPDF');
+  const status = document.getElementById('relatorioStatus');
+  btn.disabled = true; btn.textContent = 'Gerando...';
+  status.textContent = 'Montando o relatório com os seus dados, isso pode levar alguns segundos...';
+  try{
+    await gerarRelatorioMensalPDF(mesAno);
+    status.textContent = 'Relatório gerado e baixado com sucesso. ✓';
+    addToast('Relatório mensal em PDF gerado. 📄');
+  }catch(e){
+    console.error(e);
+    status.textContent = 'Não foi possível gerar o relatório agora.';
+    addToast('Ocorreu um erro ao gerar o PDF, tente novamente.');
+  }finally{
+    btn.disabled = false; btn.textContent = '📄 Gerar PDF';
+  }
+});
 document.getElementById('backupToggle').addEventListener('click', ()=>{
   atualizarUltimoBackupLabel();
   openModal('modalBackup');
@@ -7043,6 +7661,14 @@ const ITEM_EXPLAIN = {
   'VGBL Multimercado':{ oque:'Plano de previdência VGBL com a carteira investida em multimercado, sem dedução fiscal, com IR no resgate incidindo só sobre o rendimento.', como:'O rendimento varia conforme a estratégia multimercado do fundo por trás do plano.', perfil:'Moderado: equilíbrio entre diversificação de estratégia e a tributação mais favorável do VGBL sobre o total aportado.', dica:'Avalie o histórico e a volatilidade do fundo multimercado por trás do plano antes de contratar.' },
   'VGBL Ações':{ oque:'Plano de previdência VGBL com a carteira investida em ações, unindo exposição à Renda Variável à tributação favorável do VGBL sobre o valor total aportado.', como:'O rendimento acompanha o desempenho de uma carteira de ações; no resgate, o IR incide só sobre o rendimento obtido.', perfil:'Arrojado: para quem tem horizonte longo e aceita mais oscilação, buscando crescimento patrimonial de longo prazo dentro da previdência.', dica:'Como em qualquer previdência com ações, faz mais sentido para quem está longe da data de resgate.' },
   'VGBL Data-Alvo':{ oque:'Plano de previdência VGBL que ajusta automaticamente a composição da carteira ao longo do tempo, ficando mais conservador conforme se aproxima da data-alvo definida (ex.: ano de aposentadoria).', como:'No início, a carteira tem mais Renda Variável; à medida que a data-alvo se aproxima, o fundo migra automaticamente para uma composição mais conservadora.', perfil:'Qualquer perfil que prefira não precisar rebalancear manualmente ao longo dos anos, o ajuste já é feito pelo próprio fundo.', dica:'Escolha a data-alvo de acordo com quando você realmente pretende começar a usar o dinheiro, não necessariamente a idade "oficial" de aposentadoria.' },
+  // ---- Eixos do Radar do Investidor (comportamento real, não onboarding) ----
+  'Consistência de aportes':{ oque:'O quanto você tem mantido o hábito de colocar dinheiro novo na carteira, mês após mês, calculado a partir dos seus próprios aportes registados.', como:'Medimos em quantos dos últimos meses (com histórico disponível) houve pelo menos um aporte externo, seja em ações, FIIs ou Renda Fixa.', perfil:'Uma consistência alta é um dos hábitos mais poderosos para os juros compostos trabalharem a seu favor ao longo do tempo.', dica:'Automatizar um valor fixo todo mês, mesmo pequeno, tende a manter essa consistência alta sem exigir força de vontade constante.' },
+  'Diversificação':{ oque:'Quantos ativos diferentes você realmente tem em Renda Variável hoje, não uma intenção, mas a carteira de fato.', como:'Calculado a partir do número de ativos distintos com posição atual, normalizado (8 ou mais ativos já representa uma diversificação ampla).', perfil:'Mais diversificação reduz o impacto de um problema isolado numa única empresa sobre todo o seu patrimônio.', dica:'Qualidade da diversificação (setores diferentes) importa tanto quanto a quantidade de ativos.' },
+  'Apetite a risco (RV)':{ oque:'Qual fatia do seu patrimônio está, agora, realmente exposta à Renda Variável, e não o que você disse que toleraria.', como:'Calculado diretamente da sua alocação atual: percentual do patrimônio total investido em ações, FIIs, ETFs, BDRs e afins.', perfil:'Um apetite mais alto indica conforto maior com oscilação em busca de retorno; um apetite mais baixo indica preferência por estabilidade.', dica:'Compare este número com o que você declarou no questionário, uma diferença grande vale a pena entender o porquê.' },
+  'Horizonte demonstrado':{ oque:'Por quanto tempo, em média, o seu dinheiro está de fato investido, somando Renda Fixa e Renda Variável, ponderado pelo valor de cada posição.', como:'Para Renda Variável, conta desde a primeira compra de cada ativo ainda em carteira; para Renda Fixa, desde o aporte inicial de cada produto com saldo atual. Posições maiores pesam mais na média do que posições pequenas.', perfil:'Um horizonte demonstrado mais longo indica uma postura de longo prazo na prática, não só na teoria, mesmo que a maior parte do patrimônio esteja em Renda Fixa.', dica:'Se este indicador parece baixo apesar de você já aportar há meses sem retirar, confira se os seus produtos de Renda Fixa têm a data do primeiro aporte corretamente registada, é dela que este cálculo parte.' },
+  'Preservação de capital':{ oque:'O quanto do dinheiro que você já colocou no Patrium permanece investido, em vez de ter sido retirado.', como:'Compara o total já retirado com o total já aportado externamente, quanto menor a proporção retirada, maior a preservação de capital.', perfil:'Alta preservação de capital indica disciplina para deixar o dinheiro trabalhar; muitas retiradas podem indicar uso do investimento como reserva de curto prazo.', dica:'Reservas de emergência separadas ajudam a evitar precisar retirar investimentos de longo prazo por imprevistos.' },
+  'Controle de concentração':{ oque:'O inverso do peso do seu maior ativo dentro da Renda Variável, quanto menor a concentração, maior este indicador.', como:'Calculado como 100% menos o percentual que o seu maior ativo representa da carteira de ações/FIIs/ETFs/BDRs.', perfil:'Um bom controle de concentração protege o patrimônio do risco específico de uma única empresa ou ativo.', dica:'Direcionar os próximos aportes para os ativos menores da carteira (em vez de sempre para o maior) melhora este indicador com o tempo.' },
+  'Atividade recente':{ oque:'Há quanto tempo você registou o seu último lançamento no Patrium, seja um aporte, compra, venda ou dividendo.', como:'Calculado pela diferença entre hoje e a data do lançamento mais recente entre todos os seus registos.', perfil:'Não mede se você está investindo bem, só o quão atualizado está o seu acompanhamento no Patrium.', dica:'Manter os lançamentos em dia (mesmo que os aportes sejam esporádicos) deixa os seus indicadores e alertas sempre confiáveis.' },
 };
 function abrirExplorarAtivo(idOrTicker, categoria){
   const item = idOrTicker ? (ITEM_EXPLAIN[idOrTicker] || null) : null;
@@ -8285,6 +8911,313 @@ function runInternalTests(){
 }
 
 /* ===================== INIT ===================== */
+/* ===================== RELATÓRIO MENSAL EM PDF =====================
+   Reaproveita, sem exceção, as mesmas funções de cálculo já usadas em
+   todo o Patrium (computePatrimonio, computeResultadoIntervalo,
+   computeAllocacaoAsOf, computeConcentracaoAtivo, computeTWR/XIRR,
+   computeIndiceSaudePatrimonial, computeInsightsCompletos,
+   computeDicasPersonalizadas, computeMilestones, o perfil do
+   investidor). O PDF nunca calcula nada por conta própria, só formata
+   e apresenta o que o motor do Patrium já produz. */
+function getMesReferenciaRange(mesAno){ // mesAno = 'YYYY-MM'
+  const [ano, mes] = mesAno.split('-').map(Number);
+  const start = `${mesAno}-01`;
+  const ultimoDiaMes = new Date(ano, mes, 0).getDate();
+  const hojeISO = todayISO();
+  const fimDoMes = `${mesAno}-${String(ultimoDiaMes).padStart(2,'0')}`;
+  const end = fimDoMes < hojeISO ? fimDoMes : hojeISO;
+  return { start, end };
+}
+async function gerarRelatorioMensalPDF(mesAno){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  const PW = 210, PH = 297, MX = 18;
+  const NAVY = [11,18,36], EMERALD = [12,152,104], GOLD = [156,122,34], INK = [28,32,42], FAINT = [120,128,140], LINE=[224,227,232];
+  const nome = (DATA.settings.userName||'').trim();
+  const [anoNum, mesNum] = mesAno.split('-').map(Number);
+  const MESES_LONGO = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const mesLabel = `${MESES_LONGO[mesNum-1]} de ${anoNum}`;
+  const { start, end } = getMesReferenciaRange(mesAno);
+
+  let y = MX;
+  let pagina = 1;
+  const LOGO_MINI_W = 5, LOGO_MINI_H = LOGO_MINI_W * (440/316);
+  function rodape(){
+    try{ doc.addImage(PATRIUM_LOGO_SRC, 'PNG', MX, PH-14.5, LOGO_MINI_H*(316/440), LOGO_MINI_H); }catch(e){}
+    doc.setFontSize(7.5); doc.setTextColor(...FAINT); doc.setFont('helvetica','normal');
+    doc.text('Patrium Invest · Relatório gerado automaticamente a partir dos seus dados · Não é recomendação de investimento', MX+9, PH-10);
+    doc.text(String(pagina), PW-MX, PH-10, { align:'right' });
+  }
+  function novaPagina(){
+    rodape();
+    doc.addPage();
+    pagina++;
+    y = MX;
+    try{ doc.addImage(PATRIUM_LOGO_SRC, 'PNG', MX, 6, LOGO_MINI_H*(316/440), LOGO_MINI_H); }catch(e){}
+    doc.setFontSize(8); doc.setTextColor(...FAINT);
+    doc.text('Patrium Invest', MX+9, 10);
+    doc.text(mesLabel, PW-MX, 10, { align:'right' });
+    doc.setDrawColor(...LINE); doc.line(MX, 13, PW-MX, 13);
+    y = 20;
+  }
+  function garanteEspaco(altura){ if(y+altura > PH-16){ novaPagina(); } }
+  function tituloSecao(texto){
+    y += 6;
+    garanteEspaco(20);
+    doc.setFillColor(...NAVY); doc.rect(MX, y, PW-2*MX, 9, 'F');
+    doc.setTextColor(255,255,255); doc.setFontSize(11); doc.setFont('helvetica','bold');
+    doc.text(texto, MX+3, y+6.2);
+    y += 15;
+  }
+  function subtitulo(texto){
+    garanteEspaco(8);
+    doc.setTextColor(...GOLD); doc.setFontSize(9.5); doc.setFont('helvetica','bold');
+    doc.text(texto, MX, y);
+    y += 6;
+  }
+  function paragrafo(texto, opts){
+    opts = opts||{};
+    doc.setTextColor(...(opts.cor||INK)); doc.setFontSize(opts.tamanho||9.5); doc.setFont('helvetica', opts.negrito?'bold':'normal');
+    const linhas = doc.splitTextToSize(texto, PW-2*MX);
+    garanteEspaco(linhas.length*4.6+2);
+    doc.text(linhas, MX, y);
+    y += linhas.length*4.6+2;
+  }
+  function linhaKV(label, valor, cor){
+    garanteEspaco(6);
+    doc.setFontSize(9); doc.setTextColor(...FAINT); doc.setFont('helvetica','normal');
+    doc.text(label, MX, y);
+    doc.setTextColor(...(cor||INK)); doc.setFont('helvetica','bold');
+    doc.text(String(valor), PW-MX, y, { align:'right' });
+    y += 5.6;
+  }
+  function tabela(head, body, opts){
+    garanteEspaco(14);
+    doc.autoTable({
+      head:[head], body, startY:y, margin:{left:MX, right:MX}, theme:'grid',
+      headStyles:{ fillColor:NAVY, textColor:255, fontSize:8.5, fontStyle:'bold' },
+      bodyStyles:{ fontSize:8.3, textColor:INK },
+      alternateRowStyles:{ fillColor:[245,247,250] },
+      ...opts,
+    });
+    y = doc.lastAutoTable.finalY + 8;
+  }
+  function statChip(x, w, label, valor, cor){
+    doc.setDrawColor(...LINE); doc.setFillColor(250,250,252);
+    doc.roundedRect(x, y, w, 18, 2, 2, 'FD');
+    doc.setFontSize(7.3); doc.setTextColor(...FAINT); doc.text(label, x+3, y+6);
+    doc.setFontSize(11); doc.setTextColor(...(cor||INK)); doc.setFont('helvetica','bold');
+    doc.text(String(valor), x+3, y+14);
+  }
+
+  // ===== CAPA =====
+  doc.setFillColor(...NAVY); doc.rect(0,0,PW,PH,'F');
+  try{
+    const logoW = 32, logoH = logoW * (440/316); // proporção real do PNG (316×440), nunca esmagada
+    doc.addImage(PATRIUM_LOGO_SRC, 'PNG', PW/2-logoW/2, 55, logoW, logoH);
+  }catch(e){}
+  doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(22);
+  doc.text('Relatório Mensal', PW/2, 110, { align:'center' });
+  doc.setFontSize(15); doc.setFont('helvetica','normal'); doc.setTextColor(...[220,220,225]);
+  doc.text(mesLabel, PW/2, 120, { align:'center' });
+  doc.setDrawColor(...GOLD); doc.setLineWidth(0.6); doc.line(PW/2-25, 128, PW/2+25, 128);
+  doc.setFontSize(12); doc.setTextColor(255,255,255);
+  doc.text(nome ? `Preparado para ${nome}` : 'Relatório Patrium Invest', PW/2, 140, { align:'center' });
+  doc.setFontSize(8.5); doc.setTextColor(...[170,175,185]);
+  doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')}, com dados até ${fmtDate(end)}`, PW/2, 260, { align:'center' });
+  doc.text('Cálculos idênticos aos exibidos no aplicativo Patrium Invest', PW/2, 266, { align:'center' });
+
+  novaPagina();
+
+  // ===== RESUMO EXECUTIVO =====
+  const patr = computePatrimonio();
+  const periodo = computeResultadoIntervalo(start, end);
+  tituloSecao('Resumo executivo');
+  paragrafo(`${nome?nome+', a':'A'} sua carteira fechou ${mesLabel} com um patrimônio total de ${fmtMoney(patr.patrimonio)}. Neste período, o resultado (ganhos menos aportes) foi de ${fmtMoneySigned(periodo.ganhosPeriodo)}, com ${fmtMoney(periodo.aportesPeriodo)} em aportes líquidos e ${fmtMoney(periodo.divsPeriodo)} em dividendos recebidos.`);
+  y += 2;
+  statChip(MX, 55, 'Patrimônio', fmtMoney(patr.patrimonio));
+  statChip(MX+58, 55, 'Resultado do mês', fmtMoneySigned(periodo.ganhosPeriodo), periodo.ganhosPeriodo>=0?EMERALD:[190,60,60]);
+  statChip(MX+116, 55, 'Aportes do mês', fmtMoney(periodo.aportesPeriodo));
+  y += 24;
+
+  // ===== PATRIMÔNIO E EVOLUÇÃO =====
+  tituloSecao('Patrimônio e evolução');
+  linhaKV('Patrimônio no início do mês', fmtMoney(periodo.patrInicial));
+  linhaKV('Patrimônio no fim do mês', fmtMoney(periodo.patrFinal));
+  linhaKV('Variação no mês', fmtMoneySigned(round2(periodo.patrFinal-periodo.patrInicial)), periodo.patrFinal>=periodo.patrInicial?EMERALD:[190,60,60]);
+  linhaKV('Aportes no mês', fmtMoney(periodo.aportesPeriodo));
+  linhaKV('Retiradas no mês', fmtMoney(periodo.retiradasPeriodo));
+  linhaKV('Dividendos no mês', fmtMoney(periodo.divsPeriodo));
+  linhaKV('Valorização no mês', fmtMoneySigned(periodo.valorizacaoPeriodo));
+  linhaKV('Resultado total (ganhos - aportes)', fmtMoneySigned(periodo.ganhosPeriodo), periodo.ganhosPeriodo>=0?EMERALD:[190,60,60]);
+  y += 4;
+
+  // Gráfico de evolução patrimonial (renderizado offscreen em canvas e embutido como imagem)
+  try{
+    const serieCompleta = buildTimeline().filter(p=>p.date<=end);
+    if(serieCompleta.length>=2){
+      const canvas = document.createElement('canvas'); canvas.width=1000; canvas.height=320;
+      const chartTmp = new Chart(canvas.getContext('2d'), {
+        type:'line',
+        data:{ labels:serieCompleta.map(p=>fmtDate(p.date)), datasets:[{ data:serieCompleta.map(p=>p.patrimonio), borderColor:'#0C9868', backgroundColor:'rgba(12,152,104,.12)', fill:true, pointRadius:0, borderWidth:2.5, tension:.25 }] },
+        options:{ responsive:false, animation:false, plugins:{ legend:{display:false} }, scales:{ x:{display:false}, y:{ ticks:{ callback:(v)=>fmtMoney(v) } } } }
+      });
+      await new Promise(r=>setTimeout(r,60));
+      const imgData = canvas.toDataURL('image/png');
+      chartTmp.destroy();
+      garanteEspaco(70);
+      subtitulo('Evolução do patrimônio (histórico completo até este mês)');
+      doc.addImage(imgData, 'PNG', MX, y, PW-2*MX, 58);
+      y += 64;
+    }
+  }catch(e){}
+
+  // ===== RENDA FIXA =====
+  const rf = computeRfTotals();
+  const rfProds = computeRfProducts();
+  tituloSecao('Renda Fixa');
+  linhaKV('Capital investido', fmtMoney(rf.capital));
+  linhaKV('Saldo atual', fmtMoney(rf.saldo));
+  linhaKV('Rendimento acumulado', fmtMoneySigned(rf.rendimento), EMERALD);
+  linhaKV('Rentabilidade sobre aportes', fmtPct(rf.rentabPct));
+  y += 2;
+  if(rfProds.length){
+    tabela(['Produto','Instituição','Saldo atual','Rendimento'], rfProds.map(p=>[p.name, p.instituicao||'—', fmtMoney(p.saldoAtual), fmtMoneySigned(p.rendimento)]));
+  }
+
+  // ===== RENDA VARIÁVEL / ATIVOS =====
+  const rv = computeRvTotals();
+  const positions = computePositions().filter(p=>p.qty>0.0000001);
+  tituloSecao('Renda Variável e ativos');
+  linhaKV('Capital investido', fmtMoney(rv.capital));
+  linhaKV('Valor de mercado', fmtMoney(rv.marketValue));
+  linhaKV('Resultado não realizado', fmtMoneySigned(rv.unrealized), rv.unrealized>=0?EMERALD:[190,60,60]);
+  linhaKV('Resultado realizado (vendas)', fmtMoneySigned(rv.realized), rv.realized>=0?EMERALD:[190,60,60]);
+  linhaKV('Dividendos recebidos (total)', fmtMoney(rv.dividends));
+  y += 2;
+  if(positions.length){
+    tabela(['Ativo','Quantidade','Preço médio','Preço atual','Valor atual','Resultado'],
+      positions.map(p=>[p.ticker, fmtNum(p.qty), fmtMoney(p.avgPrice), p.hasRealPrice?fmtMoney(p.curPrice):'—', fmtMoney(p.marketValue), p.hasRealPrice?fmtMoneySigned(p.unrealizedPL):'—']));
+  }
+
+  // ===== ALOCAÇÃO E CONCENTRAÇÃO =====
+  const allocFim = computeAllocacaoAsOf(end);
+  const conc = computeConcentracaoAtivo();
+  tituloSecao('Alocação e concentração');
+  if(allocFim.total>0){
+    linhaKV('Renda Fixa', fmtNum(allocFim.rfPct.toFixed(1))+'% · '+fmtMoney(allocFim.rf));
+    linhaKV('Renda Variável', fmtNum(allocFim.rvPct.toFixed(1))+'% · '+fmtMoney(allocFim.rv));
+    linhaKV('Caixa', fmtMoney(allocFim.caixa));
+  }
+  y += 2;
+  if(conc.length){
+    subtitulo('Concentração por ativo (dentro da Renda Variável)');
+    tabela(['Ativo','% da carteira de ações'], conc.slice(0,10).map(c=>[c.ticker, fmtNum(c.peso.toFixed(1))+'%']));
+  }
+
+  // ===== DIVIDENDOS =====
+  const divPorMes = computeDividendsByMonth();
+  tituloSecao('Dividendos');
+  linhaKV('Recebidos neste mês', fmtMoney(periodo.divsPeriodo));
+  linhaKV('Total já recebido', fmtMoney(rv.dividends));
+  if(divPorMes.length){
+    subtitulo('Últimos 6 meses');
+    tabela(['Mês','Total recebido'], divPorMes.slice(-6).map(m=>[monthLabel(m.month), fmtMoney(m.total)]));
+  }
+
+  // ===== METAS =====
+  const metas = computeQuantityGoals();
+  tituloSecao('Metas');
+  if(metas.length===0){
+    paragrafo('Nenhuma meta de quantidade criada até o momento.');
+  } else {
+    tabela(['Meta','Atual / Alvo','% concluído','Ritmo mensal'],
+      metas.map(m=>[m.ticker, `${fmtNum(m.currentQty)} / ${fmtNum(m.targetQty)}`, fmtNum(m.pctComplete.toFixed(0))+'%', m.ritmoMensal!==null?fmtNum(m.ritmoMensal)+'/mês':'Dados insuficientes']));
+  }
+
+  // ===== DESEMPENHO (TWR/XIRR) =====
+  const twr = computeTWR();
+  const xirr = computeXIRR();
+  tituloSecao('Desempenho');
+  linhaKV('TWR acumulado (independe dos aportes)', twr&&twr.sufficient!==false&&twr.cumulative!==undefined ? fmtPct(twr.cumulative) : 'Dados insuficientes');
+  linhaKV('XIRR anualizado (retorno do seu dinheiro)', xirr!==null ? fmtPct(xirr) : 'Dados insuficientes');
+
+  // ===== PERFIL DO INVESTIDOR =====
+  tituloSecao('Perfil do investidor');
+  const perfil = DATA.settings.investorProfile;
+  if(!perfil){
+    paragrafo('Perfil de investidor ainda não definido no Patrium.');
+  } else {
+    const p = PERFIS_INVESTIDOR[perfil.tipo];
+    subtitulo(`Perfil: ${p.nome.toUpperCase()}`);
+    paragrafo(p.desc);
+    y += 2;
+    subtitulo('Radar do investidor — comportamento real');
+    computeComportamentoInvestidor().forEach(e=>{
+      garanteEspaco(6);
+      doc.setFontSize(8.3); doc.setTextColor(...INK); doc.setFont('helvetica','normal');
+      doc.text(e.label, MX, y+3.2);
+      doc.setFillColor(...LINE); doc.roundedRect(MX+62, y, 90, 3.2, 1, 1, 'F');
+      if(e.pct!==null){ doc.setFillColor(...GOLD); doc.roundedRect(MX+62, y, 90*(e.pct/100), 3.2, 1, 1, 'F'); }
+      y += 6.5;
+    });
+    y += 2;
+    const bucket = computeCarteiraBucket();
+    if(bucket){
+      const bp = PERFIS_INVESTIDOR[bucket];
+      subtitulo('Perfil declarado × Perfil identificado pelo Patrium');
+      linhaKV('Perfil declarado (questionário)', p.nome);
+      linhaKV('Perfil identificado pelo Patrium (carteira real)', bp.nome);
+      paragrafo(bucket===perfil.tipo
+        ? `A composição atual da carteira está alinhada com o perfil ${p.nome.toLowerCase()} declarado.`
+        : `A composição atual está mais próxima de um perfil ${bp.nome.toLowerCase()}, diferente do perfil ${p.nome.toLowerCase()} declarado. Isso não é um erro, só uma diferença a acompanhar.`);
+    }
+  }
+
+  // ===== SAÚDE PATRIMONIAL =====
+  const indice = computeIndiceSaudePatrimonial();
+  tituloSecao('Índice de Saúde Patrimonial');
+  if(indice.score===null){
+    paragrafo('Dados ainda insuficientes para calcular o índice.');
+  } else {
+    subtitulo(`${indice.score}/100 — ${indice.status}`);
+    if(indice.fortes.length){ subtitulo('Pontos fortes'); indice.fortes.forEach(f=>paragrafo('• '+f, {tamanho:8.6})); }
+    if(indice.melhorar.length){ subtitulo('Pontos a melhorar'); indice.melhorar.forEach(f=>paragrafo('• '+f, {tamanho:8.6})); }
+  }
+
+  // ===== INSIGHTS E DICAS =====
+  const insights = computeInsightsCompletos();
+  tituloSecao('Insights e pontos de atenção');
+  if(insights.length===0) paragrafo('Sem insights suficientes ainda.');
+  else insights.forEach(i=> paragrafo('• '+i.texto.replace(/<[^>]+>/g,''), {tamanho:8.8}));
+
+  const dicas = computeDicasPersonalizadas();
+  if(dicas.length){
+    tituloSecao('Dicas personalizadas');
+    dicas.forEach(d=> paragrafo('• '+(d.texto||d), {tamanho:8.8}));
+  }
+
+  // ===== SELOS/CONQUISTAS =====
+  const milestonesTodos = computeMilestones();
+  const conquistados = milestonesTodos.filter(m=>m.achieved);
+  tituloSecao('Selos e conquistas');
+  linhaKV('Total desbloqueado', `${conquistados.length} de ${milestonesTodos.length}`);
+  if(conquistados.length){
+    tabela(['Selo','Descrição'], conquistados.slice(-15).map(m=>[m.label, m.desc]));
+  }
+
+  // ===== CONCLUSÃO DO MÊS =====
+  tituloSecao('Conclusão do mês');
+  const fraseFechamento = periodo.ganhosPeriodo>=0
+    ? `${mesLabel} fechou em terreno positivo, com um resultado de ${fmtMoneySigned(periodo.ganhosPeriodo)}. O patrimônio total encerrou em ${fmtMoney(patr.patrimonio)}.`
+    : `${mesLabel} fechou em terreno negativo, com um resultado de ${fmtMoneySigned(periodo.ganhosPeriodo)}. O patrimônio total encerrou em ${fmtMoney(patr.patrimonio)}.`;
+  paragrafo(fraseFechamento);
+  paragrafo('Este relatório foi gerado automaticamente pelo Patrium Invest, usando exatamente os mesmos cálculos exibidos no aplicativo. Nenhuma informação aqui é uma recomendação de investimento.', {tamanho:8, cor:FAINT});
+
+  rodape();
+  doc.save(`patrium-relatorio-${mesAno}.pdf`);
+}
+
 async function init(){
   document.getElementById('headerLogoSlot').outerHTML = patriumLogoHTML({height:36});
   document.getElementById('footerLogoSlot').outerHTML = patriumLogoHTML({height:34});
@@ -8318,9 +9251,11 @@ async function init(){
     wrap.appendChild(document.createRange().createContextualFragment(patriumLogoHTML({height:20})));
     wrap.appendChild(primeiro);
   }
-  ['modalAporte','modalGlossarioTermo','modalCentralAjuda','modalCentralAlertas','modalSeloDetalhe','modalDividendo','modalSaldoRf','modalCaixa','modalMetaQtd','modalAtivoDetalhe','modalEditarMovimento','modalBackup'].forEach(inserirLogoMiniModal);
+  ['modalAporte','modalGlossarioTermo','modalCentralAjuda','modalCentralAlertas','modalSeloDetalhe','modalDividendo','modalSaldoRf','modalCaixa','modalMetaQtd','modalAtivoDetalhe','modalEditarMovimento','modalBackup','modalConfiguracoes','modalIndiceSaude','modalRelatorioMensal','modalEmpresa','modalEditarRf','modalEditarOperacao','modalConfirm'].forEach(inserirLogoMiniModal);
   const onboardLogoSlot = document.getElementById('onboardLogoSlot');
   if(onboardLogoSlot) onboardLogoSlot.innerHTML = patriumLogoHTML({height:30});
+  const explorarLogoSlot = document.getElementById('explorarModalLogoSlot');
+  if(explorarLogoSlot) explorarLogoSlot.innerHTML = patriumLogoHTML({height:26});
   document.getElementById('rfDataAporte') && (document.getElementById('rfDataAporte').max = todayISO());
   let stored = await Store.load();
   if(!stored){ stored = buildDemoData(); await Store.save(stored); }
