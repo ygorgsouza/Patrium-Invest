@@ -379,6 +379,156 @@ table.data tbody tr[data-ticker]{ cursor:pointer; }
 /* ===== Toast ===== */
 .toast-wrap{ position:fixed; bottom:calc(22px + env(safe-area-inset-bottom, 0px)); right:calc(22px + env(safe-area-inset-right, 0px)); z-index:200; display:flex; flex-direction:column; gap:9px; }
 @media (max-width:640px){ .toast-wrap{ left:12px; right:12px; bottom:calc(12px + env(safe-area-inset-bottom, 0px)); } }
+
+/* ===================== ASSISTENTE PATRIUM (premium) ===================== */
+.assist-fab{
+  position:fixed; right:calc(24px + env(safe-area-inset-right, 0px)); bottom:calc(24px + env(safe-area-inset-bottom, 0px));
+  width:58px; height:58px; border-radius:50%; border:1px solid color-mix(in srgb, var(--gold) 35%, transparent); cursor:pointer; z-index:150;
+  background:
+    radial-gradient(circle at 32% 28%, color-mix(in srgb, var(--gold) 35%, transparent), transparent 55%),
+    linear-gradient(155deg, var(--navy, #0B1224) 0%, var(--emerald-deep) 130%);
+  box-shadow:0 10px 28px -8px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.04) inset, 0 1px 0 rgba(255,255,255,.12) inset;
+  display:flex; align-items:center; justify-content:center; transition:transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .3s ease;
+  overflow:visible;
+}
+.assist-fab-glow{
+  position:absolute; inset:-7px; border-radius:50%; pointer-events:none;
+  background:radial-gradient(circle, color-mix(in srgb, var(--emerald) 55%, transparent) 0%, transparent 68%);
+  opacity:.55; animation:assistFabPulse 3.2s ease-in-out infinite;
+}
+@keyframes assistFabPulse{ 0%,100%{ opacity:.35; transform:scale(.92); } 50%{ opacity:.65; transform:scale(1.08); } }
+.assist-fab:hover{ transform:scale(1.08) translateY(-1px); box-shadow:0 14px 34px -8px color-mix(in srgb, var(--emerald) 55%, transparent), 0 0 0 1px rgba(255,255,255,.05) inset, 0 1px 0 rgba(255,255,255,.16) inset; }
+.assist-fab:active{ transform:scale(.94); }
+.assist-fab.has-context .assist-fab-glow{ animation-duration:1.9s; opacity:.7; }
+.assist-fab-icon{ width:26px; height:26px; position:relative; z-index:1; filter:drop-shadow(0 1px 3px rgba(0,0,0,.35)); transition:transform .3s ease; }
+.assist-fab:hover .assist-fab-icon{ transform:rotate(8deg) scale(1.05); }
+.assist-fab-badge{
+  position:absolute; top:-3px; right:-3px; min-width:18px; height:18px; padding:0 5px; border-radius:99px;
+  background:var(--gold); color:#1a1400; font-size:10.5px; font-weight:800; display:flex; align-items:center; justify-content:center;
+  border:2px solid var(--bg); line-height:1; z-index:2; box-shadow:0 2px 6px rgba(0,0,0,.3);
+}
+@media (prefers-reduced-motion: reduce){ .assist-fab-glow{ animation:none; opacity:.45; } .assist-fab-icon, .assist-fab{ transition:none; } }
+
+.assist-panel{
+  position:fixed; right:calc(24px + env(safe-area-inset-right, 0px)); bottom:calc(94px + env(safe-area-inset-bottom, 0px));
+  width:404px; max-width:calc(100vw - 32px); height:min(660px, 78vh); z-index:151;
+  background:var(--surface); border:1px solid var(--line); border-radius:22px;
+  box-shadow:0 24px 60px -16px rgba(0,0,0,.45), 0 0 0 1px color-mix(in srgb, var(--gold) 12%, transparent);
+  display:none; flex-direction:column; overflow:hidden;
+  transform-origin:calc(100% - 30px) bottom;
+  animation:assistPanelIn .32s cubic-bezier(.22,1,.36,1);
+}
+.assist-panel.open{ display:flex; }
+@keyframes assistPanelIn{ from{ opacity:0; transform:scale(.85) translateY(14px); filter:blur(3px); } to{ opacity:1; transform:scale(1) translateY(0); filter:blur(0); } }
+@media (prefers-reduced-motion: reduce){ .assist-panel{ animation:assistPanelInReduced .18s ease; } }
+@keyframes assistPanelInReduced{ from{ opacity:0; } to{ opacity:1; } }
+@media (max-width:640px){
+  .assist-panel{
+    right:0; left:0; bottom:0; top:0; width:100%; max-width:100%; height:100%; border-radius:0;
+    padding-top:env(safe-area-inset-top, 0px); padding-bottom:env(safe-area-inset-bottom, 0px);
+    transform-origin:calc(100% - 26px) bottom;
+  }
+  .assist-fab{ width:54px; height:54px; right:calc(16px + env(safe-area-inset-right, 0px)); bottom:calc(16px + env(safe-area-inset-bottom, 0px)); }
+}
+
+.assist-head{
+  flex:none; position:relative; display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:18px 18px 16px;
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(160deg, var(--navy, #0B1224) 0%, var(--surface-2) 145%);
+  overflow:hidden;
+}
+.assist-head::before{
+  content:""; position:absolute; inset:-60% -10% auto -10%; height:130px; pointer-events:none;
+  background:radial-gradient(circle, color-mix(in srgb, var(--emerald) 40%, transparent) 0%, transparent 70%);
+}
+.assist-head-brand{ display:flex; align-items:center; gap:10px; min-width:0; position:relative; z-index:1; }
+.assist-head-titulo{ font-weight:800; font-size:14.5px; font-family:var(--font-display); color:#fff; }
+.assist-head-sub{ font-size:10.5px; color:rgba(255,255,255,.62); margin-top:1px; }
+.assist-head-status{ display:flex; align-items:center; gap:5px; font-size:9.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; color:color-mix(in srgb, var(--emerald) 80%, #fff); margin-top:4px; }
+.assist-head-status-dot{ width:6px; height:6px; border-radius:50%; background:var(--emerald); box-shadow:0 0 6px var(--emerald-glow); animation:assistFabPulse 2.4s ease-in-out infinite; }
+.assist-head-actions{ display:flex; gap:6px; flex:none; position:relative; z-index:1; }
+.assist-head-actions .icon-btn{ background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.14); color:rgba(255,255,255,.85); }
+.assist-head-actions .icon-btn:hover{ background:rgba(255,255,255,.16); border-color:rgba(255,255,255,.26); }
+
+.assist-body{ flex:1 1 auto; overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:13px; -webkit-overflow-scrolling:touch; background:var(--surface); }
+.assist-msg{ max-width:90%; padding:12px 15px; border-radius:15px; font-size:13.3px; line-height:1.6; white-space:pre-line; overflow-wrap:break-word; animation:assistMsgIn .26s cubic-bezier(.22,1,.36,1); }
+@keyframes assistMsgIn{ from{ opacity:0; transform:translateY(8px) scale(.98); } to{ opacity:1; transform:translateY(0) scale(1); } }
+@media (prefers-reduced-motion: reduce){ .assist-msg, .assist-msg-acoes{ animation:none; } }
+.assist-msg strong{ font-weight:800; color:var(--text); }
+.assist-msg-user{
+  align-self:flex-end; color:#fff; border-bottom-right-radius:5px;
+  background:linear-gradient(140deg, var(--emerald-deep), var(--accent));
+  box-shadow:0 4px 14px -6px var(--emerald-glow);
+}
+.assist-msg-user strong{ color:#fff; }
+.assist-msg-bot{
+  align-self:flex-start; color:var(--text); border-bottom-left-radius:5px;
+  background:var(--surface-2); border:1px solid var(--line-soft); position:relative;
+  box-shadow:0 2px 10px -6px rgba(0,0,0,.2);
+}
+.assist-msg-bot::before{
+  content:""; position:absolute; left:0; top:12px; bottom:12px; width:2.5px; border-radius:2px;
+  background:linear-gradient(180deg, var(--gold), var(--emerald));
+}
+.assist-msg-erro{ background:var(--negative-soft); border-color:color-mix(in srgb, var(--negative) 30%, var(--line-soft)); }
+.assist-msg-erro::before{ background:var(--negative); }
+
+/* Cartão estruturado — só para respostas com pares "Rótulo: valor" no
+   início (análises/resumos), respostas simples continuam texto simples. */
+.assist-card{ align-self:flex-start; max-width:92%; width:100%; background:var(--surface-2); border:1px solid var(--line-soft); border-radius:15px; overflow:hidden; box-shadow:0 2px 10px -6px rgba(0,0,0,.2); animation:assistMsgIn .26s cubic-bezier(.22,1,.36,1); }
+.assist-card-stats{ display:grid; grid-template-columns:repeat(auto-fit, minmax(108px,1fr)); gap:1px; background:var(--line-soft); }
+.assist-card-stat{ background:var(--surface-2); padding:12px 13px; }
+.assist-card-stat-label{ font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--text-faint); margin-bottom:3px; }
+.assist-card-stat-value{ font-family:var(--font-mono); font-size:14.5px; font-weight:800; color:var(--text); }
+.assist-card-body{ padding:13px 15px; font-size:13px; line-height:1.6; color:var(--text-soft); border-top:1px solid var(--line-soft); }
+.assist-card-body strong{ color:var(--text); font-weight:800; }
+.assist-card-section-title{ font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--gold); margin:10px 0 4px; }
+.assist-card-section-title:first-child{ margin-top:0; }
+
+.assist-typing{ align-self:flex-start; display:flex; align-items:center; gap:8px; padding:11px 15px; background:var(--surface-2); border-radius:15px; border:1px solid var(--line-soft); }
+.assist-typing-label{ font-size:11px; color:var(--text-faint); font-weight:600; }
+.assist-typing-dots{ display:flex; gap:4px; }
+.assist-typing-dots span{ width:5px; height:5px; border-radius:50%; background:var(--accent); box-shadow:0 0 5px var(--emerald-glow); animation:assistTypingDot 1.2s ease-in-out infinite; }
+.assist-typing-dots span:nth-child(2){ animation-delay:.15s; } .assist-typing-dots span:nth-child(3){ animation-delay:.3s; }
+@keyframes assistTypingDot{ 0%,60%,100%{ opacity:.3; transform:translateY(0); } 30%{ opacity:1; transform:translateY(-3px); } }
+@media (prefers-reduced-motion: reduce){ .assist-typing-dots span{ animation:none; opacity:.7; } }
+
+.assist-msg-acoes{ align-self:flex-start; display:flex; flex-wrap:wrap; gap:7px; max-width:90%; margin-top:-5px; }
+.assist-action-btn{
+  display:inline-flex; align-items:center; gap:5px; border:1.5px solid color-mix(in srgb, var(--gold) 55%, var(--accent) 45%);
+  background:linear-gradient(120deg, color-mix(in srgb, var(--gold) 12%, transparent), color-mix(in srgb, var(--accent) 12%, transparent));
+  color:var(--text); font-size:12px; font-weight:700; padding:7px 13px; border-radius:99px; cursor:pointer; transition:all .18s ease;
+}
+.assist-action-btn:hover{ background:linear-gradient(120deg, var(--gold), var(--accent)); color:#0B1224; border-color:transparent; transform:translateY(-1px); box-shadow:0 4px 12px -4px color-mix(in srgb, var(--gold) 50%, transparent); }
+.assist-action-btn:active{ transform:translateY(0) scale(.97); }
+
+.assist-empty{ margin:auto; text-align:center; padding:26px 18px; }
+.assist-empty-icon{ font-size:30px; margin-bottom:10px; opacity:.85; }
+.assist-empty-titulo{ font-weight:800; font-size:14.5px; font-family:var(--font-display); margin-bottom:5px; }
+.assist-empty-sub{ color:var(--text-faint); font-size:12px; max-width:260px; margin:0 auto; line-height:1.5; }
+
+.assist-suggestions{ flex:none; display:flex; gap:7px; overflow-x:auto; padding:0 18px 14px; scrollbar-width:none; }
+.assist-suggestions::-webkit-scrollbar{ display:none; }
+.assist-suggestion-chip{
+  flex:none; white-space:nowrap; font-size:11.8px; font-weight:600; padding:8px 14px; border-radius:99px;
+  border:1.5px solid var(--line); background:var(--surface-2); color:var(--text-soft); cursor:pointer; transition:all .18s ease;
+}
+.assist-suggestion-chip:hover{ border-color:var(--accent); color:var(--accent); background:color-mix(in srgb, var(--accent) 8%, var(--surface-2)); transform:translateY(-1px); }
+
+.assist-input-row{ flex:none; display:flex; align-items:center; gap:9px; padding:13px 15px; border-top:1px solid var(--line); background:var(--surface); }
+.assist-input-row input{
+  flex:1; min-width:0; background:var(--surface-2); border:1.5px solid var(--line); border-radius:13px; padding:11px 15px;
+  color:var(--text); font-family:inherit; font-size:16px; transition:border-color .18s ease, box-shadow .18s ease;
+}
+.assist-input-row input:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+.assist-send-btn{
+  flex:none; width:42px; height:42px; border-radius:12px; border:none; cursor:pointer;
+  background:linear-gradient(140deg, var(--emerald-deep), var(--accent)); color:#fff; display:flex; align-items:center; justify-content:center;
+  transition:transform .16s cubic-bezier(.34,1.56,.64,1), box-shadow .16s ease; box-shadow:0 4px 12px -5px var(--emerald-glow);
+}
+.assist-send-btn:hover{ transform:scale(1.08); box-shadow:0 6px 16px -5px var(--emerald-glow); }
+.assist-send-btn:active{ transform:scale(.94); }
+.assist-send-btn:disabled{ opacity:.5; cursor:default; transform:none; box-shadow:none; }
 .toast{ background:var(--surface-3); border:1px solid var(--line); color:var(--text); padding:13px 18px; border-radius:12px; font-size:13.5px; box-shadow:var(--shadow-lg); animation:toastIn .25s var(--ease); max-width:330px; display:flex; align-items:center; gap:10px; overflow:hidden; position:relative; padding-right:22px; backdrop-filter:blur(8px); }
 @keyframes toastIn{ from{opacity:0; transform:translateY(10px) translateX(4px);} to{opacity:1; transform:translateY(0) translateX(0);} }
 .toast::after{ content:""; position:absolute; left:0; bottom:0; height:2px; background:var(--accent); width:100%; transform-origin:left; animation:toastProgress 3.2s linear forwards; }
@@ -445,6 +595,12 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
 @keyframes demoPulse{ 0%,100%{ box-shadow:0 0 0 0 color-mix(in srgb, var(--info) 35%, transparent); } 50%{ box-shadow:0 0 0 5px color-mix(in srgb, var(--info) 0%, transparent); } }
 
 .btn:focus-visible, .icon-btn:focus-visible, .tab-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+/* Foco visível genérico para qualquer elemento interativo que não tenha
+   uma regra própria (cards clicáveis, filtros, links, itens de accordion),
+   essencial para quem navega por teclado. */
+a:focus-visible, [tabindex]:focus-visible, .help-cat-filter:focus-visible, .faq-q:focus-visible, .conceito-q:focus-visible, .achv-badge:focus-visible, .wiz-card:focus-visible, .info-dot:focus-visible, .help-seg-btn:focus-visible{
+  outline:2px solid var(--accent); outline-offset:2px; border-radius:6px;
+}
 
 /* ===== Sucesso ao salvar: check + brilho dourado discreto ===== */
 .save-check{ display:inline-flex; align-items:center; justify-content:center; width:58px; height:58px; border-radius:50%; background:var(--positive-soft); margin:0 auto 14px; animation:saveCheckPop .45s cubic-bezier(.3,1.4,.4,1); position:relative; box-shadow:0 0 0 8px color-mix(in srgb, var(--positive) 8%, transparent); }
@@ -589,6 +745,26 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
 .faq-a{ max-height:0; overflow:hidden; transition:max-height .28s ease; }
 .faq-item.open .faq-a{ max-height:600px; }
 .faq-a-inner{ padding:0 16px 15px; font-size:13px; color:var(--text-soft); line-height:1.6; }
+
+/* ===================== CENTRAL DE AJUDA — CONCEITOS FINANCEIROS ===================== */
+.help-seg{ display:flex; gap:6px; margin-bottom:14px; padding:4px; background:var(--surface-2); border-radius:12px; border:1px solid var(--line-soft); }
+.help-seg-btn{ flex:1; border:none; background:none; padding:9px 10px; border-radius:9px; font-size:12.5px; font-weight:700; color:var(--text-faint); cursor:pointer; transition:all .18s ease; }
+.help-seg-btn.active{ background:var(--accent); color:var(--accent-ink); }
+.conceito-item{ border:1px solid var(--line-soft); border-radius:12px; overflow:hidden; background:var(--surface); transition:border-color .18s ease; margin-bottom:8px; }
+.conceito-item.open{ border-color:var(--accent); }
+.conceito-q{
+  width:100%; text-align:left; padding:13px 16px; background:none; border:none; cursor:pointer;
+  display:flex; justify-content:space-between; align-items:center; gap:12px; font-size:13.5px; font-weight:700; color:var(--text);
+}
+.conceito-item.open .conceito-q .faq-arrow{ transform:rotate(180deg); color:var(--accent); }
+.conceito-a{ max-height:0; overflow:hidden; transition:max-height .32s ease; padding:0 16px; }
+.conceito-item.open .conceito-a{ max-height:1100px; padding:0 16px 16px; }
+.conceito-bloco{ padding:10px 0; border-top:1px dashed var(--line-soft); }
+.conceito-bloco:first-child{ border-top:none; }
+.conceito-bloco-titulo{ font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--accent); margin-bottom:4px; }
+.conceito-bloco-cautela .conceito-bloco-titulo{ color:var(--warning); }
+.conceito-bloco p{ margin:0; font-size:13px; color:var(--text-soft); line-height:1.6; }
+.conceito-link{ margin-top:10px; }
 
 /* ===================== ONBOARDING ===================== */
 .onboard-box{ max-width:760px; width:94vw; }
@@ -794,6 +970,11 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
 .perfil-comparacao-versus{ flex:none; font-size:17px; font-weight:800; color:var(--text-faint); }
 .perfil-evolucao-item{ text-align:center; }
 .perfil-evolucao-arrow{ color:var(--text-faint); font-size:16px; }
+.dash-proxima-meta{ padding:14px 16px; border-radius:12px; border:1.5px solid; background:var(--surface-2); margin-bottom:14px; }
+.dash-proxima-meta-label{ font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint); margin-bottom:4px; }
+.dash-proxima-meta-nome{ font-weight:700; font-size:14px; margin-bottom:6px; }
+.dash-proxima-meta-valores{ display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+.dash-proxima-meta-objetivo{ font-size:19px; font-weight:800; }
 .dash-saudacao{ margin-bottom:18px; padding:16px 20px; border-radius:16px; background:linear-gradient(120deg, var(--surface-2), var(--surface)); border:1px solid var(--line-soft); animation:saudacaoIn .4s cubic-bezier(.34,1.56,.64,1); }
 @keyframes saudacaoIn{ from{ opacity:0; transform:translateY(-6px); } to{ opacity:1; transform:translateY(0); } }
 .dash-saudacao-linha{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
@@ -1075,8 +1256,9 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
     <!-- 11. METAS — resumo curto. Reaproveita computeQuantityGoals(); posição sempre real. -->
     <div class="card" style="margin-bottom:16px;">
       <div class="flex-between" style="margin-bottom:14px;">
-        <h3 style="margin:0; font-size:15px;">Metas de carteira<span class="info-dot" data-help-cat="Metas">?</span></h3>
+        <h3 style="margin:0; font-size:15px;">Metas<span class="info-dot" data-help-cat="Metas">?</span></h3>
       </div>
+      <div id="dashProximaMetaPatrimonial"></div>
       <div id="dashMetasResumo"></div>
     </div>
   </section>
@@ -1151,6 +1333,20 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
         <h3 style="margin:0 0 14px; font-size:15px; display:flex; align-items:center; gap:8px;"><span style="font-size:17px;">📉</span> Piores posições</h3>
         <div id="rankPiores"></div>
       </div>
+    </div>
+
+    <!-- Metas patrimoniais — por VALOR em R$, complementares às metas de
+         quantidade abaixo. Reflete sempre o patrimônio já calculado pelo
+         Patrium (computePatrimonio()), nunca um valor próprio. -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="flex-between" style="flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+        <div>
+          <h3 style="margin:0 0 4px; font-size:15px;">Metas patrimoniais<span class="info-dot" data-help-cat="Metas">?</span></h3>
+          <p class="section-hint mb-0">Um valor em reais que você quer alcançar de patrimônio total, com prazo opcional. Reflete automaticamente o seu patrimônio calculado.</p>
+        </div>
+        <button class="btn btn-primary" id="btnNovaMetaPatrimonial">+ Nova meta patrimonial</button>
+      </div>
+      <div id="metasPatrimoniaisLista"></div>
     </div>
 
     <!-- Metas por quantidade de ativos — nunca uma meta de valor. A quantidade
@@ -2131,11 +2327,21 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
   <div class="modal wide">
     <div class="modal-head"><h3>Central de Ajuda</h3><button class="icon-btn" data-close="modalCentralAjuda">✕</button></div>
     <div class="modal-body">
-      <p class="section-hint" style="margin-bottom:10px;">Tudo sobre como o Patrium funciona e como cada número é calculado.</p>
+      <p class="section-hint" style="margin-bottom:10px;">Uma base de conhecimento sobre como o Patrium funciona e como cada número é calculado, exatamente como o motor por trás do produto calcula.</p>
       <button type="button" class="btn btn-sm" id="btnReverOnboarding" style="margin-bottom:14px;">↻ Rever apresentação inicial</button>
-      <input type="text" id="ajudaBusca" placeholder="Buscar uma dúvida…" style="width:100%; margin-bottom:12px; background:var(--surface-2); border:1.5px solid var(--line); border-radius:11px; padding:10px 14px; color:var(--text); font-size:13.5px;">
-      <div class="help-cat-filters" id="ajudaCatFilters"></div>
-      <div class="faq-list" id="ajudaFaqList"></div>
+      <input type="text" id="ajudaBusca" placeholder="Buscar um conceito ou dúvida…" style="width:100%; margin-bottom:14px; background:var(--surface-2); border:1.5px solid var(--line); border-radius:11px; padding:10px 14px; color:var(--text); font-size:13.5px;">
+      <div class="help-seg" id="ajudaSeg">
+        <button type="button" class="help-seg-btn active" data-view="conceitos">📖 Conceitos financeiros</button>
+        <button type="button" class="help-seg-btn" data-view="faq">❓ Perguntas frequentes</button>
+      </div>
+      <div id="ajudaViewConceitos">
+        <div class="help-cat-filters" id="ajudaConceitosCatFilters"></div>
+        <div id="ajudaConceitosLista"></div>
+      </div>
+      <div id="ajudaViewFaq" class="hidden">
+        <div class="help-cat-filters" id="ajudaCatFilters"></div>
+        <div class="faq-list" id="ajudaFaqList"></div>
+      </div>
       <div class="ajuda-suporte-final">
         <span class="ajuda-suporte-icon">✉️</span>
         <div>
@@ -2444,6 +2650,26 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
   </div>
 </div>
 
+<div class="modal-overlay" id="modalMetaPatrimonial">
+  <div class="modal">
+    <div class="modal-head"><h3 id="metaPatrimonialTitulo">Nova meta patrimonial</h3><button class="icon-btn" data-close="modalMetaPatrimonial">✕</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Nome da meta</label><input type="text" id="metaPatrimonialNome" placeholder="Ex.: Primeiros R$ 50 mil"></div>
+      <div class="field"><label>Valor objetivo (R$)</label><input type="number" step="0.01" min="0.01" id="metaPatrimonialValor" placeholder="Ex.: 50000"></div>
+      <div class="field"><label>Data limite (opcional)</label><input type="date" id="metaPatrimonialData"></div>
+      <div class="field"><label>Observação (opcional)</label><input type="text" id="metaPatrimonialObs"></div>
+      <p class="helper">O progresso é calculado automaticamente a partir do seu patrimônio total já calculado pelo Patrium, a meta só guarda o objetivo, nunca um valor próprio.</p>
+      <input type="hidden" id="metaPatrimonialId">
+      <input type="hidden" id="metaPatrimonialCreatedAt">
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger hidden" id="btnExcluirMetaPatrimonial" style="margin-right:auto;">Eliminar meta</button>
+      <button class="btn" data-close="modalMetaPatrimonial">Cancelar</button>
+      <button class="btn btn-primary" id="btnSalvarMetaPatrimonial">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalCaixa">
   <div class="modal">
     <div class="modal-head"><h3>Registar retirada</h3><button class="icon-btn" data-close="modalCaixa">✕</button></div>
@@ -2491,6 +2717,46 @@ hr.line{ border:none; border-top:1px solid var(--line); margin:20px 0; }
       <button class="btn" data-close="modalConfirm">Cancelar</button>
       <button class="btn btn-danger" id="btnConfirmAction" style="border-color:var(--negative);">Confirmar</button>
     </div>
+  </div>
+</div>
+
+<!-- ===================== ASSISTENTE PATRIUM ===================== -->
+<button type="button" class="assist-fab" id="assistFab" title="Assistente Patrium" aria-label="Abrir Assistente Patrium">
+  <span class="assist-fab-glow"></span>
+  <svg class="assist-fab-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M16 3 L27 16 L16 29 L5 16 Z" stroke="url(#assistFabGrad)" stroke-width="1.6" fill="rgba(255,255,255,.06)"/>
+    <circle cx="16" cy="16" r="3.6" fill="url(#assistFabGrad)"/>
+    <path d="M16 8.4 V12.2 M16 19.8 V23.6 M8.4 16 H12.2 M19.8 16 H23.6" stroke="url(#assistFabGrad)" stroke-width="1.5" stroke-linecap="round"/>
+    <defs>
+      <linearGradient id="assistFabGrad" x1="4" y1="4" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#D6B378"/><stop offset="1" stop-color="#22C48E"/>
+      </linearGradient>
+    </defs>
+  </svg>
+  <span class="assist-fab-badge hidden" id="assistFabBadge">1</span>
+</button>
+<div class="assist-panel" id="assistPanel" role="dialog" aria-label="Assistente Patrium" aria-modal="false">
+  <div class="assist-head">
+    <div class="assist-head-brand">
+      <div class="patrium-logo" id="assistLogoSlot" style="--logo-h:22px;"></div>
+      <div>
+        <div class="assist-head-titulo">Assistente Patrium</div>
+        <div class="assist-head-sub">Inteligência conectada ao seu patrimônio</div>
+        <div class="assist-head-status"><span class="assist-head-status-dot"></span>Carteira conectada</div>
+      </div>
+    </div>
+    <div class="assist-head-actions">
+      <button type="button" class="icon-btn btn-sm" id="assistBtnLimpar" title="Limpar conversa">🗑</button>
+      <button type="button" class="icon-btn btn-sm" id="assistBtnFechar" title="Fechar" aria-label="Fechar Assistente">✕</button>
+    </div>
+  </div>
+  <div class="assist-body" id="assistBody" tabindex="0"></div>
+  <div class="assist-suggestions" id="assistSuggestions"></div>
+  <div class="assist-input-row">
+    <input type="text" id="assistInput" placeholder="Converse sobre o seu patrimônio…" autocomplete="off">
+    <button type="button" class="assist-send-btn" id="assistBtnEnviar" title="Enviar" aria-label="Enviar mensagem">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12 L20 4 L14 20 L11 13 L4 12 Z"/></svg>
+    </button>
   </div>
 </div>
 
@@ -2638,7 +2904,7 @@ function showSaveSuccess(modalId, message, afterFn){
    funções por chamadas Supabase (ex.: supabase.from('patrium_data')...)
    sem precisar de tocar no resto do app. */
 const STORAGE_KEY = 'patrium_invest_v1';
-const SCHEMA_VERSION = 10;
+const SCHEMA_VERSION = 11;
 const Store = {
   async load(){
     try{
@@ -2753,6 +3019,13 @@ function migrateData(data){
     data.settings.userName = data.settings.userName || null;
     data.schemaVersion = 10;
   }
+  if(data.schemaVersion < 11){
+    // v10 -> v11: metas patrimoniais (por valor em R$) — array novo, vazio
+    // por padrão. Não mexe nas metas de quantidade existentes (quantityGoals),
+    // é um sistema à parte e complementar.
+    data.patrimonyGoals = data.patrimonyGoals || [];
+    data.schemaVersion = 11;
+  }
   // ---- Reconciliação defensiva (roda sempre, independente de versão) ----
   // Garante uma invariante crítica para os gráficos: todo ticker com um preço
   // em cache (DATA.prices) tem pelo menos um snapshot correspondente. Sem
@@ -2764,6 +3037,7 @@ function migrateData(data){
   // sintetizado aqui usa a data de hoje, nunca uma data passada.
   data.priceSnapshots = data.priceSnapshots || {};
   data.quantityGoals = data.quantityGoals || [];
+  data.patrimonyGoals = data.patrimonyGoals || [];
   data.unlockedAchievements = data.unlockedAchievements || [];
   if(data.settings) data.settings.investorProfile = data.settings.investorProfile || null;
   if(data.settings) data.settings.alertasLidos = data.settings.alertasLidos || [];
@@ -2796,6 +3070,7 @@ function emptyData(){
     reconciliations: [],   // {id, date, patrimonioInformado, patrimonioCalculado, diferenca, note}, conferência, nunca vira rendimento sozinha
     positionAdjustments: [], // {id, ticker, date, valorCalculado, valorReal, ajuste, note}, saldo real por posição de ação/FII/ETF/cripto
     quantityGoals: [],       // {id, ticker, targetQty, unit:'ações'|'cotas', note}, meta de QUANTIDADE, nunca de valor; nunca altera a posição real
+    patrimonyGoals: [],      // {id, nome, valorObjetivo, dataLimite, observacao, createdAt}, meta de VALOR em R$, reflete o patrimônio calculado, nunca um valor próprio
     unlockedAchievements: [], // array de ids de selos já vistos (evita re-disparar o toast de "novo selo")
     settings: { allocationTarget: { rf:80, rv:20 }, theme:'dark', investorProfile:null, onboardingDone:false, alertasLidos:[], lastBackupAt:null, investorProfileHistory:[], userName:null }
   };
@@ -3582,6 +3857,68 @@ function computeQuantityGoals(){
       concluida, ritmoMensal, previsaoMeses, nComprasRegistadas: comprasTicker.length
     };
   }).sort((a,b)=> a.ticker.localeCompare(b.ticker));
+}
+/* Metas patrimoniais — por VALOR em R$, complementares (nunca substituem)
+   às metas de quantidade acima. Reaproveita computePatrimonio() como
+   ÚNICA fonte do patrimônio atual (nenhum cálculo paralelo) e
+   computeMonthlyContributions() para estimar o ritmo de aportes. O
+   percentual exibido na barra nunca passa de 100%, mas o percentual REAL
+   (progressoReal) nunca é limitado, para permitir dizer "147% da meta"
+   quando o patrimônio já ultrapassou o objetivo. */
+function computePatrimonyGoals(){
+  const valorAtual = computePatrimonio().patrimonio;
+  const contribMensal = computeMonthlyContributions();
+  const hoje = todayISO();
+  return (DATA.patrimonyGoals||[]).map(g=>{
+    const valorObjetivo = g.valorObjetivo;
+    const progressoReal = valorObjetivo>0 ? (valorAtual/valorObjetivo)*100 : null;
+    const progressoExibicao = progressoReal===null ? 0 : Math.max(0, Math.min(progressoReal, 100));
+    const concluida = progressoReal!==null && progressoReal>=100;
+    const faltam = Math.max(0, round2(valorObjetivo - valorAtual));
+
+    let prazo = null;
+    if(g.dataLimite){
+      const diasRestantes = daysBetween(hoje, g.dataLimite);
+      const mesesRestantes = diasRestantes/30.44;
+      let percentualTempo = null;
+      if(g.createdAt){
+        const totalDias = daysBetween(g.createdAt, g.dataLimite);
+        const decorridoDias = daysBetween(g.createdAt, hoje);
+        percentualTempo = totalDias>0 ? Math.max(0, Math.min(100, (decorridoDias/totalDias)*100)) : null;
+      }
+      // Ritmo necessário só é calculado com prazo futuro e meta ainda não
+      // concluída. Ritmo atual só com pelo menos 3 meses de aportes
+      // registados — dados insuficientes nunca viram um status inventado.
+      let ritmoNecessario = null, ritmoAtual = null, statusRitmo = null;
+      if(!concluida && diasRestantes>0 && mesesRestantes>0){
+        ritmoNecessario = round2(faltam/mesesRestantes);
+      }
+      if(contribMensal.length>=3){
+        const recentes = contribMensal.slice(-3);
+        ritmoAtual = round2(recentes.reduce((s,m)=>s+m.total,0)/recentes.length);
+      }
+      if(!concluida && ritmoNecessario!==null && ritmoNecessario>0 && ritmoAtual!==null){
+        const razao = ritmoAtual/ritmoNecessario;
+        statusRitmo = razao>=1.1 ? 'acima' : razao>=0.9 ? 'no-ritmo' : 'atencao';
+      }
+      prazo = { dataLimite:g.dataLimite, diasRestantes, vencida: diasRestantes<0 && !concluida, percentualTempo, ritmoNecessario, ritmoAtual, statusRitmo };
+    }
+
+    return {
+      id:g.id, nome:g.nome, observacao:g.observacao||null, createdAt:g.createdAt||null,
+      valorObjetivo, valorAtual: round2(valorAtual), progressoReal, progressoExibicao, concluida, faltam, prazo,
+    };
+  }).sort((a,b)=> (b.progressoExibicao - a.progressoExibicao));
+}
+/* A meta patrimonial mais relevante para destaque (Dashboard e aba Metas):
+   prioriza a mais próxima de ser concluída entre as ainda não concluídas;
+   se todas estiverem concluídas, mostra a concluída mais recente. */
+function computePatrimonyGoalPrincipal(){
+  const metas = computePatrimonyGoals();
+  if(metas.length===0) return null;
+  const emAndamento = metas.filter(m=>!m.concluida);
+  if(emAndamento.length>0) return emAndamento[0]; // já ordenado por progresso desc
+  return metas[0];
 }
 /* Concentração por setor — só existe quando pelo menos um ativo detido tem
    setor conhecido (DATA.sectors, preenchido por "Atualizar preços" com
@@ -4799,6 +5136,134 @@ function renderEducacao(){
 /* ===================== CENTRAL DE AJUDA (específica do Patrium) =====================
    Explica como o PRODUTO funciona e como cada número é calculado, distinto
    da Educação (que é sobre investimentos em geral). */
+
+/* Conceitos financeiros prioritários — estrutura fixa em 4 partes (O que é
+   / Como o Patrium calcula / Como interpretar / Quando ter cautela), com a
+   lógica EXATA já implementada no motor, nunca uma explicação inventada.
+   linkTab/linkLabel levam direto à área relevante do produto. */
+const CONCEITOS_FINANCEIROS = [
+  { termo:'Patrimônio', icone:'💰', cat:'Fundamentos',
+    oque:'A soma de tudo o que você tem investido no Patrium, num único número.',
+    comoCalcula:'Patrimônio = saldo em Renda Fixa + valor de mercado da Renda Variável + saldo em Caixa. Cada uma dessas três partes já é calculada separadamente em outras telas, o patrimônio é só a soma delas.',
+    comoInterpretar:'É o retrato de "quanto vale a sua carteira hoje", não é lucro nem dinheiro disponível para gastar, é o valor total investido mais o que já rendeu.',
+    quandoCautela:'O valor de mercado da Renda Variável depende de preços atualizados. Se você não atualizar os preços há muito tempo, o patrimônio exibido pode estar desatualizado.',
+    linkTab:'dashboard', linkLabel:'Ver Patrimônio no Dashboard' },
+  { termo:'Aportes', icone:'📥', cat:'Fundamentos',
+    oque:'Dinheiro novo que você colocou no Patrium, vindo de fora.',
+    comoCalcula:'Conta como aporte: uma compra de ação/FII/ETF/BDR paga com dinheiro externo, um aporte em Renda Fixa marcado como externo, ou um aporte de caixa. Uma transferência interna (ex.: Renda Fixa para Caixa) nunca conta como aporte, porque não é dinheiro novo.',
+    comoInterpretar:'É a parte do crescimento do patrimônio que veio de você, não do mercado. O Patrium sempre separa "quanto veio de aportes" de "quanto veio de valorização" no card "De onde veio o crescimento".',
+    quandoCautela:'Se um aporte foi registado por engano como "interno", ele não vai aparecer nesse total, revise o campo de origem (externo/interno) ao registar um aporte de Renda Fixa.',
+    linkTab:'analises', linkLabel:'Ver em Análises' },
+  { termo:'Retiradas', icone:'📤', cat:'Fundamentos',
+    oque:'Dinheiro que saiu de vez do Patrium, não uma simples troca de lugar dentro da carteira.',
+    comoCalcula:'Uma retirada de caixa, ou um resgate de Renda Fixa marcado para "sair do Patrium" (não para o Caixa), reduz o patrimônio total e conta como um fluxo externo negativo no cálculo de XIRR.',
+    comoInterpretar:'Diferente de transferir Renda Fixa para o Caixa (que não muda o patrimônio total), uma retirada de verdade reduz o quanto você tem investido.',
+    quandoCautela:'Ao resgatar Renda Fixa, confira se escolheu "para o Caixa" (transferência interna) ou "para fora do Patrium" (retirada real), são tratados de forma bem diferente nos cálculos.',
+    linkTab:'rendafixa', linkLabel:'Ver Renda Fixa' },
+  { termo:'Resultado realizado', icone:'✅', cat:'Desempenho',
+    oque:'O lucro ou prejuízo que já é definitivo, de uma venda que já aconteceu.',
+    comoCalcula:'Para cada venda: (preço de venda − preço médio) × quantidade vendida, descontando as taxas da operação. Uma vez vendido, esse resultado não muda mais, mesmo que o preço do ativo continue subindo ou caindo depois.',
+    comoInterpretar:'É dinheiro "garantido", ninguém pode tirar esse resultado de você depois de vendido. Também é a base do Imposto de Renda devido em vendas de ações.',
+    quandoCautela:'Um resultado realizado positivo isolado não significa que a carteira toda vai bem, olhe sempre o resultado total (realizado + não realizado).',
+    linkTab:'historico', linkLabel:'Ver Histórico' },
+  { termo:'Resultado não realizado', icone:'📈', cat:'Desempenho',
+    oque:'O ganho ou perda "no papel" de uma posição que você ainda tem, ainda não vendeu.',
+    comoCalcula:'(preço atual − preço médio) × quantidade em carteira. Muda todos os dias junto com o preço de mercado do ativo, só vira resultado realizado quando você vende.',
+    comoInterpretar:'É uma fotografia do momento, pode subir ou descer até o dia em que você realmente vender a posição.',
+    quandoCautela:'Sem um preço atual atualizado, esse número usa o último preço conhecido, que pode estar desatualizado. Atualize os preços regularmente na aba Ações.',
+    linkTab:'acoes', linkLabel:'Ver Ações' },
+  { termo:'Custo médio', icone:'📊', cat:'Desempenho',
+    oque:'O preço médio que você pagou por cada unidade de um ativo, considerando todas as compras já feitas.',
+    comoCalcula:'Média ponderada de todas as compras (soma dos valores investidos ÷ soma das quantidades compradas). A cada venda, o custo médio é recalculado proporcionalmente, mas não muda por causa de uma nova compra num preço diferente sem ajustar a base.',
+    comoInterpretar:'É a referência usada para calcular o resultado não realizado, comparando o preço atual com o que você efetivamente pagou em média.',
+    quandoCautela:'Comprar mais de um ativo em queda reduz o custo médio, mas só faz sentido se a tese de investimento continuar válida, "baixar a média" não é garantia de recuperação.',
+    linkTab:'acoes', linkLabel:'Ver posições em Ações' },
+  { termo:'Dividendos', icone:'💵', cat:'Fundamentos',
+    oque:'Proventos (dividendos ou JCP) que você recebeu dos seus ativos de Renda Variável.',
+    comoCalcula:'Cada dividendo é registado manualmente por você (ativo, data, valor líquido recebido), e entra no resultado total da carteira e no cálculo de rentabilidade real, sem nunca ser contado como valorização de preço.',
+    comoInterpretar:'É renda separada da valorização do ativo, aparece isolada no card "De onde veio o crescimento" e na aba Dividendos.',
+    quandoCautela:'Se você recebeu um provento e não registou, ele não entra em nenhum cálculo, o Patrium só sabe o que você informa.',
+    linkTab:'dividendos', linkLabel:'Ver Dividendos' },
+  { termo:'Renda Fixa', icone:'🏦', cat:'Carteira',
+    oque:'A parte da sua carteira em títulos que pagam uma remuneração combinada previamente (CDB, Tesouro Direto, LCI/LCA e outros).',
+    comoCalcula:'Para cada produto, o Patrium reconstrói o saldo a partir dos aportes, resgates e dos saldos reais que você informa ao longo do tempo, o rendimento é a diferença entre o saldo atual e o total efetivamente aportado (líquido de resgates).',
+    comoInterpretar:'O saldo de RF é normalmente mais estável e previsível do que a Renda Variável, mas ainda depende de você manter os saldos atualizados periodicamente.',
+    quandoCautela:'Se você não atualiza o saldo de um produto há muito tempo, o rendimento mostrado pode estar defasado, atualize com "Registar saldo/aporte" de tempos em tempos.',
+    linkTab:'rendafixa', linkLabel:'Ver Renda Fixa' },
+  { termo:'Renda Variável', icone:'📈', cat:'Carteira',
+    oque:'A parte da sua carteira em ações, FIIs, ETFs, BDRs e outros ativos negociados em bolsa, cujo preço oscila com o mercado.',
+    comoCalcula:'Valor de mercado = quantidade em carteira × preço atual de cada ativo, somado entre todos os ativos. O resultado soma o ganho/perda não realizado de tudo que você ainda tem, mais o realizado de tudo que já vendeu.',
+    comoInterpretar:'Tende a oscilar mais do que a Renda Fixa, no curto prazo, mas historicamente busca retornos maiores no longo prazo em troca dessa oscilação.',
+    quandoCautela:'Sem preços atualizados, o valor de mercado exibido não reflete o preço real de hoje, atualize regularmente.',
+    linkTab:'acoes', linkLabel:'Ver Ações' },
+  { termo:'Alocação', icone:'🥧', cat:'Carteira',
+    oque:'Como o seu patrimônio está distribuído entre Renda Fixa, Renda Variável e Caixa.',
+    comoCalcula:'Percentual de cada classe sobre o patrimônio total: % RF = saldo RF ÷ patrimônio total, e o mesmo para RV e Caixa. Você também pode definir uma alocação-alvo de referência, que o Patrium compara com a real, sem nunca ajustar a carteira sozinho.',
+    comoInterpretar:'Mostra o quanto da sua carteira está exposta à oscilação da Renda Variável versus a estabilidade da Renda Fixa.',
+    quandoCautela:'Uma alocação muito diferente do seu perfil declarado não é um erro, só uma diferença a acompanhar (veja a comparação no card de Perfil).',
+    linkTab:'alocacao', linkLabel:'Ver Alocação' },
+  { termo:'Concentração', icone:'🎯', cat:'Carteira',
+    oque:'O quanto um único ativo pesa dentro da sua Renda Variável.',
+    comoCalcula:'Peso de cada ativo = valor de mercado desse ativo ÷ valor total da Renda Variável (não do patrimônio total). Por isso, mesmo uma carteira pequena de ações pode ter alta concentração num único papel.',
+    comoInterpretar:'Concentração alta amplia tanto ganhos quanto perdas, um problema isolado numa única empresa pesa mais quando ela representa uma fatia grande da carteira.',
+    quandoCautela:'O Patrium nunca diz para vender um ativo concentrado, só mostra o dado, a decisão de diversificar (ou não) é sempre sua.',
+    linkTab:'analises', linkLabel:'Ver Concentração em Análises' },
+  { termo:'TWR', icone:'📐', cat:'Desempenho',
+    oque:'Time-Weighted Return, a performance da sua carteira independente de quando e quanto você aportou.',
+    comoCalcula:'Encadeia sub-períodos entre cada fluxo externo (aporte ou retirada), calculando o retorno de cada sub-período isoladamente e depois compondo todos, isso elimina a distorção que um aporte grande no meio do caminho causaria.',
+    comoInterpretar:'É a métrica certa para avaliar "as minhas escolhas de investimento foram boas?", sem o ruído de quando você colocou dinheiro.',
+    quandoCautela:'Exige um histórico mínimo de datas e eventos para ser confiável. Com poucos dados, o Patrium mostra "Dados insuficientes" em vez de inventar um número.',
+    linkTab:'historico', linkLabel:'Ver evolução no Histórico' },
+  { termo:'XIRR', icone:'📏', cat:'Desempenho',
+    oque:'O retorno anualizado que você de fato obteve sobre o seu dinheiro, considerando quando cada real entrou e saiu.',
+    comoCalcula:'Calculado por Newton-Raphson sobre todos os fluxos externos (aportes e retiradas, cada um na sua data exata) mais o valor final da carteira, encontrando a taxa anual que zera o valor presente líquido de tudo isso.',
+    comoInterpretar:'É o número mais próximo de "quanto rendeu, ao ano, o dinheiro que eu efetivamente investi". Diferente do TWR, é sensível a quando você aportou.',
+    quandoCautela:'Um aporte grande muito recente pode distorcer o XIRR anualizado no curto prazo. Compare ao longo de vários meses, não julgue por uma única leitura logo após um aporte grande.',
+    linkTab:'historico', linkLabel:'Ver evolução no Histórico' },
+  { termo:'Saúde Patrimonial', icone:'🩺', cat:'Diagnóstico',
+    oque:'Um indicador de 0 a 100 sobre a organização da sua carteira, não é uma nota de investimento nem uma promessa de retorno.',
+    comoCalcula:'Combina 10 componentes (diversificação, concentração, distribuição RF/RV, evolução patrimonial, regularidade de aportes, dependência de poucos ativos, evolução dos dividendos, metas, histórico e atualização de preços), cada um avaliado como bom, atenção, crítico ou dados insuficientes, e resumidos numa média ponderada.',
+    comoInterpretar:'Quanto mais próximo de 100, mais organizada e bem distribuída está a carteira segundo esses critérios, não significa "vai render mais".',
+    quandoCautela:'Componentes sem dados suficientes ficam de fora da média (não contam como 0), então o índice só reflete o que já pode ser avaliado com confiança.',
+    linkTab:'dashboard', linkLabel:'Ver no Dashboard' },
+  { termo:'Perfil do Investidor', icone:'🧭', cat:'Diagnóstico',
+    oque:'Uma classificação (Conservador, Moderado ou Arrojado) baseada nas suas respostas a um questionário sobre horizonte, tolerância a risco e objetivos.',
+    comoCalcula:'A média das suas respostas (cada uma numa escala de 1 a 4) define o perfil: mais próximo de 1 é conservador, de 4 é arrojado, com um ponto de corte intermediário para moderado.',
+    comoInterpretar:'É o que VOCÊ declarou querer, comparado depois com o "Perfil identificado pelo Patrium" (calculado da sua carteira real), para ver se os dois estão alinhados.',
+    quandoCautela:'É um retrato de um momento, pode (e deve) ser reavaliado quando os seus objetivos mudarem, use o botão "Reavaliar meu perfil".',
+    linkTab:'educacao', linkLabel:'Ver perfil na Educação' },
+  { termo:'Radar do Investidor', icone:'🕸️', cat:'Diagnóstico',
+    oque:'Uma visualização do seu comportamento REAL como investidor, calculada a partir do que você fez, não do que respondeu no questionário.',
+    comoCalcula:'7 eixos, todos de dados reais: consistência de aportes (meses com aporte), diversificação (número de ativos), apetite a risco (% real em Renda Variável), horizonte demonstrado (tempo médio do dinheiro investido, RF+RV), preservação de capital (retiradas vs. aportado), controle de concentração (inverso do peso do maior ativo) e atividade recente (dias desde o último lançamento).',
+    comoInterpretar:'Mostra o que a sua carteira revela sobre você, útil para comparar com o Perfil declarado e ver se combinam.',
+    quandoCautela:'Cada eixo mostra "Dados insuficientes" quando não há histórico suficiente para calculá-lo com confiança, nunca aparece um valor inventado.',
+    linkTab:'educacao', linkLabel:'Ver Radar na Educação' },
+  { termo:'Metas', icone:'🎯', cat:'Planejamento',
+    oque:'Objetivos que você define dentro do Patrium, de dois tipos independentes: por quantidade de um ativo, ou por valor total de patrimônio.',
+    comoCalcula:'Meta de quantidade: acompanha a sua posição real de um ativo (nunca a altera). Meta patrimonial: acompanha o patrimônio total já calculado (Patrimônio = RF + RV + Caixa), nunca um valor próprio ou fictício.',
+    comoInterpretar:'O progresso de qualquer meta reflete automaticamente os seus dados reais, se o patrimônio ou a posição diminuir, o progresso diminui corretamente também.',
+    quandoCautela:'Só metas com data limite mostram ritmo necessário e status ("no ritmo"/"atenção"), e só quando há aportes suficientes registados para calcular isso com confiança.',
+    linkTab:'acoes', linkLabel:'Ver Metas em Ações' },
+  { termo:'Selos', icone:'🏅', cat:'Planejamento',
+    oque:'Marcos automáticos da sua jornada como investidor, desbloqueados sozinhos a partir dos seus dados reais.',
+    comoCalcula:'Cada selo tem uma condição objetiva calculada dos seus dados (ex.: patrimônio ≥ R$10 mil, 5 vendas registadas, backup exportado), nunca é marcado manualmente e nunca conta um comportamento arriscado como conquista.',
+    comoInterpretar:'São reconhecimento de comportamento (consistência, organização, disciplina), não incentivo a assumir mais risco.',
+    quandoCautela:'Um selo desbloqueado não é uma recomendação, é só o registo de que uma condição objetiva foi atingida.',
+    linkTab:'educacao', linkLabel:'Ver Selos na Educação' },
+  { termo:'Evolução histórica', icone:'🗓️', cat:'Planejamento',
+    oque:'A reconstrução do seu patrimônio ao longo do tempo, dia a dia, a partir de todos os eventos registados.',
+    comoCalcula:'Para cada data com algum evento (compra, venda, aporte, resgate, ajuste), o Patrium recalcula RF + RV + Caixa naquele ponto exato, usando o preço de mercado (ou o último conhecido) de cada ativo na época.',
+    comoInterpretar:'É a base de gráficos, comparações de período e do cálculo de TWR/XIRR, quanto mais longo e completo o histórico, mais confiáveis ficam essas análises.',
+    quandoCautela:'Poucos meses de histórico limitam a confiabilidade de comparações e do TWR, o Patrium avisa quando isso acontece em vez de mostrar um número pouco confiável.',
+    linkTab:'historico', linkLabel:'Ver Histórico' },
+  { termo:'Atualização de preços', icone:'🔄', cat:'Planejamento',
+    oque:'O processo de buscar o preço de mercado mais recente dos seus ativos de Renda Variável.',
+    comoCalcula:'Ao clicar em "Atualizar preços", o Patrium busca a cotação mais recente (via brapi.dev, uma fonte pública) para cada ativo em carteira, e guarda a data/hora dessa atualização.',
+    comoInterpretar:'Todo cálculo que depende do preço atual (valor de mercado, resultado não realizado, patrimônio) usa o último preço atualizado conhecido, não necessariamente o preço deste exato segundo.',
+    quandoCautela:'Se você não atualiza há muito tempo, o Patrium mostra um alerta de preços desatualizados, é um bom hábito atualizar antes de tomar qualquer decisão baseada nos números.',
+    linkTab:'acoes', linkLabel:'Atualizar preços em Ações' },
+];
+
 const HELP_FAQ = [
   { cat:'Começando', q:'O que é o Patrium Invest?', a:'É a sua central de acompanhamento de patrimônio, ações, FIIs, ETFs, Renda Fixa e dividendos, com cálculos financeiros corretos (TWR, XIRR, rentabilidade real) e sem depender de nenhum servidor externo além da cotação de preços.' },
   { cat:'Começando', q:'Onde ficam guardados os meus dados?', a:'Só neste navegador, no armazenamento local do dispositivo. Nada é enviado para nenhum servidor do Patrium. Use "Backup e dados" no cabeçalho para exportar regularmente, isso evita perder o histórico se limpar o navegador ou trocar de aparelho.' },
@@ -4842,10 +5307,65 @@ const HELP_FAQ = [
   { cat:'Ações', q:'O Patrium me deixa vender mais ações do que eu tenho?', a:'Não. Ao escolher "Venda" no formulário, o campo de quantidade mostra quantas unidades você tem disponíveis e se ajusta automaticamente ao máximo, nunca é possível registar uma venda maior do que a sua posição real.' },
   { cat:'Renda Fixa', q:'Como retiro dinheiro da Renda Fixa de forma rápida?', a:'Use o botão "↓ Retirar dinheiro" na aba Renda Fixa, ele já abre o formulário certo com o campo de resgate em foco, sem precisar navegar por outras opções.' },
   { cat:'Começando', q:'O que é o botão "Explorar" ao cadastrar um investimento?', a:'Ao lado de cada categoria e de cada ativo sugerido no "+ Novo investimento", "Explorar" abre uma explicação sobre o que é aquele ativo, como funciona, o peso sugerido por perfil de investidor e dicas práticas, tudo antes de você decidir cadastrar algo.' },
+  { cat:'Como funciona', q:'O que é "patrimônio" exatamente, no Patrium?', a:'É a soma de tudo o que está investido: o saldo em Renda Fixa, mais o valor de mercado da Renda Variável, mais o que estiver no Caixa. Não inclui bens fora do Patrium (imóveis, veículos), só o que está registado aqui.' },
+  { cat:'Como funciona', q:'Qual a diferença entre saldo e fluxo de caixa?', a:'Saldo é "quanto tem agora" num ponto no tempo (ex.: o saldo de um produto de Renda Fixa hoje). Fluxo de caixa é "o que entrou ou saiu" num período (ex.: quanto você aportou este mês). O Patrium usa saldos para o patrimônio atual e fluxos para calcular rentabilidade (TWR/XIRR) e para separar "quanto veio de aportes" de "quanto veio de valorização".' },
+  { cat:'Como funciona', q:'Qual a diferença entre aporte e valorização?', a:'Aporte é dinheiro novo que você colocou, de fora. Valorização é o ganho (ou perda) que o mercado gerou sobre o que já estava investido. O card "De onde veio o crescimento" separa exatamente essas duas fontes, sem nunca contar o mesmo real duas vezes.' },
+  { cat:'Como funciona', q:'Qual a diferença entre resultado realizado e não realizado?', a:'Realizado é definitivo, já aconteceu numa venda. Não realizado é "no papel", de uma posição que você ainda tem, e pode mudar até o dia em que for vendida.' },
+  { cat:'Como funciona', q:'Por que alguns indicadores precisam de histórico para funcionar?', a:'Métricas como TWR e XIRR dependem de comparar valores em datas diferentes, sem um mínimo de eventos e tempo registados, o cálculo simplesmente não tem base suficiente para ser confiável. Nesses casos, o Patrium prefere mostrar "Dados insuficientes" a arriscar um número que engana.' },
+  { cat:'Como funciona', q:'Por que alguns dados aparecem como "indisponíveis"?', a:'Sempre que falta uma informação necessária para um cálculo correto (um preço atual, um histórico mínimo, uma data), o Patrium mostra isso claramente em vez de estimar ou inventar um valor. É uma escolha deliberada de transparência.' },
 ];
 let helpCurrentCat = 'Todos';
+let ajudaViewAtual = 'conceitos';
 function renderCentralAjuda(categoriaInicial){
   helpCurrentCat = categoriaInicial || 'Todos';
+  ajudaViewAtual = categoriaInicial ? 'faq' : 'conceitos';
+  document.querySelectorAll('#ajudaSeg .help-seg-btn').forEach(b=> b.classList.toggle('active', b.dataset.view===ajudaViewAtual));
+  document.getElementById('ajudaViewConceitos').classList.toggle('hidden', ajudaViewAtual!=='conceitos');
+  document.getElementById('ajudaViewFaq').classList.toggle('hidden', ajudaViewAtual!=='faq');
+
+  // ---- Conceitos financeiros (estrutura fixa em 4 partes) ----
+  const catsConceitos = ['Todos', ...new Set(CONCEITOS_FINANCEIROS.map(c=>c.cat))];
+  let currentConceito = 'Todos';
+  const barConceitos = document.getElementById('ajudaConceitosCatFilters');
+  const listConceitos = document.getElementById('ajudaConceitosLista');
+  function renderListaConceitos(){
+    const termo = (busca.value||'').toLowerCase().trim();
+    let itens = currentConceito==='Todos' ? CONCEITOS_FINANCEIROS : CONCEITOS_FINANCEIROS.filter(c=>c.cat===currentConceito);
+    if(termo) itens = itens.filter(c=> c.termo.toLowerCase().includes(termo) || c.oque.toLowerCase().includes(termo) || c.comoCalcula.toLowerCase().includes(termo));
+    listConceitos.innerHTML = itens.length ? itens.map(c=>`
+      <div class="conceito-item">
+        <button type="button" class="conceito-q"><span>${c.icone} ${escapeHtml(c.termo)}</span><span class="faq-arrow">▾</span></button>
+        <div class="conceito-a">
+          <div class="conceito-bloco"><div class="conceito-bloco-titulo">O que é?</div><p>${escapeHtml(c.oque)}</p></div>
+          <div class="conceito-bloco"><div class="conceito-bloco-titulo">Como o Patrium calcula?</div><p>${escapeHtml(c.comoCalcula)}</p></div>
+          <div class="conceito-bloco"><div class="conceito-bloco-titulo">Como interpretar?</div><p>${escapeHtml(c.comoInterpretar)}</p></div>
+          <div class="conceito-bloco conceito-bloco-cautela"><div class="conceito-bloco-titulo">Quando ter cautela?</div><p>${escapeHtml(c.quandoCautela)}</p></div>
+          ${c.linkTab?`<button type="button" class="btn btn-sm conceito-link" data-jump-tab="${c.linkTab}">${escapeHtml(c.linkLabel)} →</button>`:''}
+        </div>
+      </div>`).join('') : `<p class="text-faint small">Nenhum conceito encontrado.</p>`;
+    listConceitos.querySelectorAll('.conceito-q').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const item = btn.closest('.conceito-item');
+        const wasOpen = item.classList.contains('open');
+        listConceitos.querySelectorAll('.conceito-item.open').forEach(o=>o.classList.remove('open'));
+        if(!wasOpen) item.classList.add('open');
+      });
+    });
+    listConceitos.querySelectorAll('.conceito-link').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        closeModal('modalCentralAjuda');
+        const tabBtn = document.querySelector(`.tab-btn[data-tab="${btn.dataset.jumpTab}"]`);
+        if(tabBtn) tabBtn.click();
+      });
+    });
+  }
+  function renderBarConceitos(){
+    barConceitos.innerHTML = catsConceitos.map(c=>`<button type="button" class="help-cat-filter ${c===currentConceito?'active':''}" data-cat="${c}">${escapeHtml(c)}</button>`).join('');
+    barConceitos.querySelectorAll('.help-cat-filter').forEach(btn=> btn.addEventListener('click', ()=>{ currentConceito = btn.dataset.cat; renderBarConceitos(); renderListaConceitos(); }));
+  }
+
+  // ---- Perguntas frequentes (FAQ do produto) ----
   const cats = ['Todos', ...new Set(HELP_FAQ.map(f=>f.cat))];
   let current = helpCurrentCat;
   const bar = document.getElementById('ajudaCatFilters');
@@ -4873,8 +5393,19 @@ function renderCentralAjuda(categoriaInicial){
     bar.innerHTML = cats.map(c=>`<button type="button" class="help-cat-filter ${c===current?'active':''}" data-cat="${c}">${escapeHtml(c)}</button>`).join('');
     bar.querySelectorAll('.help-cat-filter').forEach(btn=> btn.addEventListener('click', ()=>{ current = btn.dataset.cat; renderBar(); renderList(); }));
   }
+
+  document.querySelectorAll('#ajudaSeg .help-seg-btn').forEach(btn=>{
+    btn.onclick = ()=>{
+      ajudaViewAtual = btn.dataset.view;
+      document.querySelectorAll('#ajudaSeg .help-seg-btn').forEach(b=> b.classList.toggle('active', b===btn));
+      document.getElementById('ajudaViewConceitos').classList.toggle('hidden', ajudaViewAtual!=='conceitos');
+      document.getElementById('ajudaViewFaq').classList.toggle('hidden', ajudaViewAtual!=='faq');
+    };
+  });
+
   busca.value = '';
-  busca.oninput = renderList;
+  busca.oninput = ()=>{ renderListaConceitos(); renderList(); };
+  renderBarConceitos(); renderListaConceitos();
   renderBar(); renderList();
 }
 document.getElementById('btnCentralAjuda').addEventListener('click', ()=>{ renderCentralAjuda(); openModal('modalCentralAjuda'); });
@@ -5513,6 +6044,23 @@ function renderDashboard(){
 
   // 11. Metas de carteira — resumo curto, reaproveita computeQuantityGoals()
   // (a posição atual vem sempre de computePositions(), nunca da meta).
+  const proximaMetaEl = document.getElementById('dashProximaMetaPatrimonial');
+  const metaPrincipal = computePatrimonyGoalPrincipal();
+  if(metaPrincipal){
+    const cor = metaPrincipal.concluida ? 'var(--positive)' : 'var(--accent)';
+    proximaMetaEl.innerHTML = `<div class="dash-proxima-meta" style="border-color:${cor};">
+      <div class="dash-proxima-meta-label">${metaPrincipal.concluida?'🏆 META ATINGIDA':'🎯 PRÓXIMA META'}</div>
+      <div class="dash-proxima-meta-nome">${escapeHtml(metaPrincipal.nome)}</div>
+      <div class="dash-proxima-meta-valores">
+        <span class="mono dash-proxima-meta-objetivo">${fmtMoney(metaPrincipal.valorObjetivo)}</span>
+        <span class="small text-faint">${fmtMoney(metaPrincipal.valorAtual)} alcançados</span>
+      </div>
+      <div class="perfil-radar-track" style="margin:8px 0 4px;"><div class="perfil-radar-fill" style="width:${metaPrincipal.progressoExibicao.toFixed(0)}%; background:${cor};"></div></div>
+      <div class="mono small" style="font-weight:700; color:${cor};">${fmtNum(metaPrincipal.progressoReal.toFixed(1))}%</div>
+    </div>`;
+  } else {
+    proximaMetaEl.innerHTML = '';
+  }
   const metas = computeQuantityGoals();
   const metasEl = document.getElementById('dashMetasResumo');
   metasEl.innerHTML = metas.length
@@ -5520,7 +6068,7 @@ function renderDashboard(){
         <span class="mono" style="font-weight:600;">${escapeHtml(m.ticker)}</span>
         <span class="small text-soft mono">${fmtNum(m.currentQty)} / ${fmtNum(m.targetQty)} ${escapeHtml(m.unit)} · <strong style="color:${m.concluida?'var(--positive)':'var(--text)'};">${fmtNum(m.pctComplete.toFixed(0))}%</strong></span>
       </div>`).join('') + (metas.length>5?`<p class="small text-faint" style="margin:8px 0 0;">+${metas.length-5} meta(s), ver aba Ações →</p>`:'')
-    : listaVazia('Nenhuma meta definida ainda, crie metas de quantidade na aba Ações.');
+    : (metaPrincipal ? '' : listaVazia('Nenhuma meta definida ainda, crie metas na aba Ações.'));
 }
 
 function renderAcoes(){
@@ -5568,6 +6116,7 @@ function renderAcoes(){
   document.getElementById('rankMelhores').innerHTML = rankings.melhores.length ? rankings.melhores.slice(0,5).map((p,i)=>rankRow(i+1,p,true)).join('') : '<p class="text-soft small">Nenhuma posição no verde ainda.</p>';
   document.getElementById('rankPiores').innerHTML = rankings.piores.length ? rankings.piores.slice(0,5).map((p,i)=>rankRow(i+1,p,false)).join('') : '<p class="text-soft small">Nenhuma posição no vermelho, carteira saudável. 🎉</p>';
   renderMetasQuantidade();
+  renderMetasPatrimoniais();
 }
 /* Metas por quantidade — render */
 function renderMetasQuantidade(){
@@ -5655,6 +6204,105 @@ function excluirMetaQtd(id){
 document.getElementById('btnExcluirMetaQtd').addEventListener('click', ()=>{
   const id = document.getElementById('metaQtdId').value;
   if(id) excluirMetaQtd(id);
+});
+
+/* ---- Metas patrimoniais (por valor em R$) — mesmo padrão de CRUD das
+   metas por quantidade acima, mas guardando em DATA.patrimonyGoals e
+   sempre refletindo computePatrimonio(), nunca um valor próprio. ---- */
+function renderMetasPatrimoniais(){
+  const metas = computePatrimonyGoals();
+  document.getElementById('metasPatrimoniaisLista').innerHTML = metas.length ? metas.map(m=>{
+    const cor = m.concluida ? 'var(--positive)' : 'var(--accent)';
+    let prazoHtml = '';
+    if(m.prazo){
+      const p = m.prazo;
+      const statusInfo = { 'acima':{txt:'Acima do ritmo', cor:'var(--positive)'}, 'no-ritmo':{txt:'No ritmo', cor:'var(--info)'}, 'atencao':{txt:'Atenção ao ritmo', cor:'var(--warning)'} };
+      prazoHtml = `<div class="small text-soft" style="margin-top:6px; line-height:1.6;">
+        ${p.vencida ? `<span style="color:var(--negative); font-weight:700;">Prazo vencido em ${fmtDate(p.dataLimite)}.</span>` : `Prazo: <strong>${fmtDate(p.dataLimite)}</strong>${p.diasRestantes>=0?` (${p.diasRestantes} dia(s) restante(s))`:''}`}
+        ${p.percentualTempo!==null?` · ${fmtNum(p.percentualTempo.toFixed(0))}% do tempo decorrido`:''}
+        ${!m.concluida && p.ritmoNecessario!==null ? `<br>Ritmo necessário: <strong>${fmtMoney(p.ritmoNecessario)}/mês</strong>` : ''}
+        ${p.statusRitmo ? ` · <strong style="color:${statusInfo[p.statusRitmo].cor};">${statusInfo[p.statusRitmo].txt}</strong>` : (!m.concluida && p.ritmoNecessario!==null ? ' · <span class="text-faint">Dados insuficientes para avaliar o ritmo atual (é preciso pelo menos 3 meses de aportes registados)</span>' : '')}
+      </div>`;
+    }
+    return `<div style="padding:16px 0; border-bottom:1px solid var(--line-soft);">
+      <div class="flex-between" style="flex-wrap:wrap; gap:10px; margin-bottom:8px;">
+        <div>
+          <strong style="font-size:15.5px;">${escapeHtml(m.nome)}</strong>
+          ${m.concluida?'<span class="pill pill-pos" style="margin-left:8px; font-size:11px; padding:3px 8px;">Meta atingida ✓</span>':''}
+          ${m.observacao?`<div class="small text-faint" style="margin-top:2px;">${escapeHtml(m.observacao)}</div>`:''}
+        </div>
+        <div class="flex gap-6">
+          <button class="icon-btn btn-sm" style="width:28px;height:28px;" onclick="abrirEdicaoMetaPatrimonial('${m.id}')" title="Editar">✎</button>
+          <button class="icon-btn btn-sm" style="width:28px;height:28px;" onclick="excluirMetaPatrimonial('${m.id}')" title="Eliminar">🗑</button>
+        </div>
+      </div>
+      <div class="flex-between" style="align-items:baseline; margin-bottom:6px;">
+        <span class="mono" style="font-size:13.5px;">${fmtMoney(m.valorAtual)} <span class="text-faint">de</span> ${fmtMoney(m.valorObjetivo)}</span>
+        <span class="mono" style="font-weight:800; color:${cor};">${fmtNum(m.progressoReal.toFixed(1))}%</span>
+      </div>
+      <div style="height:8px; background:var(--surface-3); border-radius:99px; overflow:hidden;">
+        <div style="height:100%; width:${m.progressoExibicao.toFixed(1)}%; background:${cor}; border-radius:99px; transition:width .3s ease;"></div>
+      </div>
+      <div class="small text-soft" style="margin-top:6px;">${m.faltam>0 ? `Faltam ${fmtMoney(m.faltam)}` : 'Meta completa'}</div>
+      ${prazoHtml}
+    </div>`;
+  }).join('') : `<div class="empty"><div class="empty-icon">🎯</div><h3>Nenhuma meta patrimonial definida</h3><p>Defina um valor em reais que você quer alcançar de patrimônio total, o Patrium acompanha o progresso automaticamente.</p></div>`;
+}
+document.getElementById('btnNovaMetaPatrimonial').addEventListener('click', ()=>{
+  document.getElementById('metaPatrimonialTitulo').textContent = 'Nova meta patrimonial';
+  document.getElementById('metaPatrimonialId').value = '';
+  document.getElementById('metaPatrimonialCreatedAt').value = '';
+  document.getElementById('metaPatrimonialNome').value = '';
+  document.getElementById('metaPatrimonialValor').value = '';
+  document.getElementById('metaPatrimonialData').value = '';
+  document.getElementById('metaPatrimonialObs').value = '';
+  document.getElementById('btnExcluirMetaPatrimonial').classList.add('hidden');
+  openModal('modalMetaPatrimonial');
+});
+function abrirEdicaoMetaPatrimonial(id){
+  const g = DATA.patrimonyGoals.find(x=>x.id===id); if(!g) return;
+  document.getElementById('metaPatrimonialTitulo').textContent = 'Editar meta patrimonial';
+  document.getElementById('metaPatrimonialId').value = g.id;
+  document.getElementById('metaPatrimonialCreatedAt').value = g.createdAt || '';
+  document.getElementById('metaPatrimonialNome').value = g.nome;
+  document.getElementById('metaPatrimonialValor').value = g.valorObjetivo;
+  document.getElementById('metaPatrimonialData').value = g.dataLimite || '';
+  document.getElementById('metaPatrimonialObs').value = g.observacao || '';
+  document.getElementById('btnExcluirMetaPatrimonial').classList.remove('hidden');
+  openModal('modalMetaPatrimonial');
+}
+document.getElementById('btnSalvarMetaPatrimonial').addEventListener('click', async ()=>{
+  const id = document.getElementById('metaPatrimonialId').value;
+  const nome = document.getElementById('metaPatrimonialNome').value.trim();
+  const valorObjetivo = parseFloat(document.getElementById('metaPatrimonialValor').value);
+  const dataLimite = document.getElementById('metaPatrimonialData').value || null;
+  const observacao = document.getElementById('metaPatrimonialObs').value.trim();
+  if(!nome || isNaN(valorObjetivo) || valorObjetivo<=0){ addToast('Informe o nome da meta e um valor objetivo maior que zero.'); return; }
+  if(id){
+    const g = DATA.patrimonyGoals.find(x=>x.id===id); if(!g) return;
+    g.nome = nome; g.valorObjetivo = round2(valorObjetivo); g.dataLimite = dataLimite;
+    if(observacao) g.observacao = observacao; else delete g.observacao;
+  } else {
+    DATA.patrimonyGoals.push({ id:uid(), nome, valorObjetivo:round2(valorObjetivo), dataLimite, observacao: observacao||'', createdAt: todayISO() });
+  }
+  await Store.save(DATA);
+  renderAll();
+  closeModal('modalMetaPatrimonial');
+  addToast('Meta patrimonial guardada. ✓');
+});
+function excluirMetaPatrimonial(id){
+  const g = DATA.patrimonyGoals.find(x=>x.id===id); if(!g) return;
+  askConfirm('Eliminar meta', `Eliminar a meta "${escapeHtml(g.nome)}"? O seu patrimônio real não é afetado, só a meta é removida.`, async ()=>{
+    DATA.patrimonyGoals = DATA.patrimonyGoals.filter(x=>x.id!==id);
+    await Store.save(DATA);
+    renderAll();
+    closeModal('modalMetaPatrimonial');
+    addToast('Meta eliminada.');
+  });
+}
+document.getElementById('btnExcluirMetaPatrimonial').addEventListener('click', ()=>{
+  const id = document.getElementById('metaPatrimonialId').value;
+  if(id) excluirMetaPatrimonial(id);
 });
 
 /* ---- Operações: listar/editar/eliminar diretamente em DATA.transactions ----
@@ -9029,19 +9677,44 @@ async function gerarRelatorioMensalPDF(mesAno){
 
   novaPagina();
 
-  // ===== RESUMO EXECUTIVO =====
+  // ===== PÁGINA 2 — RESUMO EXECUTIVO =====
   const patr = computePatrimonio();
   const periodo = computeResultadoIntervalo(start, end);
+  const twrResumo = computeTWR();
+  const xirrResumo = computeXIRR();
+  const indiceResumo = computeIndiceSaudePatrimonial();
   tituloSecao('Resumo executivo');
-  paragrafo(`${nome?nome+', a':'A'} sua carteira fechou ${mesLabel} com um patrimônio total de ${fmtMoney(patr.patrimonio)}. Neste período, o resultado (ganhos menos aportes) foi de ${fmtMoneySigned(periodo.ganhosPeriodo)}, com ${fmtMoney(periodo.aportesPeriodo)} em aportes líquidos e ${fmtMoney(periodo.divsPeriodo)} em dividendos recebidos.`);
+  // Leitura executiva — só a partir de dados reais, nunca uma frase genérica.
+  const variacaoPeriodo = round2(periodo.patrFinal - periodo.patrInicial);
+  const variacaoPct = periodo.patrInicial>0 ? (variacaoPeriodo/periodo.patrInicial)*100 : null;
+  let impulsionadoPor = 'aportes e desempenho dos investimentos';
+  if(periodo.aportesPeriodo>0 && Math.abs(variacaoPeriodo)>0){
+    const pctAportes = Math.min(100, Math.max(0, (periodo.aportesPeriodo/Math.max(variacaoPeriodo,0.01))*100));
+    impulsionadoPor = pctAportes>=65 ? 'principalmente por novos aportes' : pctAportes<=35 ? 'principalmente pelo desempenho dos investimentos' : 'de forma equilibrada entre aportes e desempenho dos investimentos';
+  }
+  const fraseLeitura = variacaoPct!==null
+    ? `${nome?nome+', s':'S'}eu patrimônio evoluiu ${variacaoPct>=0?'':'-'}${fmtNum(Math.abs(variacaoPct).toFixed(1))}% em ${mesLabel}, ${impulsionadoPor}.`
+    : `${nome?nome+', a':'A'}sua carteira fechou ${mesLabel} com um patrimônio total de ${fmtMoney(patr.patrimonio)}.`;
+  paragrafo(fraseLeitura);
   y += 2;
-  statChip(MX, 55, 'Patrimônio', fmtMoney(patr.patrimonio));
-  statChip(MX+58, 55, 'Resultado do mês', fmtMoneySigned(periodo.ganhosPeriodo), periodo.ganhosPeriodo>=0?EMERALD:[190,60,60]);
-  statChip(MX+116, 55, 'Aportes do mês', fmtMoney(periodo.aportesPeriodo));
+  statChip(MX, 55, 'Patrimônio atual', fmtMoney(patr.patrimonio));
+  statChip(MX+58, 55, 'Patrimônio anterior', fmtMoney(periodo.patrInicial));
+  statChip(MX+116, 55, 'Variação no período', fmtMoneySigned(variacaoPeriodo), variacaoPeriodo>=0?EMERALD:[190,60,60]);
   y += 24;
+  statChip(MX, 55, 'Aportes', fmtMoney(periodo.aportesPeriodo));
+  statChip(MX+58, 55, 'Retiradas', fmtMoney(periodo.retiradasPeriodo));
+  statChip(MX+116, 55, 'Resultado', fmtMoneySigned(periodo.ganhosPeriodo), periodo.ganhosPeriodo>=0?EMERALD:[190,60,60]);
+  y += 24;
+  statChip(MX, 55, 'Dividendos', fmtMoney(periodo.divsPeriodo));
+  statChip(MX+58, 55, 'TWR', twrResumo&&twrResumo.cumulative!==undefined?fmtPct(twrResumo.cumulative):'Insuficiente');
+  statChip(MX+116, 55, 'XIRR', xirrResumo!==null?fmtPct(xirrResumo):'Insuficiente');
+  y += 24;
+  statChip(MX, 118, 'Saúde Patrimonial', indiceResumo.score!==null?`${indiceResumo.score}/100 — ${indiceResumo.status}`:'Dados insuficientes', indiceResumo.score!==null?(indiceResumo.score>=75?EMERALD:indiceResumo.score>=50?GOLD:[190,60,60]):FAINT);
+  y += 26;
 
-  // ===== PATRIMÔNIO E EVOLUÇÃO =====
-  tituloSecao('Patrimônio e evolução');
+  // ===== PÁGINA 3 — EVOLUÇÃO PATRIMONIAL =====
+  novaPagina();
+  tituloSecao('Evolução patrimonial');
   linhaKV('Patrimônio no início do mês', fmtMoney(periodo.patrInicial));
   linhaKV('Patrimônio no fim do mês', fmtMoney(periodo.patrFinal));
   linhaKV('Variação no mês', fmtMoneySigned(round2(periodo.patrFinal-periodo.patrInicial)), periodo.patrFinal>=periodo.patrInicial?EMERALD:[190,60,60]);
@@ -9072,77 +9745,103 @@ async function gerarRelatorioMensalPDF(mesAno){
     }
   }catch(e){}
 
-  // ===== RENDA FIXA =====
-  const rf = computeRfTotals();
-  const rfProds = computeRfProducts();
-  tituloSecao('Renda Fixa');
-  linhaKV('Capital investido', fmtMoney(rf.capital));
-  linhaKV('Saldo atual', fmtMoney(rf.saldo));
-  linhaKV('Rendimento acumulado', fmtMoneySigned(rf.rendimento), EMERALD);
-  linhaKV('Rentabilidade sobre aportes', fmtPct(rf.rentabPct));
-  y += 2;
-  if(rfProds.length){
-    tabela(['Produto','Instituição','Saldo atual','Rendimento'], rfProds.map(p=>[p.name, p.instituicao||'—', fmtMoney(p.saldoAtual), fmtMoneySigned(p.rendimento)]));
-  }
-
-  // ===== RENDA VARIÁVEL / ATIVOS =====
-  const rv = computeRvTotals();
-  const positions = computePositions().filter(p=>p.qty>0.0000001);
-  tituloSecao('Renda Variável e ativos');
-  linhaKV('Capital investido', fmtMoney(rv.capital));
-  linhaKV('Valor de mercado', fmtMoney(rv.marketValue));
-  linhaKV('Resultado não realizado', fmtMoneySigned(rv.unrealized), rv.unrealized>=0?EMERALD:[190,60,60]);
-  linhaKV('Resultado realizado (vendas)', fmtMoneySigned(rv.realized), rv.realized>=0?EMERALD:[190,60,60]);
-  linhaKV('Dividendos recebidos (total)', fmtMoney(rv.dividends));
-  y += 2;
-  if(positions.length){
-    tabela(['Ativo','Quantidade','Preço médio','Preço atual','Valor atual','Resultado'],
-      positions.map(p=>[p.ticker, fmtNum(p.qty), fmtMoney(p.avgPrice), p.hasRealPrice?fmtMoney(p.curPrice):'—', fmtMoney(p.marketValue), p.hasRealPrice?fmtMoneySigned(p.unrealizedPL):'—']));
-  }
-
-  // ===== ALOCAÇÃO E CONCENTRAÇÃO =====
+  // ===== PÁGINA 4 — ALOCAÇÃO =====
+  novaPagina();
   const allocFim = computeAllocacaoAsOf(end);
   const conc = computeConcentracaoAtivo();
-  tituloSecao('Alocação e concentração');
+  tituloSecao('Alocação');
   if(allocFim.total>0){
     linhaKV('Renda Fixa', fmtNum(allocFim.rfPct.toFixed(1))+'% · '+fmtMoney(allocFim.rf));
     linhaKV('Renda Variável', fmtNum(allocFim.rvPct.toFixed(1))+'% · '+fmtMoney(allocFim.rv));
     linhaKV('Caixa', fmtMoney(allocFim.caixa));
+  } else {
+    paragrafo('Histórico insuficiente para calcular a alocação neste período.');
   }
   y += 2;
   if(conc.length){
-    subtitulo('Concentração por ativo (dentro da Renda Variável)');
+    subtitulo('Distribuição e concentração dentro da Renda Variável');
     tabela(['Ativo','% da carteira de ações'], conc.slice(0,10).map(c=>[c.ticker, fmtNum(c.peso.toFixed(1))+'%']));
   }
 
-  // ===== DIVIDENDOS =====
+  // ===== PÁGINA 5 — RENDA FIXA =====
+  novaPagina();
+  const rf = computeRfTotals();
+  const rfProds = computeRfProducts();
+  tituloSecao('Renda Fixa');
+  if(rf.capital<=0){
+    paragrafo('Nenhum produto de Renda Fixa registado até o momento.');
+  } else {
+    linhaKV('Capital investido', fmtMoney(rf.capital));
+    linhaKV('Saldo atual', fmtMoney(rf.saldo));
+    linhaKV('Rendimento acumulado', fmtMoneySigned(rf.rendimento), EMERALD);
+    linhaKV('Rentabilidade sobre aportes', fmtPct(rf.rentabPct));
+    linhaKV('Participação no patrimônio', patr.patrimonio>0 ? fmtNum((rf.saldo/patr.patrimonio*100).toFixed(1))+'%' : '—');
+    y += 2;
+    if(rfProds.length) tabela(['Produto','Instituição','Saldo atual','Rendimento'], rfProds.map(p=>[p.name, p.instituicao||'—', fmtMoney(p.saldoAtual), fmtMoneySigned(p.rendimento)]));
+  }
+
+  // ===== PÁGINA 6 — RENDA VARIÁVEL =====
+  novaPagina();
+  const rv = computeRvTotals();
+  const positions = computePositions().filter(p=>p.qty>0.0000001);
+  tituloSecao('Renda Variável');
+  if(positions.length===0){
+    paragrafo('Nenhuma posição de Renda Variável registada até o momento.');
+  } else {
+    linhaKV('Capital investido', fmtMoney(rv.capital));
+    linhaKV('Valor de mercado', fmtMoney(rv.marketValue));
+    linhaKV('Participação no patrimônio', patr.patrimonio>0 ? fmtNum((rv.marketValue/patr.patrimonio*100).toFixed(1))+'%' : '—');
+    y += 2;
+    tabela(['Ativo','Quantidade','Preço médio','Preço atual','Valor atual','Resultado'],
+      positions.map(p=>[p.ticker, fmtNum(p.qty), fmtMoney(p.avgPrice), p.hasRealPrice?fmtMoney(p.curPrice):'—', fmtMoney(p.marketValue), p.hasRealPrice?fmtMoneySigned(p.unrealizedPL):'—']));
+  }
+
+  // ===== PÁGINA 7 — DESEMPENHO (resultado, dividendos, TWR, XIRR) =====
+  novaPagina();
+  const twr = computeTWR();
+  const xirr = computeXIRR();
   const divPorMes = computeDividendsByMonth();
-  tituloSecao('Dividendos');
-  linhaKV('Recebidos neste mês', fmtMoney(periodo.divsPeriodo));
-  linhaKV('Total já recebido', fmtMoney(rv.dividends));
+  tituloSecao('Desempenho');
+  linhaKV('Resultado não realizado', fmtMoneySigned(rv.unrealized), rv.unrealized>=0?EMERALD:[190,60,60]);
+  linhaKV('Resultado realizado (vendas)', fmtMoneySigned(rv.realized), rv.realized>=0?EMERALD:[190,60,60]);
+  linhaKV('Dividendos recebidos (total)', fmtMoney(rv.dividends));
+  linhaKV('TWR acumulado', twr&&twr.cumulative!==undefined ? fmtPct(twr.cumulative) : 'Histórico insuficiente');
+  paragrafo('TWR mede a performance da carteira independente de quando e quanto você aportou.', {tamanho:8, cor:FAINT});
+  linhaKV('XIRR anualizado', xirr!==null ? fmtPct(xirr) : 'Histórico insuficiente');
+  paragrafo('XIRR é o retorno anualizado do seu dinheiro, considerando a data exata de cada aporte/retirada.', {tamanho:8, cor:FAINT});
+  y += 2;
   if(divPorMes.length){
-    subtitulo('Últimos 6 meses');
+    subtitulo('Dividendos, últimos 6 meses');
     tabela(['Mês','Total recebido'], divPorMes.slice(-6).map(m=>[monthLabel(m.month), fmtMoney(m.total)]));
   }
 
-  // ===== METAS =====
-  const metas = computeQuantityGoals();
+  // ===== PÁGINA 8 — METAS (patrimoniais + quantidade) =====
+  novaPagina();
+  const metasPatr = computePatrimonyGoals();
+  const metasQtd = computeQuantityGoals();
   tituloSecao('Metas');
-  if(metas.length===0){
-    paragrafo('Nenhuma meta de quantidade criada até o momento.');
+  if(metasPatr.length===0 && metasQtd.length===0){
+    paragrafo('Nenhuma meta criada até o momento.');
   } else {
-    tabela(['Meta','Atual / Alvo','% concluído','Ritmo mensal'],
-      metas.map(m=>[m.ticker, `${fmtNum(m.currentQty)} / ${fmtNum(m.targetQty)}`, fmtNum(m.pctComplete.toFixed(0))+'%', m.ritmoMensal!==null?fmtNum(m.ritmoMensal)+'/mês':'Dados insuficientes']));
+    if(metasPatr.length){
+      subtitulo('Metas patrimoniais');
+      const metaPrincipalPdf = computePatrimonyGoalPrincipal();
+      metasPatr.forEach(m=>{
+        const destaque = metaPrincipalPdf && m.id===metaPrincipalPdf.id;
+        linhaKV(`${destaque?'★ ':''}${m.nome}${m.concluida?' (atingida)':''}`, `${fmtMoney(m.valorAtual)} / ${fmtMoney(m.valorObjetivo)} (${fmtNum(m.progressoReal.toFixed(1))}%)`, m.concluida?EMERALD:INK);
+        if(m.prazo) paragrafo(`Prazo: ${fmtDate(m.prazo.dataLimite)}${m.prazo.vencida?' (vencido)':''}${m.prazo.statusRitmo?' · '+({acima:'Acima do ritmo',['no-ritmo']:'No ritmo',atencao:'Atenção ao ritmo'}[m.prazo.statusRitmo]):''}`, {tamanho:8, cor:FAINT});
+      });
+      y += 2;
+    }
+    if(metasQtd.length){
+      subtitulo('Metas de quantidade de ativos');
+      tabela(['Meta','Atual / Alvo','% concluído','Ritmo mensal'],
+        metasQtd.map(m=>[m.ticker, `${fmtNum(m.currentQty)} / ${fmtNum(m.targetQty)}`, fmtNum(m.pctComplete.toFixed(0))+'%', m.ritmoMensal!==null?fmtNum(m.ritmoMensal)+'/mês':'Dados insuficientes']));
+    }
   }
 
-  // ===== DESEMPENHO (TWR/XIRR) =====
-  const twr = computeTWR();
-  const xirr = computeXIRR();
-  tituloSecao('Desempenho');
-  linhaKV('TWR acumulado (independe dos aportes)', twr&&twr.sufficient!==false&&twr.cumulative!==undefined ? fmtPct(twr.cumulative) : 'Dados insuficientes');
-  linhaKV('XIRR anualizado (retorno do seu dinheiro)', xirr!==null ? fmtPct(xirr) : 'Dados insuficientes');
-
-  // ===== PERFIL DO INVESTIDOR =====
+  // ===== PÁGINA 9 — PERFIL DO INVESTIDOR =====
+  novaPagina();
   tituloSecao('Perfil do investidor');
   const perfil = DATA.settings.investorProfile;
   if(!perfil){
@@ -9174,51 +9873,1159 @@ async function gerarRelatorioMensalPDF(mesAno){
     }
   }
 
-  // ===== SAÚDE PATRIMONIAL =====
+  // ===== PÁGINA 10 — SAÚDE PATRIMONIAL =====
+  novaPagina();
   const indice = computeIndiceSaudePatrimonial();
   tituloSecao('Índice de Saúde Patrimonial');
+  paragrafo('Este é um indicador de organização e qualidade da carteira segundo critérios do Patrium, não é uma promessa de retorno nem uma nota de investimento.', {tamanho:8.3, cor:FAINT});
   if(indice.score===null){
     paragrafo('Dados ainda insuficientes para calcular o índice.');
   } else {
     subtitulo(`${indice.score}/100 — ${indice.status}`);
     if(indice.fortes.length){ subtitulo('Pontos fortes'); indice.fortes.forEach(f=>paragrafo('• '+f, {tamanho:8.6})); }
-    if(indice.melhorar.length){ subtitulo('Pontos a melhorar'); indice.melhorar.forEach(f=>paragrafo('• '+f, {tamanho:8.6})); }
+    if(indice.melhorar.length){ subtitulo('Pontos de atenção'); indice.melhorar.forEach(f=>paragrafo('• '+f, {tamanho:8.6})); }
   }
 
-  // ===== INSIGHTS E DICAS =====
+  // ===== PÁGINA 11 — INSIGHTS =====
+  novaPagina();
   const insights = computeInsightsCompletos();
-  tituloSecao('Insights e pontos de atenção');
-  if(insights.length===0) paragrafo('Sem insights suficientes ainda.');
+  tituloSecao('Insights');
+  paragrafo('Leituras automáticas geradas só a partir dos seus dados, nunca uma recomendação de compra ou venda.', {tamanho:8.3, cor:FAINT});
+  if(insights.length===0) paragrafo('Histórico insuficiente para gerar insights neste momento.');
   else insights.forEach(i=> paragrafo('• '+i.texto.replace(/<[^>]+>/g,''), {tamanho:8.8}));
 
-  const dicas = computeDicasPersonalizadas();
-  if(dicas.length){
-    tituloSecao('Dicas personalizadas');
-    dicas.forEach(d=> paragrafo('• '+(d.texto||d), {tamanho:8.8}));
-  }
-
-  // ===== SELOS/CONQUISTAS =====
-  const milestonesTodos = computeMilestones();
-  const conquistados = milestonesTodos.filter(m=>m.achieved);
-  tituloSecao('Selos e conquistas');
-  linhaKV('Total desbloqueado', `${conquistados.length} de ${milestonesTodos.length}`);
-  if(conquistados.length){
-    tabela(['Selo','Descrição'], conquistados.slice(-15).map(m=>[m.label, m.desc]));
-  }
-
-  // ===== CONCLUSÃO DO MÊS =====
-  tituloSecao('Conclusão do mês');
+  // ===== PÁGINA 12 — CONCLUSÃO =====
+  novaPagina();
+  tituloSecao('Conclusão');
   const fraseFechamento = periodo.ganhosPeriodo>=0
     ? `${mesLabel} fechou em terreno positivo, com um resultado de ${fmtMoneySigned(periodo.ganhosPeriodo)}. O patrimônio total encerrou em ${fmtMoney(patr.patrimonio)}.`
     : `${mesLabel} fechou em terreno negativo, com um resultado de ${fmtMoneySigned(periodo.ganhosPeriodo)}. O patrimônio total encerrou em ${fmtMoney(patr.patrimonio)}.`;
   paragrafo(fraseFechamento);
+  const pontoPositivo = insights.find(i=>i.tipo==='positivo');
+  const pontoAtencao = insights.find(i=>i.tipo==='atencao' || i.tipo==='critica');
+  if(pontoPositivo) paragrafo('Principal ponto positivo: '+pontoPositivo.texto.replace(/<[^>]+>/g,''), {tamanho:8.8});
+  if(pontoAtencao) paragrafo('Principal ponto de atenção: '+pontoAtencao.texto.replace(/<[^>]+>/g,''), {tamanho:8.8});
+  const metaPrincipalConclusao = computePatrimonyGoalPrincipal();
+  if(metaPrincipalConclusao) paragrafo(`Próxima meta: ${metaPrincipalConclusao.nome}, ${fmtNum(metaPrincipalConclusao.progressoReal.toFixed(1))}% concluída.`, {tamanho:8.8});
+  const dicas = computeDicasPersonalizadas();
+  if(dicas.length){
+    y += 2;
+    subtitulo('Dicas e sugestões personalizadas');
+    dicas.forEach(d=> paragrafo('• '+(d.texto||d), {tamanho:8.6}));
+  }
+  const milestonesTodos = computeMilestones();
+  const conquistados = milestonesTodos.filter(m=>m.achieved);
+  if(conquistados.length){
+    y += 2;
+    paragrafo(`Selos conquistados: ${conquistados.length} de ${milestonesTodos.length}.`, {tamanho:8, cor:FAINT});
+  }
+  y += 4;
   paragrafo('Este relatório foi gerado automaticamente pelo Patrium Invest, usando exatamente os mesmos cálculos exibidos no aplicativo. Nenhuma informação aqui é uma recomendação de investimento.', {tamanho:8, cor:FAINT});
 
   rodape();
   doc.save(`patrium-relatorio-${mesAno}.pdf`);
 }
 
+/* ===================== ASSISTENTE PATRIUM =====================
+   Camada de assistente contextual e determinístico. NÃO é uma chamada a
+   um modelo de IA externo — não existe backend nem infraestrutura segura
+   para uma API de IA neste projeto (ver relatório final), então o
+   Assistente funciona 100% a partir de reconhecimento de intenção +
+   reaproveitamento direto das funções de cálculo já existentes. Nunca
+   inventa números, nunca duplica o motor financeiro. */
+
+// ---- Normalização de texto (tolerância a acentos/maiúsculas/pontuação) ----
+function normalizarTexto(s){
+  return (s||'').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[?!.,;:()]/g,' ')
+    .replace(/\s+/g,' ').trim();
+}
+// Distância de edição (Levenshtein), usada só para tickers curtos (tolera "petrr4", "itub").
+function levenshtein(a,b){
+  const m=a.length, n=b.length;
+  if(m===0) return n; if(n===0) return m;
+  const d = Array.from({length:m+1},()=>new Array(n+1).fill(0));
+  for(let i=0;i<=m;i++) d[i][0]=i;
+  for(let j=0;j<=n;j++) d[0][j]=j;
+  for(let i=1;i<=m;i++) for(let j=1;j<=n;j++){
+    d[i][j] = a[i-1]===b[j-1] ? d[i-1][j-1] : 1+Math.min(d[i-1][j], d[i][j-1], d[i-1][j-1]);
+  }
+  return d[m][n];
+}
+
+/* ---- Camada de contexto — reúne SÓ os resultados das funções já
+   existentes, nunca recalcula nada por conta própria. ---- */
+function buildAssistantContext(){
+  const patr = computePatrimonio();
+  const rf = computeRfTotals();
+  const rv = computeRvTotals();
+  const positions = computePositions().filter(p=>p.qty>0.0000001);
+  const alloc = computeAllocation();
+  const conc = computeConcentracaoAtivo();
+  const twr = computeTWR();
+  const xirr = computeXIRR();
+  const indice = computeIndiceSaudePatrimonial();
+  const perfil = DATA.settings.investorProfile;
+  const bucket = computeCarteiraBucket();
+  const metasPatr = computePatrimonyGoals();
+  const metaPrincipal = computePatrimonyGoalPrincipal();
+  const metasQtd = computeQuantityGoals();
+  const insights = computeInsightsCompletos();
+  const comportamento = computeComportamentoInvestidor();
+  const rfProds = computeRfProducts();
+  const milestones = computeMilestones();
+  const nome = (DATA.settings.userName||'').trim();
+  const divMesAtual = computeDividendsByMonth().slice(-1)[0];
+  return { patr, rf, rv, positions, alloc, conc, twr, xirr, indice, perfil, bucket, metasPatr, metaPrincipal, metasQtd, insights, comportamento, rfProds, milestones, nome, divMesAtual };
+}
+
+// Nomes comuns de empresas → ticker (pequeno, só os mais citados; cobre
+// "a Petrobras", "aquela ação do Itaú" etc.). Reaproveita os tickers já
+// existentes em RV_CATALOG, não inventa nada novo.
+// Complemento pequeno de termos gerais de investimento não cobertos pelo
+// glossário da Educação (nunca uma base gigantesca, só o que falta).
+const ASSIST_TERMOS_EXTRA = [
+  { termo:'Bitcoin', def:'Uma criptomoeda, um ativo digital descentralizado, sem lastro num governo ou empresa. Tem alta volatilidade e não é regulado como Renda Fixa ou Variável tradicional no Brasil.' },
+  { termo:'criptomoeda', def:'Ativo digital descentralizado (ex.: Bitcoin, Ethereum). Alta volatilidade, sem garantia do FGC nem lastro tradicional.' },
+  { termo:'Tesouro Selic', def:'Título público pós-fixado que acompanha a taxa Selic, considerado um dos investimentos mais líquidos e seguros do país, bom para reserva de emergência.' },
+  { termo:'Tesouro IPCA', def:'Título público que paga a inflação (IPCA) mais uma taxa fixa combinada na compra, protege o poder de compra no longo prazo.' },
+  { termo:'Tesouro Prefixado', def:'Título público com taxa de juros definida no momento da compra, sabe exatamente o retorno se levar até o vencimento, mas o preço oscila antes disso.' },
+  { termo:'debênture', def:'Título de dívida emitido por uma empresa (não um banco), você empresta dinheiro a ela em troca de uma remuneração combinada.' },
+  { termo:'REIT', def:'Real Estate Investment Trust, o equivalente americano ao FII brasileiro, um fundo que investe em imóveis ou dívida imobiliária.' },
+  { termo:'previdência privada', def:'Produto de acumulação de longo prazo (PGBL ou VGBL) com vantagens tributárias específicas, geralmente pensado para aposentadoria.' },
+];
+const ASSIST_ALIASES_EMPRESA = {
+  'petrobras':'PETR4', 'itau':'ITUB4', 'itaú':'ITUB4', 'bradesco':'BBDC4', 'banco do brasil':'BBAS3',
+  'vale':'VALE3', 'weg':'WEGE3', 'magazine luiza':'MGLU3', 'magalu':'MGLU3', 'ambev':'ABEV3',
+  'itausa':'ITSA4', 'santander':'SANB11', 'localiza':'RENT3', 'gerdau':'GGBR4', 'suzano':'SUZB3',
+  'jbs':'JBSS3', 'raia drogasil':'RADL3', 'raia':'RADL3', 'azul':'AZUL4', 'natura':'NTCO3',
+};
+// Todos os tickers conhecidos pelo Patrium (posições + catálogo já usado no
+// wizard "+ Novo investimento"), usados para reconhecer um ativo mesmo que
+// o utilizador nunca tenha investido nele.
+function assistTodosOsTickersConhecidos(ctx){
+  return new Set([
+    ...ctx.positions.map(p=>p.ticker), ...Object.keys(DATA.prices||{}),
+    ...(RV_CATALOG.acao||[]), ...(RV_CATALOG.fii||[]), ...(RV_CATALOG.etf||[]), ...(RV_CATALOG.bdr||[]), ...(RV_CATALOG.cripto||[]),
+  ]);
+}
+// Encontra um ativo mencionado na mensagem — na carteira do utilizador OU
+// apenas conhecido pelo Patrium (RV_CATALOG) — e diz se ele É POSSUÍDO ou
+// não. Tolera erro de digitação e nomes de empresa por extenso.
+function detectarAtivoQualquer(texto, ctx){
+  const tNorm = normalizarTexto(texto);
+  for(const nome of Object.keys(ASSIST_ALIASES_EMPRESA)){
+    if(tNorm.includes(nome)){
+      const tk = ASSIST_ALIASES_EMPRESA[nome];
+      return { ticker:tk, possuido: ctx.positions.some(p=>p.ticker===tk) };
+    }
+  }
+  const conhecidos = assistTodosOsTickersConhecidos(ctx);
+  const palavras = texto.toUpperCase().match(/[A-Z]{3,6}\d{0,2}/g) || [];
+  for(const palavra of palavras){
+    if(conhecidos.has(palavra)) return { ticker:palavra, possuido: ctx.positions.some(p=>p.ticker===palavra) };
+  }
+  for(const palavra of palavras){
+    // Tolerância a erro de digitação só entra para tokens com chance real
+    // de serem um ticker (4+ letras, ou com dígito) — evita falso positivo
+    // com fragmentos curtos de palavras em português partidas por acento
+    // (ex.: "concentração" → "TRA", que por acaso fica perto de "TRX").
+    if(palavra.length<4 && !/\d/.test(palavra)) continue;
+    for(const k of conhecidos){
+      if(Math.abs(palavra.length-k.length)<=1 && levenshtein(palavra, k)<=1) return { ticker:k, possuido: ctx.positions.some(p=>p.ticker===k) };
+    }
+  }
+  return null;
+}
+// Mantido para compatibilidade — só tickers que o utilizador REALMENTE possui.
+function detectarTickerNaMensagem(texto, ctx){
+  const r = detectarAtivoQualquer(texto, ctx);
+  return (r && r.possuido) ? r.ticker : null;
+}
+
+/* ---- Classificação de intenção — por padrões/substrings tolerantes a
+   digitação, checados em ordem de especificidade (mais específico primeiro). ---- */
+// Tolera erro de digitação em QUALQUER palavra da frase, comparando por
+// distância de edição contra a palavra-alvo (não só substring), resolve
+// casos como "patrmonio" (falta uma letra no meio, não é um prefixo/sufixo).
+function contemPalavraSimilar(texto, alvo, maxDist){
+  maxDist = maxDist===undefined ? 2 : maxDist;
+  if(texto.includes(alvo)) return true;
+  const palavras = texto.split(' ');
+  return palavras.some(p=> p.length>=4 && Math.abs(p.length-alvo.length)<=maxDist && levenshtein(p, alvo)<=maxDist);
+}
+let assistantUltimosTickers = []; // rolling, máx. 2, para "qual pesa mais?" entre os dois últimos citados
+// Pré-processador de continuação — roda ANTES do classificador normal.
+// Resolve elipses/referências curtas usando só o contexto da conversa +
+// dados reais (nunca inventa uma referência). Devolve null quando a
+// mensagem não é uma continuação reconhecível, para o classificador normal
+// seguir com o fluxo de sempre.
+function resolverContinuacao(textoOriginal, ctx){
+  const t = normalizarTexto(textoOriginal);
+  const curto = t.split(' ').filter(Boolean).length<=6;
+
+  // "Qual pesa mais?" / "qual é maior?" entre os dois últimos ativos citados.
+  if(curto && /pesa mais|qual (e |é )?maior|qual dos dois/.test(t) && assistantUltimosTickers.length===2){
+    return { id:'comparar_ativos', tickers:assistantUltimosTickers.slice() };
+  }
+
+  // "Qual cresceu mais?" / "qual rendeu mais?" — RF × RV.
+  if(curto && /cresceu mais|rendeu mais|foi melhor|performou melhor/.test(t)){
+    if(assistantUltimaMetrica==='rf' || assistantUltimaMetrica==='rv'){
+      return { id:'comparar_crescimento_rf_rv' };
+    }
+  }
+  // "E nos últimos meses?" — refina a comparação RF×RV para período recente.
+  if(curto && /ultimos meses|recentemente|ultimamente/.test(t) && assistantUltimaMetrica==='comparar_crescimento_rf_rv'){
+    return { id:'comparar_crescimento_rf_rv', recente:true };
+  }
+
+  // "Qual é melhor?" entre TWR e XIRR (só quando os dois já foram citados).
+  if(curto && /qual (e |é )?melhor/.test(t) && assistantUltimosComparados && assistantUltimosComparados.includes('twr') && assistantUltimosComparados.includes('xirr')){
+    return { id:'comparar_twr_xirr' };
+  }
+  // "Por quê?" — aprofunda a última resposta.
+  if(curto && /^por q/.test(t)){
+    return { id:'aprofundar' };
+  }
+
+  // "Em quê?" / "Principalmente onde?" — depois de uma análise de concentração.
+  if(curto && /^(em que|onde|principalmente onde)/.test(t) && assistantUltimaMetrica==='concentracao'){
+    return { id:'ranking_posicao', ordinal:1, ticker: ctx.conc[0]?ctx.conc[0].ticker:null };
+  }
+  // "Principalmente em bancos." — confirma/nega com dados reais.
+  if(/banco/.test(t) && (assistantUltimaMetrica==='concentracao' || assistantUltimaMetrica==='ranking_posicao')){
+    return { id:'confirmar_setor', setor:'bancos' };
+  }
+
+  // "Quanto representa?" — peso do último ativo citado.
+  if(curto && /quanto representa|representa quanto|quanto (e |é )?isso|quanto vale isso/.test(t) && assistantUltimoTicker){
+    return { id:'peso_ticker', ticker:assistantUltimoTicker };
+  }
+
+  // "Tenho muito risco (se eu fizer isso)?" — depois de considerar comprar um ativo.
+  if(/muito risco|arriscado|risco se (eu )?fizer/.test(t) && assistantUltimoTicker){
+    return { id:'risco_se_comprar', ticker:assistantUltimoTicker };
+  }
+
+  // "E se eu colocar/investir só R$ X (reais)?" — simulação pontual ou mensal.
+  if(/^e se/.test(t) && /\d/.test(t)){
+    const valor = assistExtrairValor(textoOriginal);
+    if(valor){
+      if(/por mes|mensal|mensalmente|todo mes/.test(t)) return { id:'simulacao_aporte_mensal', valor };
+      return { id:'simulacao_valor', valor, ticker:assistantUltimoTicker };
+    }
+  }
+  // "Quanto tempo?" — reaproveita a última simulação de aporte mensal.
+  if(curto && /quanto tempo|em quanto tempo/.test(t) && assistantUltimaMetrica==='simulacao_aporte_mensal'){
+    return { id:'simulacao_aporte_mensal', reusarUltimoValor:true };
+  }
+
+  // "Quero chegar aos X mil" — meta genérica por valor (existente ou não).
+  if(/quero chegar|quero atingir|meu objetivo e chegar/.test(t)){
+    const valor = assistExtrairValor(textoOriginal);
+    if(valor) return { id:'meta_valor_generico', valorMeta:valor };
+  }
+  // "Quanto falta?" — reaproveita o último valor de meta mencionado, mesmo
+  // sem uma meta formalmente criada.
+  if(curto && /quanto falta/.test(t) && assistantUltimoValorMeta){
+    return { id:'meta_valor_generico', valorMeta:assistantUltimoValorMeta };
+  }
+
+  return null;
+}
+function classificarIntencaoAssistente(textoOriginal, ctx){
+  const t = normalizarTexto(textoOriginal);
+  const testa = (arr)=> arr.some(p=> t.includes(p));
+  const testaFuzzy = (arr, dist)=> arr.some(p=> contemPalavraSimilar(t, p, dist));
+
+  // Perguntas "como faço / onde vejo / como registo algo" são sempre sobre
+  // NAVEGAÇÃO no produto, checadas antes de qualquer palavra-chave de dados
+  // (senão "como registro uma retirada" cairia em "retiradas" por engano).
+  if(testa(['como registr','como adiciono','como crio','como cadastro','onde vejo','onde fica','onde encontro','como funciona','como altero','como edito','como faco para','como faço para'])) return {id:'ajuda_navegacao'};
+  if(testa(['pdf','relatorio mensal'])) return {id:'ajuda_pdf'};
+  if(testa(['backup','exportar dados','importar dados'])) return {id:'ajuda_backup'};
+
+  // "O que é / significa / explica X" é sempre uma pergunta de conceito,
+  // mesmo quando X também é uma palavra-chave de dado pessoal (ex.:
+  // "o que é concentração") — a resposta de educação já mescla definição
+  // com o dado real do utilizador quando aplicável. "oq"/"oq é" também
+  // conta (abreviação comum).
+  const perguntaConceito = testa(['o que e ','oque e ','oq e ','oq é','o que significa','me explica','explica ','diferenca entre']);
+
+  const ativo = detectarAtivoQualquer(textoOriginal, ctx);
+  const doisTickers = detectarDoisTickers(textoOriginal, ctx);
+  if(doisTickers.length===2) return {id:'comparar_ativos', tickers:doisTickers};
+  if(testa(['duas maiores posicoes','minhas maiores posicoes','maiores posicoes','qual acao eu deveria priorizar','qual devo priorizar'])) return {id:'comparar_ativos', tickers:null};
+
+  // Um ativo específico mencionado (da carteira ou só conhecido pelo
+  // Patrium) tem prioridade sobre uma pergunta de conceito genérica —
+  // "o que é VALE3?" é sobre o ativo, não um conceito abstrato. Exceto
+  // quando a pergunta é sobre custo médio ou é claramente uma decisão de
+  // compra ("pensando em comprar X"), que tem prioridade mesmo se X já
+  // fizer parte da carteira — a intenção ali é decidir, não consultar.
+  if(ativo && testa(['custo medio','preco medio'])) return {id:'custo_medio', ticker:ativo.ticker};
+  if(testa(['seria interessante','vale a pena eu','vale a pena comprar','deveria comprar','pensando em comprar','pensando em investir em','penso em comprar'])) return {id:'considerar_compra', ticker: ativo?ativo.ticker:null, usarUltimoTicker: !ativo};
+  if(testa(['pensando em vender','deveria vender','vale a pena vender','penso em vender'])) return {id:'considerar_venda', ticker: ativo?ativo.ticker:null, usarUltimoTicker: !ativo};
+  if(ativo) return { id:'ativo', ticker:ativo.ticker, possuido:ativo.possuido };
+
+  // Referências que dependem do último ativo mencionado na conversa
+  // ("Eu tenho?").
+  if(testa(['eu tenho','possuo isso','tenho isso','tenho esse','ja tenho'])) return {id:'ativo', usarUltimoTicker:true};
+
+  if(perguntaConceito) return {id:'educacao'};
+
+  // Histórico e diagnóstico temporal — checados antes das intenções de
+  // "estado atual" (ex.: "quando comecei a investir" não é sobre RV hoje).
+  if(testa(['quando comecei','desde o comeco','desde que comecei'])) return {id:'historico_geral'};
+  if(testa(['quando comecei a comprar acoes','comecei a investir em acoes','comecei a comprar acoes'])) return {id:'historico_acoes'};
+  if(testa(['aportando consistentemente','consistencia dos meus aportes','estou aportando bem','aporto com regularidade'])) return {id:'consistencia_aportes'};
+  if(testa(['ficando mais agressiv','mais ações recentemente','mais acoes recentemente','minha concentracao aumentou','aumentei minha exposicao','mudou minha estrategia','como minha estrategia mudou','como minha carteira mudou'])) return {id:'evolucao_estrategia'};
+  if(testa(['estou evoluindo','melhor que antes','esta melhorando','minha evolucao esta consistente','estou progredindo','acho que estou evoluindo','evoluindo bem'])) return {id:'diagnostico_evolucao'};
+
+  // Afirmações espontâneas — o utilizador nem sempre pergunta, mas está
+  // abrindo espaço para o Assistente ajudar com dados reais.
+  if(testa(['preocupado com minha carteira','preocupado com meu patrimonio','tenho medo de perder dinheiro','medo de perder dinheiro'])) return {id:'preocupado_carteira'};
+  if(testa(['o que mais te preocupa','o que te preocupa'])) return {id:'pontos_atencao'};
+  if(testa(['estou investindo pouco','invisto pouco','coloco pouco dinheiro'])) return {id:'investindo_pouco'};
+  if(testa(['quero aumentar minha renda fixa','aumentar renda fixa','quero mais renda fixa'])) return {id:'aumentar_rf'};
+  if(testa(['nao gosto de tanta oscilacao','nao gosto de oscilacao','naoo gosto de volatilidade'])) return {id:'nao_gosta_oscilacao'};
+  if(testa(['quero comecar a investir em fiis','comecar a investir em fiis','quero investir em fiis'])) return {id:'comecar_categoria', categoria:'fii'};
+  if(testa(['maior aporte','melhor periodo','pior periodo','maior fase de aportes'])) return {id:'historico_geral'};
+
+  // Referências ordinais à posição ("qual minha maior posição", depois "e a
+  // segunda?") — usa sempre o ranking real de computeConcentracaoAtivo().
+  if(testa(['minha maior posicao','qual e minha maior','qual minha maior'])) return {id:'ranking_posicao', ordinal:1, ticker: ctx.conc[0]?ctx.conc[0].ticker:null};
+  if(testa(['segunda maior','a segunda posicao','e a segunda'])) return {id:'ranking_posicao', ordinal:2, ticker: ctx.conc[1]?ctx.conc[1].ticker:null};
+  if(testa(['terceira maior','a terceira posicao','e a terceira'])) return {id:'ranking_posicao', ordinal:3, ticker: ctx.conc[2]?ctx.conc[2].ticker:null};
+  if(testa(['minha menor posicao','a menor posicao'])) return {id:'ranking_posicao', ordinal:-1, ticker: ctx.conc.length?ctx.conc[ctx.conc.length-1].ticker:null};
+
+  if(testa(['analis','como esta minha carteira','como ta minha carteira','visao geral','resumo da carteira','como esta a carteira'])) return {id:'analise_completa'};
+  if(testa(['o que posso melhorar','me ajuda a melhorar','como melhoro'])) return {id:'melhorar'};
+  if(testa(['ponto de atencao','pontos de atencao','o que esta errado','problema na carteira','problemas na carteira'])) return {id:'pontos_atencao'};
+  if(testa(['fazendo bem','pontos positivos','o que esta bom','o que ta bom'])) return {id:'pontos_positivos'};
+  if(testa(['twr'])) return {id:'twr'};
+  if(testa(['xirr'])) return {id:'xirr'};
+  if(testa(['custo medio','preco medio'])) return {id:'custo_medio'};
+  if(testa(['dividend','provento',' jcp'])) return {id:'dividendos'};
+  if(testaFuzzy(['saude'],1) || testa(['saude patrim','indice de saude'])) return {id:'saude'};
+  if(testa(['radar'])) return {id:'radar'};
+  if(testa(['selo','conquista','medalha'])) return {id:'selos'};
+  if(testa(['concentrad','concentrac','maior risco','meu risco'])) return {id:'concentracao'};
+  if(testa(['alocac','distribuic'])) return {id:'alocacao'};
+  if(testa(['perfil'])) return {id:'perfil'};
+  if(testa(['meta','falta pra','falta para','falta pro','faltam'])) return {id:'metas'};
+  if(testa(['renda fix','rdb','cdb','tesouro','lci','lca','cri','cra','debenture',' rf ']) || t==='rf') return {id:'rf'};
+  if(testa(['renda variavel','acoes','ações','bolsa','fiis','etf','bdr',' rv ']) || t==='rv') return {id:'rv'};
+  if(testa(['retirei','retirad','saquei','saque'])) return {id:'retiradas'};
+  if(testa(['aportei','aportes','aporte','coloquei','ja investi','quanto investi'])) return {id:'aportes'};
+  if(testaFuzzy(['rentabilidade'],3) || testa(['rendiment','rentabil','ganhei','perdi','resultado','performance','desempenho'])) return {id:'performance'};
+  if(testaFuzzy(['patrimonio'],2) || testa(['patrim'])) return {id:'patrimonio'};
+  if(testa(['oi','ola','opa','eae','bom dia','boa tarde','boa noite'])) return {id:'saudacao'};
+  if(testa(['obrigad','valeu','falou','ate mais'])) return {id:'despedida'};
+  return {id:'desconhecido'};
+}
+
+// ---- Formatação auxiliar comum às respostas ----
+function assistFmtPct(v, digits){ return v===null||v===undefined ? null : fmtPct(v, digits); }
+const ASSIST_DISCLAIMER_SEM_DADOS = 'Não tenho esse dado disponível no Patrium neste momento.';
+const ASSIST_DISCLAIMER_HISTORICO = 'Ainda não há histórico suficiente no Patrium para calcular isso com confiança.';
+
+/* ---- Geração de resposta por intenção — cada função devolve só texto
+   (formatação leve em markdown simples: **negrito**, • listas), sempre a
+   partir do contexto real, nunca de números fixos no código. ---- */
+const ASSIST_RESPOSTAS = {
+  saudacao(ctx){
+    return `Olá${ctx.nome?', '+ctx.nome:''}! Em que posso ajudar? Posso falar sobre o seu patrimônio, a sua carteira, metas, perfil ou qualquer conceito financeiro.`;
+  },
+  despedida(){ return 'Disponha! Qualquer coisa, é só perguntar.'; },
+  patrimonio(ctx){
+    let r = `**Patrimônio atual:** ${fmtMoney(ctx.patr.patrimonio)}\n**Aportado:** ${fmtMoney(ctx.patr.aportesExternos)}\n**Resultado total:** ${fmtMoneySigned(ctx.patr.ganhoTotal)}`;
+    if(ctx.metaPrincipal) r += `\n\nSua próxima meta (**${ctx.metaPrincipal.nome}**) está em ${fmtNum(ctx.metaPrincipal.progressoReal.toFixed(1))}%.`;
+    return r;
+  },
+  aportes(ctx){
+    if(ctx.patr.aportesExternos<=0) return 'Ainda não há nenhum aporte externo registado no Patrium.';
+    return `Você já aportou **${fmtMoney(ctx.patr.aportesExternos)}** no total (dinheiro novo, de fora do Patrium). Isso não inclui transferências internas entre Renda Fixa e Caixa, só dinheiro que efetivamente entrou.`;
+  },
+  retiradas(ctx){
+    const ret = ctx.patr.caixa.retiradas;
+    if(!ret || ret<=0) return 'Você ainda não registou nenhuma retirada no Patrium.';
+    return `O total já retirado do Patrium é de **${fmtMoney(ret)}**.`;
+  },
+  rf(ctx){
+    if(ctx.rf.capital<=0) return 'Você ainda não tem nenhum produto de Renda Fixa registado no Patrium.';
+    let r = `**Renda Fixa:** ${fmtMoney(ctx.rf.saldo)}\nRendimento acumulado: ${fmtMoneySigned(ctx.rf.rendimento)}\nParticipação no patrimônio: ${ctx.alloc.total>0?fmtNum(ctx.alloc.rfPct.toFixed(1))+'%':ASSIST_DISCLAIMER_SEM_DADOS}`;
+    if(ctx.rfProds.length>1) r += `\n\nVocê tem ${ctx.rfProds.length} produtos diferentes de Renda Fixa.`;
+    return r;
+  },
+  rv(ctx){
+    if(ctx.rv.capital<=0 && ctx.positions.length===0) return 'Você ainda não tem nenhuma posição de Renda Variável registada no Patrium.';
+    let r = `**Renda Variável:** ${fmtMoney(ctx.rv.marketValue)}\nResultado não realizado: ${fmtMoneySigned(ctx.rv.unrealized)}\nParticipação no patrimônio: ${ctx.alloc.total>0?fmtNum(ctx.alloc.rvPct.toFixed(1))+'%':ASSIST_DISCLAIMER_SEM_DADOS}`;
+    if(ctx.positions.length) r += `\n\nVocê tem ${ctx.positions.length} ativo(s) diferente(s) em carteira.`;
+    return r;
+  },
+  ativo(ctx, i){
+    const p = ctx.positions.find(x=>x.ticker===i.ticker);
+    const categoria = tickerCategoria(i.ticker);
+    const descCurta = ASSET_DESC[i.ticker];
+    const catInfo = CAT_EXPLORE[categoria];
+    const catNomes = { acao:'uma ação', fii:'um Fundo Imobiliário (FII)', etf:'um ETF', bdr:'um BDR', fundo:'um fundo de investimento', cripto:'uma criptomoeda', previdencia:'um produto de previdência', outros:'um ativo' };
+    if(!p){
+      // Ativo conhecido pelo Patrium mas sem posição — conhecimento
+      // conceitual (ASSET_DESC/CAT_EXPLORE, já existentes), nunca dado de
+      // carteira nem cotação inventada.
+      let r = `**${i.ticker}**${descCurta?' — '+descCurta:''}\nÉ ${catNomes[categoria]||'um ativo'}.${catInfo?' '+catInfo.oque:''}`;
+      r += `\n\nVocê não tem posição em ${i.ticker} na sua carteira atual. Não tenho um dado de mercado (cotação) atualizado dele dentro do Patrium neste momento.`;
+      return r;
+    }
+    const pesoRv = ctx.rv.marketValue>0 ? (p.marketValue/ctx.rv.marketValue)*100 : null;
+    let r = `**${p.ticker}**${descCurta?' — '+descCurta:''}\nQuantidade: ${fmtNum(p.qty)}\nPreço médio: ${fmtMoney(p.avgPrice)}\nPreço atual: ${p.hasRealPrice?fmtMoney(p.curPrice):ASSIST_DISCLAIMER_SEM_DADOS+' (preço não atualizado, usando o custo médio como referência)'}\nValor de mercado: ${fmtMoney(p.marketValue)}\nResultado não realizado: ${fmtMoneySigned(p.unrealizedPL)}`;
+    if(p.dividends>0) r += `\nDividendos recebidos: ${fmtMoney(p.dividends)}`;
+    if(pesoRv!==null) r += `\n\n${p.ticker} representa **${fmtNum(pesoRv.toFixed(1))}%** da sua Renda Variável.`;
+    return r;
+  },
+  considerar_compra(ctx, i){
+    if(!i.ticker) return 'Sobre qual ativo você está pensando? Me diga o ticker ou o nome (ex.: "pensando em comprar VALE3").';
+    const jaTem = ctx.positions.find(x=>x.ticker===i.ticker);
+    const categoria = tickerCategoria(i.ticker);
+    const partes = [];
+    partes.push(`Sobre ${i.ticker}: posso te ajudar a pensar nisso com o que já sei da sua carteira, mas não vou te dizer "compre" ou "não compre" — isso depende do seu objetivo e horizonte.`);
+    if(jaTem){
+      const concItem = ctx.conc.find(c=>c.ticker===i.ticker);
+      partes.push(`Você já tem posição em ${i.ticker}${concItem?`, hoje representando ${fmtNum(concItem.peso.toFixed(1))}% da sua Renda Variável`:''}. Aumentar essa posição também aumenta essa concentração.`);
+    } else if(ctx.rv.marketValue>0){
+      partes.push(`Você ainda não tem ${i.ticker} na carteira. Como a sua Renda Variável já tem ${ctx.positions.length} ativo(s), entrar num novo pode tanto diversificar quanto, dependendo do peso, concentrar mais, se o valor for grande em relação ao restante.`);
+    }
+    if(ctx.perfil){
+      partes.push(`Considerando o seu perfil declarado (${PERFIS_INVESTIDOR[ctx.perfil.tipo].nome}), vale pensar se essa entrada está alinhada com o nível de risco que você busca.`);
+    }
+    if(ctx.conc.length && ctx.conc[0].peso>=40){
+      partes.push(`Um ponto de atenção real hoje: ${ctx.conc[0].ticker} já representa ${fmtNum(ctx.conc[0].peso.toFixed(1))}% da sua Renda Variável, vale considerar isso antes de concentrar ainda mais num único ativo.`);
+    }
+    partes.push('Essa é uma leitura educacional baseada nos seus dados atuais, não uma recomendação de compra nem uma garantia de retorno.');
+    return partes.join(' ');
+  },
+  considerar_venda(ctx, i){
+    if(!i.ticker) return 'Sobre qual ativo você está pensando em vender? Me diga o ticker.';
+    const p = ctx.positions.find(x=>x.ticker===i.ticker);
+    if(!p) return `Não encontrei uma posição em ${i.ticker} na sua carteira para vender.`;
+    const concItem = ctx.conc.find(c=>c.ticker===i.ticker);
+    const partes = [`Sobre vender ${i.ticker}: posso te mostrar o que isso representa hoje, mas não vou te dizer "venda" ou "não venda" — isso depende do seu objetivo.`];
+    partes.push(`Hoje você tem ${fmtNum(p.qty)} unidades, valendo ${fmtMoney(p.marketValue)}${concItem?`, ${fmtNum(concItem.peso.toFixed(1))}% da sua Renda Variável`:''}. O resultado não realizado atual é ${fmtMoneySigned(p.unrealizedPL)}${p.hasRealPrice?'':' (com base no último preço conhecido, não atualizado)'}.`);
+    if(p.unrealizedPL>0) partes.push('Vender agora realizaria esse ganho, o que também pode ter efeito no Imposto de Renda, dependendo do seu histórico de vendas no mês.');
+    partes.push('Essa é uma leitura educacional baseada nos seus dados atuais, não uma recomendação de venda.');
+    return partes.join(' ');
+  },
+  risco_se_comprar(ctx, i){
+    if(!i.ticker) return 'Sobre qual ativo? Me diga o ticker para eu avaliar o risco de concentração.';
+    const jaTem = ctx.positions.find(x=>x.ticker===i.ticker);
+    const concAtual = jaTem ? ctx.conc.find(c=>c.ticker===i.ticker) : null;
+    const partes = [];
+    if(concAtual){
+      partes.push(`Aumentar a posição em ${i.ticker} eleva a concentração além dos ${fmtNum(concAtual.peso.toFixed(1))}% que já representa hoje na sua Renda Variável.`);
+      if(concAtual.peso>=30) partes.push('Já é uma concentração relevante, então o risco de depender de um único ativo aumenta bastante.');
+      else partes.push('Ainda é uma concentração moderada, mas vale acompanhar quanto isso cresce.');
+    } else {
+      partes.push(`Como você ainda não tem ${i.ticker}, o risco imediato depende do valor que você colocaria em relação ao restante da sua Renda Variável (${fmtMoney(ctx.rv.marketValue)} hoje).`);
+    }
+    if(ctx.perfil) partes.push(`Seu perfil declarado é ${PERFIS_INVESTIDOR[ctx.perfil.tipo].nome}, vale considerar se esse nível de exposição concentrada combina com isso.`);
+    partes.push('Isso não é uma garantia de perda nem de ganho, é só uma leitura de concentração com os seus dados reais.');
+    return partes.join(' ');
+  },
+  simulacao_valor(ctx, i){
+    if(!i.ticker) return 'Sobre qual ativo é essa simulação? Me diga o ticker.';
+    const pctPatrimonio = ctx.patr.patrimonio>0 ? (i.valor/ctx.patr.patrimonio)*100 : null;
+    const pctRv = ctx.rv.marketValue>0 ? (i.valor/(ctx.rv.marketValue+i.valor))*100 : null;
+    const partes = [`**Simulação** (hipotética, não altera a sua carteira): colocando ${fmtMoney(i.valor)} em ${i.ticker}...`];
+    if(pctPatrimonio!==null) partes.push(`isso representaria cerca de ${fmtNum(pctPatrimonio.toFixed(1))}% do seu patrimônio atual`);
+    if(pctRv!==null) partes.push(`e aproximadamente ${fmtNum(pctRv.toFixed(1))}% da sua Renda Variável, somando com o que já existe`);
+    return partes.join(', ')+'.';
+  },
+  simulacao_aporte_mensal(ctx, i){
+    const valorMensal = i.reusarUltimoValor ? assistantUltimoValorSimulacaoMensal : i.valor;
+    if(!valorMensal) return 'Quanto por mês você pensa em investir? Me diga um valor (ex.: "e se eu investir 4.500 por mês?").';
+    assistantUltimoValorSimulacaoMensal = valorMensal;
+    const alvo = assistantUltimoValorMeta;
+    if(!alvo){
+      return `**Simulação:** aportando ${fmtMoney(valorMensal)} por mês, em 12 meses você teria colocado ${fmtMoney(valorMensal*12)} a mais (sem contar valorização). Se tiver um valor-alvo em mente, me diga que eu calculo o tempo estimado.`;
+    }
+    const faltamAtual = Math.max(0, alvo - ctx.patr.patrimonio);
+    if(faltamAtual<=0) return `Você já atingiu os ${fmtMoney(alvo)}, não falta mais nada com o patrimônio atual.`;
+    const meses = Math.ceil(faltamAtual/valorMensal);
+    const anos = meses/12;
+    return `**Simulação** (hipotética, considerando só o valor aportado, sem contar valorização ou dividendos): faltam ${fmtMoney(faltamAtual)} para chegar aos ${fmtMoney(alvo)}. Aportando ${fmtMoney(valorMensal)} por mês, seriam aproximadamente **${meses} meses** (cerca de ${fmtNum(anos.toFixed(1))} anos).`;
+  },
+  meta_valor_generico(ctx, i){
+    const alvo = i.valorMeta;
+    if(!alvo) return 'Qual valor você quer alcançar? Me diga um número (ex.: "quero chegar aos 50 mil").';
+    const metaExistente = ctx.metasPatr.find(m=>Math.abs(m.valorObjetivo-alvo)<0.01);
+    const faltam = Math.max(0, alvo-ctx.patr.patrimonio);
+    const progresso = alvo>0 ? (ctx.patr.patrimonio/alvo)*100 : 0;
+    let r = metaExistente
+      ? `Você já tem uma meta patrimonial de ${fmtMoney(alvo)} criada, em **${fmtNum(progresso.toFixed(1))}%**.`
+      : `Considerando os ${fmtMoney(alvo)} como objetivo: hoje você está em **${fmtNum(progresso.toFixed(1))}%** disso.`;
+    r += faltam>0 ? `\nFalta ${fmtMoney(faltam)}.` : '\nVocê já atingiu esse valor!';
+    if(!metaExistente) r += '\n\nSe quiser, posso te ajudar a criar essa meta formalmente na aba Ações, para acompanhar prazo e ritmo automaticamente.';
+    return r;
+  },
+  comparar_crescimento_rf_rv(ctx, i){
+    if(i.recente){
+      const meses = computeMonthlyContributions().slice(-3);
+      if(meses.length===0) return ASSIST_DISCLAIMER_HISTORICO;
+      const totalRf = meses.reduce((s,m)=>s+m.rf,0), totalRv = meses.reduce((s,m)=>s+m.rv,0);
+      if(totalRf===0 && totalRv===0) return 'Não houve aportes registados nos últimos meses para comparar.';
+      const maior = totalRf>=totalRv ? 'Renda Fixa' : 'Renda Variável';
+      return `Nos últimos ${meses.length} meses, os aportes foram ${fmtMoney(totalRf)} em Renda Fixa e ${fmtMoney(totalRv)} em Renda Variável. **${maior}** recebeu mais aportes recentemente (isso é sobre aportes, não sobre valorização).`;
+    }
+    if(ctx.rf.capital<=0 && ctx.rv.capital<=0) return ASSIST_DISCLAIMER_HISTORICO;
+    const resultadoRf = ctx.rf.rendimento;
+    const resultadoRv = ctx.rv.unrealized+ctx.rv.realized;
+    const maior = resultadoRf>=resultadoRv ? 'Renda Fixa' : 'Renda Variável';
+    return `Em resultado acumulado: Renda Fixa rendeu ${fmtMoneySigned(resultadoRf)}, Renda Variável teve resultado de ${fmtMoneySigned(resultadoRv)} (realizado + não realizado). **${maior}** cresceu mais em termos absolutos até agora.`;
+  },
+  comparar_twr_xirr(ctx){
+    if((!ctx.twr || ctx.twr.cumulative===undefined) && ctx.xirr===null) return ASSIST_DISCLAIMER_HISTORICO;
+    const partes = ['Não é bem que um seja "melhor" que o outro, eles medem coisas diferentes.'];
+    if(ctx.twr && ctx.twr.cumulative!==undefined) partes.push(`TWR (${fmtPct(ctx.twr.cumulative)}) mostra a performance das suas escolhas de investimento, sem o efeito de quando você aportou.`);
+    if(ctx.xirr!==null) partes.push(`XIRR (${fmtPct(ctx.xirr)}) mostra o retorno real do seu dinheiro, considerando quando cada aporte entrou.`);
+    partes.push('Use o TWR para avaliar se os ativos escolhidos estão indo bem, e o XIRR para saber quanto rendeu o que você efetivamente investiu.');
+    return partes.join(' ');
+  },
+  aprofundar(ctx, i, ultimoTicker, textoOriginal, profundidade){
+    if(assistantUltimaMetrica==='comparar_twr_xirr' || (assistantUltimosComparados && assistantUltimosComparados.includes('twr') && assistantUltimosComparados.includes('xirr'))){
+      return ASSIST_RESPOSTAS.twr(ctx, {}, ultimoTicker, textoOriginal, 'tecnico') + '\n\n' + ASSIST_RESPOSTAS.xirr(ctx, {}, ultimoTicker, textoOriginal, 'tecnico');
+    }
+    const fnAnterior = ASSIST_RESPOSTAS[assistantUltimaMetrica];
+    if(fnAnterior){
+      try{
+        const resp = fnAnterior(ctx, {ticker:ultimoTicker}, ultimoTicker, textoOriginal, 'tecnico');
+        return typeof resp==='object' ? resp.texto : resp;
+      }catch(e){}
+    }
+    return 'Pode me lembrar sobre o que você quer que eu aprofunde?';
+  },
+  confirmar_setor(ctx, i){
+    const bancos = new Set(['ITUB4','BBAS3','BBDC4','SANB11','ITSA4','BPAC11']);
+    if(ctx.conc.length===0) return ASSIST_DISCLAIMER_HISTORICO;
+    const maior = ctx.conc[0];
+    const ehBanco = bancos.has(maior.ticker);
+    if(i.setor==='bancos'){
+      return ehBanco
+        ? `Sim, os seus dados confirmam isso: ${maior.ticker} (um banco) é a sua maior posição, com ${fmtNum(maior.peso.toFixed(1))}% da Renda Variável.`
+        : `Na verdade não, pelos seus dados a maior concentração está em ${maior.ticker}, que não é do setor bancário.`;
+    }
+    return `Sua maior posição é ${maior.ticker}, com ${fmtNum(maior.peso.toFixed(1))}% da Renda Variável.`;
+  },
+  peso_ticker(ctx, i){
+    if(!i.ticker) return 'De qual ativo você quer saber o peso na carteira?';
+    const item = ctx.conc.find(c=>c.ticker===i.ticker);
+    if(!item) return `${i.ticker} não representa nada na sua Renda Variável no momento (sem posição).`;
+    const p = ctx.positions.find(x=>x.ticker===i.ticker);
+    return `**${i.ticker}** representa **${fmtNum(item.peso.toFixed(1))}%** da sua Renda Variável${p?`, valendo ${fmtMoney(p.marketValue)}`:''}.`;
+  },
+  preocupado_carteira(ctx){
+    const atencao = ctx.insights.filter(i=>i.tipo==='atencao'||i.tipo==='critica');
+    const positivos = ctx.insights.filter(i=>i.tipo==='positivo');
+    let r = 'Entendo. Vamos olhar os dados reais para ver o que realmente merece atenção. ';
+    if(atencao.length===0) r += 'Pelos dados disponíveis, não encontrei nenhum ponto crítico agora, isso é um bom sinal.';
+    else r += `Hoje há ${atencao.length} ponto(s) de atenção real(is) nos seus dados: ${atencao[0].texto.replace(/<[^>]+>/g,'')}`;
+    if(positivos.length>0) r += ` Por outro lado, ${positivos.length} ponto(s) positivo(s) também aparecem nos seus dados.`;
+    r += ' Se quiser, posso detalhar qualquer um desses pontos.';
+    return r;
+  },
+  investindo_pouco(ctx){
+    const eixo = ctx.comportamento.find(e=>e.id==='consistencia');
+    if(!eixo || eixo.pct===null) return ASSIST_DISCLAIMER_HISTORICO;
+    return `Olhando os seus dados: ${eixo.detalhe} Isso dá uma consistência de ${fmtNum(eixo.pct.toFixed(0))}%. ${eixo.pct<50?'Realmente há espaço para aportar com mais regularidade, se isso for viável para você.':'Na verdade, o seu ritmo de aportes está razoável, mesmo que não pareça.'}`;
+  },
+  aumentar_rf(ctx){
+    if(ctx.alloc.total<=0) return ASSIST_DISCLAIMER_SEM_DADOS;
+    let r = `Hoje a Renda Fixa já representa ${fmtNum(ctx.alloc.rfPct.toFixed(1))}% do seu patrimônio (${fmtMoney(ctx.alloc.rfTotal)}). Aumentar essa fatia tende a reduzir a oscilação geral da carteira, mas também reduz a exposição ao potencial de crescimento da Renda Variável.`;
+    if(ctx.perfil) r += ` Vale considerar se isso está alinhado com o seu perfil declarado (${PERFIS_INVESTIDOR[ctx.perfil.tipo].nome}).`;
+    return r;
+  },
+  nao_gosta_oscilacao(ctx){
+    let r = 'Entendo, isso é um dado importante sobre você. ';
+    if(ctx.alloc.total>0) r += `Hoje a sua carteira tem ${fmtNum(ctx.alloc.rvPct.toFixed(1))}% em Renda Variável (a parte que mais oscila) e ${fmtNum(ctx.alloc.rfPct.toFixed(1))}% em Renda Fixa.`;
+    if(ctx.perfil) r += ` Seu perfil declarado é ${PERFIS_INVESTIDOR[ctx.perfil.tipo].nome}, vale conferir se combina com essa preferência por menos oscilação.`;
+    return r;
+  },
+  comecar_categoria(ctx, i){
+    const nomes = { fii:'Fundos Imobiliários (FIIs)' };
+    const catInfo = CAT_EXPLORE[i.categoria];
+    let r = `${nomes[i.categoria]||i.categoria}: ${catInfo?catInfo.oque:''}`;
+    if(ctx.alloc.total>0) r += `\n\nHoje a sua Renda Variável é ${fmtMoney(ctx.rv.marketValue)}, ${fmtNum(ctx.alloc.rvPct.toFixed(1))}% do patrimônio. Entrar numa categoria nova pode diversificar, dependendo do quanto você destinar a ela.`;
+    return r;
+  },
+  historico_geral(ctx){
+    const eventos = [
+      ...DATA.transactions.map(t=>t.date),
+      ...DATA.rf.entries.filter(e=>e.aporte>0).map(e=>e.date),
+      ...DATA.dividends.map(d=>d.date),
+    ].sort();
+    if(eventos.length===0) return 'Ainda não há nenhum registo no Patrium para eu reconstruir o seu histórico.';
+    const primeiraData = eventos[0];
+    let r = `Seu primeiro registo no Patrium foi em **${fmtDate(primeiraData)}**.\nDesde então, você já aportou **${fmtMoney(ctx.patr.aportesExternos)}** no total (dinheiro novo, de fora do Patrium).`;
+    const contribMensal = computeMonthlyContributions();
+    if(contribMensal.length>0){
+      const maior = contribMensal.reduce((m,c)=> c.total>m.total?c:m, contribMensal[0]);
+      r += `\n\nSeu mês com maior aporte foi **${monthLabel(maior.month)}**, com ${fmtMoney(maior.total)}.`;
+    }
+    return r;
+  },
+  historico_acoes(ctx){
+    const comprasRv = DATA.transactions.filter(t=>t.type==='compra').sort((a,b)=>a.date.localeCompare(b.date));
+    if(comprasRv.length===0) return 'Você ainda não registou nenhuma compra de ações, FIIs ou outros ativos de Renda Variável no Patrium.';
+    const primeira = comprasRv[0];
+    return `Você começou a comprar ativos de Renda Variável em **${fmtDate(primeira.date)}**, com a compra de ${primeira.ticker}. Desde então, já são ${ctx.positions.length} ativo(s) diferentes em carteira.`;
+  },
+  consistencia_aportes(ctx){
+    const eixo = ctx.comportamento.find(e=>e.id==='consistencia');
+    if(!eixo || eixo.pct===null) return ASSIST_DISCLAIMER_HISTORICO;
+    let r = `Sua consistência de aportes está em **${fmtNum(eixo.pct.toFixed(0))}%** (${eixo.detalhe})`;
+    if(eixo.pct>=70) r += `\n\nÉ um ritmo consistente, esse é um dos hábitos mais poderosos para os juros compostos trabalharem a seu favor.`;
+    else if(eixo.pct>=35) r += `\n\nÉ um ritmo razoável, mas com espaço para ficar mais regular.`;
+    else r += `\n\nSeus aportes ainda estão bem irregulares, aportar um valor fixo todo mês, mesmo pequeno, tende a ajudar mais do que tentar acertar o momento certo.`;
+    return r;
+  },
+  evolucao_estrategia(ctx){
+    const timeline = buildTimeline();
+    if(timeline.length<2) return ASSIST_DISCLAIMER_HISTORICO;
+    const allocInicio = computeAllocacaoAsOf(timeline[0].date);
+    const allocAgora = computeAllocacaoAsOf(todayISO());
+    if(allocInicio.total<=0 || allocAgora.total<=0) return ASSIST_DISCLAIMER_HISTORICO;
+    const diffRv = allocAgora.rvPct - allocInicio.rvPct;
+    let r = `No início do seu histórico, ${fmtNum(allocInicio.rvPct.toFixed(0))}% estava em Renda Variável; hoje são ${fmtNum(allocAgora.rvPct.toFixed(0))}%.`;
+    if(Math.abs(diffRv)<5) r += '\n\nA sua proporção entre Renda Fixa e Renda Variável está bem estável ao longo do tempo, sem uma mudança relevante de estratégia.';
+    else if(diffRv>0) r += `\n\nVocê aumentou a sua exposição a Renda Variável em ${fmtNum(diffRv.toFixed(0))} pontos percentuais, isso indica uma estratégia mais orientada a crescimento recentemente.`;
+    else r += `\n\nVocê reduziu a sua exposição a Renda Variável em ${fmtNum(Math.abs(diffRv).toFixed(0))} pontos percentuais, isso indica uma estratégia mais conservadora recentemente.`;
+    return r;
+  },
+  diagnostico_evolucao(ctx){
+    const timeline = buildTimeline();
+    if(timeline.length<2) return ASSIST_DISCLAIMER_HISTORICO;
+    const primeiro = timeline[0].patrimonio, ultimo = timeline[timeline.length-1].patrimonio;
+    const partes = [];
+    if(primeiro>0){
+      const variacao = ((ultimo-primeiro)/primeiro)*100;
+      partes.push(`Desde o início do seu histórico, o seu patrimônio ${variacao>=0?'cresceu':'reduziu'} ${fmtNum(Math.abs(variacao).toFixed(0))}%.`);
+    }
+    const eixoConsist = ctx.comportamento.find(e=>e.id==='consistencia');
+    if(eixoConsist && eixoConsist.pct!==null) partes.push(`Sua consistência de aportes está em ${fmtNum(eixoConsist.pct.toFixed(0))}%.`);
+    if(ctx.indice.score!==null) partes.push(`Seu Índice de Saúde Patrimonial está em ${ctx.indice.score}/100 (${ctx.indice.status}).`);
+    const positivos = ctx.insights.filter(i=>i.tipo==='positivo').length;
+    const atencao = ctx.insights.filter(i=>i.tipo==='atencao'||i.tipo==='critica').length;
+    partes.push(`Hoje há ${positivos} ponto(s) positivo(s) e ${atencao} ponto(s) de atenção identificados nos seus dados.`);
+    return partes.join(' ');
+  },
+  custo_medio(ctx, i, ultimoTicker){
+    const tk = (i&&i.ticker) || ultimoTicker;
+    if(!tk) return 'Me diga o ticker do ativo (ex.: "custo médio de ITUB4") para eu consultar o preço médio.';
+    const p = ctx.positions.find(x=>x.ticker===tk);
+    if(!p) return `Não encontrei uma posição em ${tk} na sua carteira.`;
+    return `O preço médio de **${p.ticker}** é ${fmtMoney(p.avgPrice)}, calculado pela média ponderada de todas as suas compras desse ativo.`;
+  },
+  dividendos(ctx){
+    if(ctx.rv.dividends<=0) return 'Você ainda não registou nenhum dividendo recebido no Patrium.';
+    let r = `**Dividendos recebidos (total):** ${fmtMoney(ctx.rv.dividends)}`;
+    if(ctx.divMesAtual) r += `\nÚltimo mês com registo: ${monthLabel(ctx.divMesAtual.month)}, ${fmtMoney(ctx.divMesAtual.total)}`;
+    return r;
+  },
+  twr(ctx, i, ultimoTicker, textoOriginal, profundidade){
+    if(!ctx.twr || ctx.twr.cumulative===undefined) return ASSIST_DISCLAIMER_HISTORICO;
+    let r = `**TWR acumulado:** ${fmtPct(ctx.twr.cumulative)}`;
+    if(profundidade==='tecnico'){
+      r += `\n\nO TWR encadeia sub-períodos entre cada fluxo externo (aporte ou retirada), calcula o retorno de cada sub-período isoladamente e depois compõe todos — isso elimina a distorção que um aporte grande no meio do caminho causaria no cálculo. É diferente do XIRR, que pondera pelo valor e pela data de cada fluxo; o TWR mede só a qualidade das escolhas de investimento, não o retorno do seu dinheiro especificamente.`;
+      if(ctx.twr.annualized!==null && ctx.twr.annualized!==undefined) r += `\nTWR anualizado: ${fmtPct(ctx.twr.annualized)}.`;
+    } else {
+      r += `\n\nO TWR mede a performance da carteira independente de quando e quanto você aportou, é a métrica certa para avaliar "as minhas escolhas de investimento foram boas?".`;
+    }
+    return r;
+  },
+  xirr(ctx, i, ultimoTicker, textoOriginal, profundidade){
+    if(ctx.xirr===null) return ASSIST_DISCLAIMER_HISTORICO;
+    let r = `**XIRR anualizado:** ${fmtPct(ctx.xirr)}`;
+    if(profundidade==='tecnico'){
+      r += `\n\nO XIRR é calculado a partir de todos os seus fluxos externos (cada aporte e retirada, na data exata em que aconteceu) mais o valor final da carteira, encontrando por iteração numérica a taxa anual que zera o valor presente líquido de tudo isso. É sensível a quando você aportou, diferente do TWR, que isola esse efeito. Um aporte grande muito recente pode distorcer a leitura de curto prazo.`;
+    } else {
+      r += `\n\nO XIRR é o retorno anualizado que você de fato obteve, considerando a data exata de cada aporte e retirada.`;
+    }
+    return r;
+  },
+  performance(ctx){
+    const partes = [];
+    partes.push(`Resultado total: **${fmtMoneySigned(ctx.patr.ganhoTotal)}**`);
+    partes.push(ctx.twr&&ctx.twr.cumulative!==undefined ? `TWR: ${fmtPct(ctx.twr.cumulative)}` : `TWR: ${ASSIST_DISCLAIMER_HISTORICO}`);
+    partes.push(ctx.xirr!==null ? `XIRR: ${fmtPct(ctx.xirr)}` : `XIRR: ${ASSIST_DISCLAIMER_HISTORICO}`);
+    return partes.join('\n');
+  },
+  ranking_posicao(ctx, i){
+    if(ctx.conc.length===0) return 'Você ainda não tem ativos de Renda Variável para eu ranquear.';
+    const item = i.ordinal===-1 ? ctx.conc[ctx.conc.length-1] : ctx.conc[i.ordinal-1];
+    if(!item) return `Você só tem ${ctx.conc.length} ativo(s) na Renda Variável, não há um "${i.ordinal}º maior" para mostrar.`;
+    const posicao = ctx.positions.find(p=>p.ticker===item.ticker);
+    const rotulo = i.ordinal===-1 ? 'menor posição' : i.ordinal===1 ? 'maior posição' : `${i.ordinal}ª maior posição`;
+    let r = `Sua ${rotulo} é **${item.ticker}**, representando ${fmtNum(item.peso.toFixed(1))}% da sua Renda Variável.`;
+    if(posicao) r += `\nValor de mercado: ${fmtMoney(posicao.marketValue)}`;
+    return r;
+  },
+  concentracao(ctx){
+    if(ctx.conc.length===0) return 'Você ainda não tem ativos de Renda Variável para avaliar concentração.';
+    const maior = ctx.conc[0];
+    let r = `Sua maior posição é **${maior.ticker}**, que representa **${fmtNum(maior.peso.toFixed(1))}%** da sua Renda Variável.`;
+    if(maior.peso>=50) r += '\n\nIsso é uma concentração elevada, um ponto de atenção real: uma movimentação desse ativo tem bastante impacto no resultado da carteira.';
+    else if(maior.peso>=30) r += '\n\nÉ uma concentração relevante, vale acompanhar.';
+    else r += '\n\nÉ um nível de concentração saudável, sem depender demais de um único ativo.';
+    return r;
+  },
+  alocacao(ctx){
+    if(ctx.alloc.total<=0) return ASSIST_DISCLAIMER_SEM_DADOS;
+    return `**Renda Fixa:** ${fmtNum(ctx.alloc.rfPct.toFixed(1))}% (${fmtMoney(ctx.alloc.rfTotal)})\n**Renda Variável:** ${fmtNum(ctx.alloc.rvPct.toFixed(1))}% (${fmtMoney(ctx.alloc.rvTotal)})`;
+  },
+  metas(ctx){
+    if(ctx.metasPatr.length===0 && ctx.metasQtd.length===0) return 'Você ainda não criou nenhuma meta no Patrium. Pode criar uma meta patrimonial ou por quantidade de ativos na aba Ações.';
+    const partes = [];
+    if(ctx.metaPrincipal){
+      const m = ctx.metaPrincipal;
+      partes.push(`**${m.nome}**: ${fmtMoney(m.valorAtual)} de ${fmtMoney(m.valorObjetivo)} (**${fmtNum(m.progressoReal.toFixed(1))}%**)${m.concluida?' — atingida! ✓':''}`);
+      if(!m.concluida) partes.push(`Falta: ${fmtMoney(m.faltam)}`);
+      if(m.prazo && m.prazo.ritmoNecessario!==null) partes.push(`Ritmo necessário para o prazo: ${fmtMoney(m.prazo.ritmoNecessario)}/mês`);
+    }
+    if(ctx.metasQtd.length) partes.push(`Você também tem ${ctx.metasQtd.length} meta(s) de quantidade de ativos.`);
+    return partes.join('\n');
+  },
+  perfil(ctx){
+    if(!ctx.perfil) return 'Você ainda não definiu o seu perfil de investidor. Pode fazer isso na aba Educação.';
+    const p = PERFIS_INVESTIDOR[ctx.perfil.tipo];
+    let r = `Seu perfil declarado é **${p.nome}**. ${p.desc}`;
+    if(ctx.bucket && ctx.bucket!==ctx.perfil.tipo){
+      const bp = PERFIS_INVESTIDOR[ctx.bucket];
+      r += `\n\nUm ponto que vale revisar: a composição atual da sua carteira está mais próxima de um perfil **${bp.nome.toLowerCase()}**, diferente do que você declarou. Isso não significa que a carteira esteja errada, só uma diferença a acompanhar.`;
+    }
+    return r;
+  },
+  radar(ctx){
+    if(ctx.comportamento.length===0) return ASSIST_DISCLAIMER_HISTORICO;
+    return ctx.comportamento.map(e=> `${e.label}: ${e.pct===null?'dados insuficientes':fmtNum(e.pct.toFixed(0))+'%'}`).join('\n');
+  },
+  saude(ctx){
+    if(ctx.indice.score===null) return ASSIST_DISCLAIMER_HISTORICO;
+    let r = `**Índice de Saúde Patrimonial: ${ctx.indice.score}/100** (${ctx.indice.status})\n\nÉ um indicador de organização da carteira, não uma nota de investimento nem uma promessa de retorno.`;
+    if(ctx.indice.melhorar.length) r += `\n\nO que mais pesa hoje: ${ctx.indice.melhorar[0]}`;
+    return r;
+  },
+  selos(ctx){
+    const conquistados = ctx.milestones.filter(m=>m.achieved).length;
+    return `Você já desbloqueou **${conquistados} de ${ctx.milestones.length}** selos, marcos automáticos calculados a partir dos seus dados reais.`;
+  },
+  analise_completa(ctx){
+    const bloco = [];
+    bloco.push(`**Sua carteira hoje**\nPatrimônio: ${fmtMoney(ctx.patr.patrimonio)}\nAportado: ${fmtMoney(ctx.patr.aportesExternos)}\nResultado total: ${fmtMoneySigned(ctx.patr.ganhoTotal)}`);
+    if(ctx.alloc.total>0) bloco.push(`**Alocação**\nRenda Fixa: ${fmtNum(ctx.alloc.rfPct.toFixed(1))}% · Renda Variável: ${fmtNum(ctx.alloc.rvPct.toFixed(1))}%`);
+    if(ctx.conc.length) bloco.push(`**Concentração**\nMaior posição: ${ctx.conc[0].ticker} (${fmtNum(ctx.conc[0].peso.toFixed(1))}% da RV)`);
+    const perfTxt = [];
+    if(ctx.twr&&ctx.twr.cumulative!==undefined) perfTxt.push('TWR '+fmtPct(ctx.twr.cumulative));
+    if(ctx.xirr!==null) perfTxt.push('XIRR '+fmtPct(ctx.xirr));
+    if(perfTxt.length) bloco.push(`**Performance**\n${perfTxt.join(' · ')}`);
+    if(ctx.perfil) bloco.push(`**Perfil**\nDeclarado: ${PERFIS_INVESTIDOR[ctx.perfil.tipo].nome}${ctx.bucket?' · Carteira atual: '+PERFIS_INVESTIDOR[ctx.bucket].nome:''}`);
+    if(ctx.indice.score!==null) bloco.push(`**Saúde Patrimonial**\n${ctx.indice.score}/100 (${ctx.indice.status})`);
+    if(ctx.metaPrincipal) bloco.push(`**Meta**\n${ctx.metaPrincipal.nome}: ${fmtNum(ctx.metaPrincipal.progressoReal.toFixed(1))}%`);
+    const positivos = ctx.insights.filter(i=>i.tipo==='positivo').slice(0,2).map(i=>i.texto.replace(/<[^>]+>/g,''));
+    const atencao = ctx.insights.filter(i=>i.tipo==='atencao').slice(0,2).map(i=>i.texto.replace(/<[^>]+>/g,''));
+    if(positivos.length) bloco.push(`**Pontos positivos**\n${positivos.map(p=>'• '+p).join('\n')}`);
+    if(atencao.length) bloco.push(`**Pontos de atenção**\n${atencao.map(p=>'• '+p).join('\n')}`);
+    bloco.push(`Se quiser, posso detalhar alocação, performance, metas ou risco.`);
+    return bloco.join('\n\n');
+  },
+  pontos_atencao(ctx){
+    const atencao = ctx.insights.filter(i=>i.tipo==='atencao'||i.tipo==='critica').map(i=>i.texto.replace(/<[^>]+>/g,''));
+    if(atencao.length===0) return 'Neste momento não identifiquei nenhum ponto crítico nos dados disponíveis.';
+    return atencao.slice(0,4).map(p=>'• '+p).join('\n');
+  },
+  pontos_positivos(ctx){
+    const positivos = ctx.insights.filter(i=>i.tipo==='positivo').map(i=>i.texto.replace(/<[^>]+>/g,''));
+    if(positivos.length===0) return 'Ainda não tenho dados suficientes para destacar pontos fortes com confiança.';
+    return positivos.slice(0,4).map(p=>'• '+p).join('\n');
+  },
+  melhorar(ctx){
+    const atencao = ctx.insights.filter(i=>i.tipo==='atencao'||i.tipo==='critica').slice(0,3).map(i=>i.texto.replace(/<[^>]+>/g,''));
+    if(atencao.length===0) return 'Pelos dados disponíveis, não vejo um ponto crítico a priorizar agora. Continue com a consistência que já vem tendo.';
+    return `Eu priorizaria ${atencao.length===1?'este ponto':'estes '+atencao.length+' pontos'}:\n\n${atencao.map((p,idx)=>`${idx+1}. ${p}`).join('\n\n')}`;
+  },
+  educacao(ctx, i, ultimoTicker, textoOriginal, profundidade){
+    const t = normalizarTexto(textoOriginal);
+    const termo = CONCEITOS_FINANCEIROS.find(c=> t.includes(normalizarTexto(c.termo)));
+    if(termo){
+      // Prioriza dado pessoal + explicação juntos, quando o conceito tem
+      // uma resposta de dados equivalente (ex.: "o que é concentração"
+      // já mostra a definição E o percentual real do utilizador). O nível
+      // de profundidade decide o quanto de explicação entra além disso.
+      const mapaIntentPessoal = { 'Patrimônio':'patrimonio', 'Aportes':'aportes', 'Retiradas':'retiradas', 'Custo médio':'custo_medio', 'Dividendos':'dividendos', 'Renda Fixa':'rf', 'Renda Variável':'rv', 'Alocação':'alocacao', 'Concentração':'concentracao', 'TWR':'twr', 'XIRR':'xirr', 'Saúde Patrimonial':'saude', 'Perfil do Investidor':'perfil', 'Radar do Investidor':'radar', 'Metas':'metas', 'Selos':'selos' };
+      const intentPessoal = mapaIntentPessoal[termo.termo];
+      let dadoPessoal = '';
+      if(profundidade!=='basico' && intentPessoal && ASSIST_RESPOSTAS[intentPessoal]){
+        try{ dadoPessoal = ASSIST_RESPOSTAS[intentPessoal](ctx, {}, ultimoTicker, textoOriginal, profundidade); if(typeof dadoPessoal==='object') dadoPessoal=dadoPessoal.texto; }catch(e){ dadoPessoal=''; }
+      }
+      const base = `**${termo.termo}**\n${termo.oque}`;
+      if(profundidade==='basico') return base;
+      if(profundidade==='tecnico'){
+        let r = `${base}\n\n${termo.comoCalcula}\n\n**Como interpretar:** ${termo.comoInterpretar}\n\n**Quando ter cautela:** ${termo.quandoCautela}`;
+        if(dadoPessoal) r += `\n\n**No seu caso:**\n${dadoPessoal}`;
+        return r;
+      }
+      return dadoPessoal ? `${base}\n\n**No seu caso:**\n${dadoPessoal}` : `${base}\n\n${termo.comoCalcula}`;
+    }
+    const glossario = GLOSSARY_TERMS.find(g=> t.includes(normalizarTexto(g.termo)));
+    if(glossario) return `**${glossario.termo}**\n${glossario.def}`;
+    const extra = ASSIST_TERMOS_EXTRA.find(g=> t.includes(normalizarTexto(g.termo)));
+    if(extra) return `**${extra.termo}**\n${extra.def}`;
+    return 'Não reconheci esse termo específico. Pode me dizer de outra forma, ou explorar a aba Educação para o glossário completo.';
+  },
+  comparar_ativos(ctx, i){
+    let tickers = i.tickers;
+    if(!tickers){
+      if(ctx.conc.length<2) return 'Você ainda não tem duas posições de Renda Variável para comparar.';
+      tickers = [ctx.conc[0].ticker, ctx.conc[1].ticker];
+    }
+    const [tkA, tkB] = tickers;
+    const descreve = (tk)=>{
+      const p = ctx.positions.find(x=>x.ticker===tk);
+      if(!p) return { tk, semDados:true };
+      const concItem = ctx.conc.find(c=>c.ticker===tk);
+      return {
+        tk, semDados:false, qty:p.qty, avgPrice:p.avgPrice,
+        curPrice: p.hasRealPrice?p.curPrice:null,
+        marketValue:p.marketValue, unrealizedPL:p.unrealizedPL, totalResultPct:p.totalResultPct,
+        dividends:p.dividends, pesoRv: concItem?concItem.peso:null,
+      };
+    };
+    const a = descreve(tkA), b = descreve(tkB);
+    if(a.semDados && b.semDados) return `Não tenho posição registada nem em ${tkA} nem em ${tkB} na sua carteira, não consigo comparar com dados reais.`;
+    const bloco = (x)=>{
+      if(x.semDados) return `**${x.tk}**\nVocê não tem posição neste ativo no Patrium, não tenho dados reais para comparar.`;
+      const linhas = [
+        `Quantidade: ${fmtNum(x.qty)}`,
+        `Preço médio: ${fmtMoney(x.avgPrice)}`,
+        `Preço atual: ${x.curPrice!==null?fmtMoney(x.curPrice):ASSIST_DISCLAIMER_SEM_DADOS}`,
+        `Valor de mercado: ${fmtMoney(x.marketValue)}`,
+        `Resultado: ${fmtMoneySigned(x.unrealizedPL)} (${fmtNum(x.totalResultPct.toFixed(1))}%)`,
+      ];
+      if(x.dividends>0) linhas.push(`Dividendos recebidos: ${fmtMoney(x.dividends)}`);
+      if(x.pesoRv!==null) linhas.push(`Participação na sua Renda Variável: ${fmtNum(x.pesoRv.toFixed(1))}%`);
+      return `**${x.tk}**\n${linhas.join('\n')}`;
+    };
+    const partes = [bloco(a), bloco(b)];
+    // Leitura do Assistente — só compara o que os dois têm dado real, nunca uma certeza absoluta.
+    if(!a.semDados && !b.semDados){
+      const leitura = [];
+      if(a.pesoRv!==null && b.pesoRv!==null){
+        const maisConc = a.pesoRv>=b.pesoRv ? a : b;
+        const menosConc = maisConc===a ? b : a;
+        leitura.push(`${maisConc.tk} representa uma fatia maior da sua Renda Variável (${fmtNum(maisConc.pesoRv.toFixed(1))}% contra ${fmtNum(menosConc.pesoRv.toFixed(1))}% de ${menosConc.tk}). Se o objetivo for reduzir concentração, direcionar os próximos aportes para o de menor peso pode fazer sentido.`);
+      }
+      if(a.totalResultPct!==undefined && b.totalResultPct!==undefined){
+        const melhorResultado = a.totalResultPct>=b.totalResultPct ? a : b;
+        leitura.push(`Dentro da sua carteira, ${melhorResultado.tk} tem o melhor resultado percentual até agora (${fmtNum(melhorResultado.totalResultPct.toFixed(1))}%), mas isso é desempenho passado, não uma garantia de resultado futuro.`);
+      }
+      if(ctx.perfil){
+        leitura.push(`Considerando o seu perfil declarado (${PERFIS_INVESTIDOR[ctx.perfil.tipo].nome}), vale pensar em qual dos dois se encaixa melhor no seu horizonte e objetivo, isso depende mais da sua estratégia do que de um número isolado.`);
+      }
+      leitura.push('Essa leitura é educacional, baseada só nos seus dados atuais, não é uma recomendação de compra ou venda.');
+      partes.push(leitura.join(' '));
+    }
+    return { texto: partes.join('\n\n') };
+  },
+  ajuda_navegacao(){
+    return 'Use o botão "+ Novo investimento" no cabeçalho para registar compras, vendas ou aportes de Renda Fixa. Para mais detalhes sobre qualquer funcionalidade, a Central de Ajuda (ícone ❓) tem uma base de conhecimento completa, organizada por conceito.';
+  },
+  ajuda_pdf(){ return 'Use o ícone 📄 no cabeçalho para gerar o relatório mensal em PDF, escolhendo o mês de referência.'; },
+  ajuda_backup(){ return 'Use o ícone ⇅ no cabeçalho para exportar ou importar os seus dados em backup (JSON).'; },
+  desconhecido(){
+    return 'Não tenho certeza do que você quis dizer. Pode me contar de outro jeito? Por exemplo, me diga o nome do ativo, ou do que da sua carteira você está falando.';
+  },
+};
+/* ---- Ações de navegação — reaproveita EXATAMENTE o clique nas abas e nos
+   botões de abrir modal que já existem no cabeçalho, nunca uma segunda
+   arquitetura de navegação. Cada intenção mapeia, no máximo, para UMA ação
+   (nem toda resposta precisa de botão). ---- */
+const ASSIST_NAVEGACAO = {
+  patrimonio:{ label:'Ver Dashboard', tab:'dashboard' },
+  rf:{ label:'Abrir Renda Fixa', tab:'rendafixa' },
+  rv:{ label:'Abrir Ações', tab:'acoes' },
+  ativo:{ label:'Abrir Ações', tab:'acoes' },
+  custo_medio:{ label:'Abrir Ações', tab:'acoes' },
+  comparar_ativos:{ label:'Abrir Ações', tab:'acoes' },
+  dividendos:{ label:'Ver Dividendos', tab:'dividendos' },
+  metas:{ label:'Ver Metas', tab:'acoes' },
+  perfil:{ label:'Abrir Perfil', tab:'educacao' },
+  radar:{ label:'Ver Radar do Investidor', tab:'educacao' },
+  selos:{ label:'Ver Selos', tab:'educacao' },
+  alocacao:{ label:'Ver Alocação', tab:'alocacao' },
+  concentracao:{ label:'Ver Análises', tab:'analises' },
+  performance:{ label:'Ver Histórico', tab:'historico' },
+  twr:{ label:'Ver Histórico', tab:'historico' },
+  xirr:{ label:'Ver Histórico', tab:'historico' },
+  saude:{ label:'Ver no Dashboard', tab:'dashboard' },
+  analise_completa:{ label:'Ver Análises', tab:'analises' },
+  pontos_atencao:{ label:'Ver Análises', tab:'analises' },
+  ajuda_navegacao:{ label:'Abrir Central de Ajuda', modal:'ajuda' },
+  ajuda_pdf:{ label:'Gerar relatório PDF', modal:'pdf' },
+  ajuda_backup:{ label:'Abrir Backup e dados', modal:'backup' },
+  historico_geral:{ label:'Ver Histórico', tab:'historico' },
+  historico_acoes:{ label:'Ver Histórico', tab:'historico' },
+  consistencia_aportes:{ label:'Ver Histórico', tab:'historico' },
+  evolucao_estrategia:{ label:'Ver Alocação', tab:'alocacao' },
+  diagnostico_evolucao:{ label:'Ver Análises', tab:'analises' },
+  considerar_compra:{ label:'Abrir Ações', tab:'acoes' },
+  ranking_posicao:{ label:'Abrir Ações', tab:'acoes' },
+};
+// Detecta o nível de profundidade pedido pelo utilizador, tolerante a
+// acento/digitação (reaproveita normalizarTexto()), nunca obriga o
+// utilizador a escolher um nível manualmente.
+function detectarProfundidade(textoOriginal){
+  const t = normalizarTexto(textoOriginal);
+  if(/tecnic|detalhad|aprofund|matematicamente|entender o calculo|entender os calculos|quero os detalhes|calculo exato|formula/.test(t)) return 'tecnico';
+  if(/explica simples|palavras simples|simplificad|de forma simples|sou iniciante|nao entendi/.test(t)) return 'basico';
+  const temPossessivo = /\bmeu\b|\bminha\b|\bmeus\b|\bminhas\b/.test(t);
+  if(!temPossessivo && /^o que e |^oque e /.test(t)) return 'basico';
+  return 'intermediario';
+}
+// Encontra até dois tickers na mensagem (posição existente OU só conhecido
+// pelo catálogo/preços já vistos), para a comparação entre ativos. Tolera
+// erro de digitação do mesmo jeito que detectarTickerNaMensagem().
+function detectarDoisTickers(textoOriginal, ctx){
+  const palavras = [...new Set(textoOriginal.toUpperCase().match(/[A-Z]{3,6}\d{0,2}/g) || [])];
+  const conhecidos = new Set([...ctx.positions.map(p=>p.ticker), ...Object.keys(DATA.prices||{}), ...(RV_CATALOG.acao||[]), ...(RV_CATALOG.fii||[]), ...(RV_CATALOG.etf||[]), ...(RV_CATALOG.bdr||[])]);
+  const encontrados = [];
+  for(const palavra of palavras){
+    if(conhecidos.has(palavra)){ if(!encontrados.includes(palavra)) encontrados.push(palavra); continue; }
+    for(const k of conhecidos){
+      if(Math.abs(palavra.length-k.length)<=1 && levenshtein(palavra,k)<=1){ if(!encontrados.includes(k)) encontrados.push(k); break; }
+    }
+  }
+  return encontrados.slice(0,2);
+}
+/* ---- Contexto conversacional (só de sessão, nunca persistido, nunca
+   duplica DATA nem o motor financeiro) ---- */
+let assistantHistory = [];
+let assistantUltimoTicker = null;
+let assistantUltimaMetrica = null;      // id da última intenção "focada" (posicao/xirr/twr/concentracao/rf/rv/...)
+let assistantUltimoRanking = null;      // último array ordenado usado (ex.: computeConcentracaoAtivo()), para "e a segunda?"
+let assistantUltimosComparados = null;  // ex.: ['rf','rv'] ou ['twr','xirr'] ou [tickerA, tickerB]
+let assistantUltimaRespostaTexto = null;
+let assistantUltimoValorMeta = null;    // último valor numérico de meta mencionado (ex.: 50000)
+let assistantUltimoValorSimulacaoMensal = null; // último valor de aporte mensal simulado (hipotético)
+// Extrai o primeiro valor em reais mencionado na frase ("500 reais", "4.500", "R$ 50 mil").
+function assistExtrairValor(texto){
+  // Trabalha sobre o texto ORIGINAL (não normalizado), porque normalizarTexto()
+  // troca pontos/vírgulas por espaço, o que quebraria "4.500" em "4" e "500".
+  const bruto = texto.toLowerCase();
+  const mMil = bruto.match(/(\d+(?:[.,]\d+)?)\s*mil/);
+  if(mMil) return parseFloat(mMil[1].replace(',','.'))*1000;
+  // Número com separador de milhar (1.234,56 ou 1,234.56 ou 4.500) ou simples (500).
+  const mNum = bruto.match(/(\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?|\d+(?:[.,]\d+)?)\s*(?:reais|r\$)?/);
+  if(mNum){
+    let s = mNum[1];
+    // Remove separador de milhar (ponto ou vírgula seguido de exatamente 3 dígitos, repetido), mantém só o decimal final se houver.
+    s = s.replace(/[.,](?=\d{3}(\D|$))/g, '');
+    s = s.replace(',', '.');
+    const v = parseFloat(s);
+    if(!isNaN(v) && v>=2) return v;
+  }
+  return null;
+}
+function responderAssistente(textoOriginal){
+  const ctx = buildAssistantContext();
+  let intent;
+  try{
+    intent = resolverContinuacao(textoOriginal, ctx) || classificarIntencaoAssistente(textoOriginal, ctx);
+  }catch(e){
+    return { texto:'Não consegui concluir essa análise agora. Seus dados continuam intactos. Tente novamente.', acoes:[] };
+  }
+  if(intent.usarUltimoTicker && !intent.ticker) intent.ticker = assistantUltimoTicker;
+  if(intent.ticker) assistantUltimoTicker = intent.ticker;
+  const profundidade = detectarProfundidade(textoOriginal);
+  const fn = ASSIST_RESPOSTAS[intent.id] || ASSIST_RESPOSTAS.desconhecido;
+  let resposta;
+  try{
+    resposta = fn(ctx, intent, assistantUltimoTicker, textoOriginal, profundidade);
+  }catch(e){
+    resposta = 'Não consegui concluir essa análise agora. Seus dados continuam intactos. Tente novamente.';
+  }
+  const texto = typeof resposta==='object' ? resposta.texto : resposta;
+  const navPadrao = ASSIST_NAVEGACAO[intent.id];
+  const acoes = (typeof resposta==='object' && resposta.acoes) ? resposta.acoes : (navPadrao ? [navPadrao] : []);
+  // Atualiza o contexto da conversa para a próxima mensagem.
+  assistantUltimaMetrica = intent.id;
+  assistantUltimaRespostaTexto = texto;
+  if(intent.ranking) assistantUltimoRanking = intent.ranking;
+  if(intent.comparados) assistantUltimosComparados = intent.comparados;
+  else if(['twr','xirr'].includes(intent.id)){
+    assistantUltimosComparados = [...new Set([...( assistantUltimosComparados||[] ), intent.id])].slice(-2);
+  }
+  if(intent.valorMeta!==undefined) assistantUltimoValorMeta = intent.valorMeta;
+  if(intent.id==='ativo' && intent.ticker){
+    assistantUltimosTickers = [...assistantUltimosTickers.filter(tk=>tk!==intent.ticker), intent.ticker].slice(-2);
+  }
+  return { texto, acoes };
+}
+
+/* ---- Interface do Assistente Patrium ---- */
+const ASSIST_SUGESTOES_INICIAIS = ['Como estou financeiramente?','Analise minha carteira','Qual é meu maior risco?','Como está minha evolução?','Tenho muita concentração?'];
+function assistFormatarTexto(txt){
+  return escapeHtml(txt)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>')
+    .replace(/(^|<br>)• /g, '$1▪ ');
+}
+function assistExecutarAcao(acao){
+  if(acao.tab){
+    const tabBtn = document.querySelector(`.tab-btn[data-tab="${acao.tab}"]`);
+    if(tabBtn) tabBtn.click();
+    // Navegar entre abas não fecha o chat — o painel flutua por cima do
+    // conteúdo, então dá para continuar a conversa vendo a aba ao fundo.
+  } else if(acao.modal==='ajuda'){
+    assistFecharPainel();
+    renderCentralAjuda(); openModal('modalCentralAjuda');
+  } else if(acao.modal==='pdf'){
+    assistFecharPainel();
+    document.getElementById('btnRelatorioMensal').click();
+  } else if(acao.modal==='backup'){
+    assistFecharPainel();
+    document.getElementById('backupToggle').click();
+  }
+}
+// Detecta se o início da resposta é uma sequência de "**Rótulo:** valor"
+// (como a função patrimonio()/analise_completa() geram) para desenhar um
+// cartão com destaque visual, em vez de só texto corrido. Respostas
+// simples (sem esse padrão) continuam como bolha de texto normal.
+function assistParseCard(texto){
+  const linhas = texto.split('\n');
+  const stats = [];
+  let i = 0;
+  while(i<linhas.length){
+    const m = linhas[i].match(/^\*\*(.+?):\*\*\s*(.+)$/);
+    if(!m) break;
+    stats.push({ label:m[1], valor:m[2] });
+    i++;
+  }
+  if(stats.length<2) return null;
+  const resto = linhas.slice(i).join('\n').trim();
+  return { stats, resto };
+}
+function assistAdicionarMensagem(role, texto, erro, acoes){
+  assistantHistory.push({ role, texto });
+  const body = document.getElementById('assistBody');
+  const vazio = body.querySelector('.assist-empty');
+  if(vazio) vazio.remove();
+  const card = role==='bot' && !erro ? assistParseCard(texto) : null;
+  if(card){
+    const div = document.createElement('div');
+    div.className = 'assist-card';
+    const statsHtml = `<div class="assist-card-stats">${card.stats.map(s=>`<div class="assist-card-stat"><div class="assist-card-stat-label">${escapeHtml(s.label)}</div><div class="assist-card-stat-value">${escapeHtml(s.valor)}</div></div>`).join('')}</div>`;
+    const restoHtml = card.resto ? `<div class="assist-card-body">${assistFormatarCorpoCard(card.resto)}</div>` : '';
+    div.innerHTML = statsHtml + restoHtml;
+    body.appendChild(div);
+  } else {
+    const div = document.createElement('div');
+    div.className = `assist-msg assist-msg-${role}${erro?' assist-msg-erro':''}`;
+    div.innerHTML = assistFormatarTexto(texto);
+    body.appendChild(div);
+  }
+  if(acoes && acoes.length){
+    const acoesWrap = document.createElement('div');
+    acoesWrap.className = 'assist-msg-acoes';
+    acoesWrap.innerHTML = acoes.map((a,idx)=>`<button type="button" class="assist-action-btn" data-idx="${idx}">${escapeHtml(a.label)} →</button>`).join('');
+    acoesWrap.querySelectorAll('.assist-action-btn').forEach((btn,idx)=>{
+      btn.addEventListener('click', ()=> assistExecutarAcao(acoes[idx]));
+    });
+    body.appendChild(acoesWrap);
+  }
+  document.getElementById('assistFab').classList.toggle('has-context', assistantHistory.length>0);
+  body.scrollTop = body.scrollHeight;
+}
+// Transforma títulos em MAIÚSCULAS/negrito de uma seção do corpo do cartão
+// (ex.: "Minha leitura", "Ponto de atenção") num pequeno rótulo destacado.
+function assistFormatarCorpoCard(texto){
+  return assistFormatarTexto(texto).replace(/<strong>([^<]{2,28})<\/strong>(:|<br>|$)/g, '<span class="assist-card-section-title">$1</span>$2');
+}
+function assistRenderSugestoes(lista){
+  const wrap = document.getElementById('assistSuggestions');
+  wrap.innerHTML = lista.map(s=>`<button type="button" class="assist-suggestion-chip">${escapeHtml(s)}</button>`).join('');
+  wrap.querySelectorAll('.assist-suggestion-chip').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ document.getElementById('assistInput').value = btn.textContent; assistEnviar(); });
+  });
+}
+function assistEnviar(){
+  const input = document.getElementById('assistInput');
+  const texto = input.value.trim();
+  if(!texto) return;
+  assistAdicionarMensagem('user', texto);
+  input.value = '';
+  const body = document.getElementById('assistBody');
+  const typing = document.createElement('div');
+  typing.className = 'assist-typing';
+  typing.id = 'assistTypingIndicator';
+  typing.innerHTML = '<span class="assist-typing-dots"><span></span><span></span><span></span></span><span class="assist-typing-label">Pensando…</span>';
+  body.appendChild(typing);
+  body.scrollTop = body.scrollHeight;
+  // Processamento é síncrono (dados locais), mas um pequeno atraso dá a
+  // sensação de "pensando" e evita a resposta aparecer instantaneamente
+  // antes da mensagem do utilizador terminar de renderizar.
+  setTimeout(()=>{
+    const t = document.getElementById('assistTypingIndicator');
+    if(t) t.remove();
+    let resultado, erro = false;
+    try{
+      resultado = responderAssistente(texto);
+    }catch(e){
+      resultado = { texto:'Não consegui concluir essa análise agora. Seus dados continuam intactos. Tente novamente.', acoes:[] };
+      erro = true;
+    }
+    assistAdicionarMensagem('bot', resultado.texto, erro, resultado.acoes);
+  }, 380);
+}
+function assistAbrirPainel(){
+  const panel = document.getElementById('assistPanel');
+  panel.classList.add('open');
+  document.getElementById('assistFabBadge').classList.add('hidden');
+  if(assistantHistory.length===0){
+    const nome = (DATA.settings.userName||'').trim();
+    const body = document.getElementById('assistBody');
+    body.innerHTML = `<div class="assist-empty">
+      <div class="assist-empty-icon">✦</div>
+      <div class="assist-empty-titulo">Como posso ajudar${nome?', '+escapeHtml(nome):''}?</div>
+      <p class="assist-empty-sub">Converse comigo sobre o seu patrimônio, a sua carteira, ou qualquer conceito financeiro, do jeito que preferir perguntar.</p>
+    </div>`;
+    assistRenderSugestoes(ASSIST_SUGESTOES_INICIAIS);
+  }
+  setTimeout(()=> document.getElementById('assistInput').focus(), 60);
+}
+function assistFecharPainel(){ document.getElementById('assistPanel').classList.remove('open'); }
+document.getElementById('assistFab').addEventListener('click', ()=>{
+  const panel = document.getElementById('assistPanel');
+  panel.classList.contains('open') ? assistFecharPainel() : assistAbrirPainel();
+});
+document.getElementById('assistBtnFechar').addEventListener('click', assistFecharPainel);
+document.getElementById('assistBtnEnviar').addEventListener('click', assistEnviar);
+document.getElementById('assistInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); assistEnviar(); } });
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && document.getElementById('assistPanel').classList.contains('open')) assistFecharPainel(); });
+document.getElementById('assistBtnLimpar').addEventListener('click', ()=>{
+  assistantHistory = [];
+  assistantUltimoTicker = null;
+  document.getElementById('assistFab').classList.remove('has-context');
+  document.getElementById('assistBody').innerHTML = `<div class="assist-empty">
+    <div class="assist-empty-icon">✦</div>
+    <div class="assist-empty-titulo">Conversa limpa</div>
+    <p class="assist-empty-sub">Pergunte algo sobre o seu patrimônio para começar de novo.</p>
+  </div>`;
+  assistRenderSugestoes(ASSIST_SUGESTOES_INICIAIS);
+});
+
 async function init(){
+
   document.getElementById('headerLogoSlot').outerHTML = patriumLogoHTML({height:36});
   document.getElementById('footerLogoSlot').outerHTML = patriumLogoHTML({height:34});
   document.getElementById('footerAno').textContent = new Date().getFullYear();
@@ -9251,11 +11058,13 @@ async function init(){
     wrap.appendChild(document.createRange().createContextualFragment(patriumLogoHTML({height:20})));
     wrap.appendChild(primeiro);
   }
-  ['modalAporte','modalGlossarioTermo','modalCentralAjuda','modalCentralAlertas','modalSeloDetalhe','modalDividendo','modalSaldoRf','modalCaixa','modalMetaQtd','modalAtivoDetalhe','modalEditarMovimento','modalBackup','modalConfiguracoes','modalIndiceSaude','modalRelatorioMensal','modalEmpresa','modalEditarRf','modalEditarOperacao','modalConfirm'].forEach(inserirLogoMiniModal);
+  ['modalAporte','modalGlossarioTermo','modalCentralAjuda','modalCentralAlertas','modalSeloDetalhe','modalDividendo','modalSaldoRf','modalCaixa','modalMetaQtd','modalMetaPatrimonial','modalAtivoDetalhe','modalEditarMovimento','modalBackup','modalConfiguracoes','modalIndiceSaude','modalRelatorioMensal','modalEmpresa','modalEditarRf','modalEditarOperacao','modalConfirm'].forEach(inserirLogoMiniModal);
   const onboardLogoSlot = document.getElementById('onboardLogoSlot');
   if(onboardLogoSlot) onboardLogoSlot.innerHTML = patriumLogoHTML({height:30});
   const explorarLogoSlot = document.getElementById('explorarModalLogoSlot');
   if(explorarLogoSlot) explorarLogoSlot.innerHTML = patriumLogoHTML({height:26});
+  const assistLogoSlot = document.getElementById('assistLogoSlot');
+  if(assistLogoSlot) assistLogoSlot.innerHTML = patriumLogoHTML({height:22});
   document.getElementById('rfDataAporte') && (document.getElementById('rfDataAporte').max = todayISO());
   let stored = await Store.load();
   if(!stored){ stored = buildDemoData(); await Store.save(stored); }
