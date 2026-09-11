@@ -9935,11 +9935,18 @@ async function gerarRelatorioMensalPDF(mesAno){
    inventa números, nunca duplica o motor financeiro. */
 
 // ---- Normalização de texto (tolerância a acentos/maiúsculas/pontuação) ----
+// Gírias e abreviações comuns do WhatsApp/chat informal — só troca a
+// PALAVRA INTEIRA (nunca um fragmento dentro de outra palavra), para nunca
+// gerar falso positivo com termos financeiros ou tickers.
+const ASSIST_ABREVIACOES = { oq:'o que', pq:'por que', pra:'para', ta:'esta', to:'estou', mto:'muito', mta:'muita', dps:'depois', vc:'voce', tb:'tambem', nd:'nada', n:'nao', qnt:'quanto', qto:'quanto', cmg:'comigo' };
 function normalizarTexto(s){
-  return (s||'').toLowerCase()
+  let t = (s||'').toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
     .replace(/[?!.,;:()]/g,' ')
     .replace(/\s+/g,' ').trim();
+  t = t.split(' ').map(w=> ASSIST_ABREVIACOES[w]!==undefined ? ASSIST_ABREVIACOES[w] : w).join(' ');
+  t = t.replace(/\bo q\b/g, 'o que'); // "o q" como expressão de duas palavras
+  return t;
 }
 // Distância de edição (Levenshtein), usada só para tickers curtos (tolera "petrr4", "itub").
 function levenshtein(a,b){
@@ -10015,8 +10022,17 @@ function assistTodosOsTickersConhecidos(ctx){
 // não. Tolera erro de digitação e nomes de empresa por extenso.
 function detectarAtivoQualquer(texto, ctx){
   const tNorm = normalizarTexto(texto);
+  // "vale" sozinho é um verbo comum em português ("vale a pena", "vale
+  // deixar", "vale continuar"...) — só tratamos como o ticker VALE3 quando
+  // vem depois de um artigo/determinante, indicando um substantivo mesmo
+  // ("a Vale", "na Vale", "da Vale", "aquela Vale").
+  const ehNomeDaEmpresaVale = /\b(a|na|da|essa|aquela)\s+vale\b/.test(tNorm);
   for(const nome of Object.keys(ASSIST_ALIASES_EMPRESA)){
-    if(tNorm.includes(nome)){
+    // Casamento por PALAVRA INTEIRA (nunca substring solta) — "vale" não
+    // pode disparar em "vale a pena"/"valeria"/"valeu", só quando é
+    // mesmo o nome da empresa isolado.
+    const re = new RegExp('\\b'+nome.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b');
+    if(re.test(tNorm) && (nome!=='vale' || ehNomeDaEmpresaVale)){
       const tk = ASSIST_ALIASES_EMPRESA[nome];
       return { ticker:tk, possuido: ctx.positions.some(p=>p.ticker===tk) };
     }
@@ -10032,7 +10048,13 @@ function detectarAtivoQualquer(texto, ctx){
     // com fragmentos curtos de palavras em português partidas por acento
     // (ex.: "concentração" → "TRA", que por acaso fica perto de "TRX").
     if(palavra.length<4 && !/\d/.test(palavra)) continue;
+    if(palavra==='VALE' && !ehNomeDaEmpresaVale) continue;
     for(const k of conhecidos){
+      // Tickers só de letras, sem dígito (cripto como ADA, BTC, TRX) só
+      // entram por correspondência EXATA — a tolerância a erro de
+      // digitação neles colide demais com palavras comuns do português
+      // ("anda", "concentração"→"TRA" etc.), então nunca por proximidade.
+      if(!/\d/.test(k) && palavra!==k) continue;
       if(Math.abs(palavra.length-k.length)<=1 && levenshtein(palavra, k)<=1) return { ticker:k, possuido: ctx.positions.some(p=>p.ticker===k) };
     }
   }
@@ -10065,9 +10087,17 @@ function resolverContinuacao(textoOriginal, ctx){
   const t = normalizarTexto(textoOriginal);
   const curto = t.split(' ').filter(Boolean).length<=6;
 
+  // "Qual é melhor?" — depende do que foi comparado por último: dois
+  // ativos, ou TWR × XIRR (checado ANTES do caso genérico de ativos, para
+  // nunca sequestrar essa pergunta quando o assunto real era TWR/XIRR).
+  if(curto && /qual (e |é )?melhor/.test(t) && assistantUltimosComparados && assistantUltimosComparados.includes('twr') && assistantUltimosComparados.includes('xirr')){
+    return { id:'comparar_twr_xirr' };
+  }
   // "Qual pesa mais?" / "qual é maior?" entre os dois últimos ativos citados.
-  if(curto && /pesa mais|qual (e |é )?maior|qual dos dois/.test(t) && assistantUltimosTickers.length===2){
-    return { id:'comparar_ativos', tickers:assistantUltimosTickers.slice() };
+  if(curto && /pesa(ndo)? mais|qual (e |é )?maior|qual dos dois|pesando mais|qual representa mais|dando mais retorno|eu deveria ter|combina mais|voce prefere|^qual (e |é )?melhor|quem pesa mais|qual (e |é )?pior|qual ta crescendo/.test(t)){
+    if(assistantUltimosTickers.length===2) return { id:'comparar_ativos', tickers:assistantUltimosTickers.slice() };
+    if(ctx.conc.length>0) return { id:'ranking_posicao', ordinal:1, ticker: ctx.conc[0].ticker };
+    return { id:'pedir_esclarecimento', pergunta:'Comparando quais dois ativos?' };
   }
 
   // "Qual cresceu mais?" / "qual rendeu mais?" — RF × RV.
@@ -10081,13 +10111,14 @@ function resolverContinuacao(textoOriginal, ctx){
     return { id:'comparar_crescimento_rf_rv', recente:true };
   }
 
-  // "Qual é melhor?" entre TWR e XIRR (só quando os dois já foram citados).
-  if(curto && /qual (e |é )?melhor/.test(t) && assistantUltimosComparados && assistantUltimosComparados.includes('twr') && assistantUltimosComparados.includes('xirr')){
-    return { id:'comparar_twr_xirr' };
-  }
-  // "Por quê?" — aprofunda a última resposta.
-  if(curto && /^por q/.test(t)){
-    return { id:'aprofundar' };
+  // "Por quê?" / "Me dá mais detalhes" / "Quero entender o cálculo" /
+  // "Continua" / "Fala mais" — todas aprofundam a última resposta, nunca
+  // engolem uma pergunta causal explícita como "por que meu patrimônio
+  // cresceu?" (essa tem palavras-chave próprias, tratadas no classificador
+  // principal, checadas antes deste bloco).
+  if((t.split(' ').filter(Boolean).length<=2 && /^por q/.test(t)) || /quero entender o calculo|quero os detalhes|me da (mais )?detalhes|^continua$|fala mais|explica tecnicamente|quero entender tecnicamente/.test(t)){
+    if(assistantUltimaMetrica) return { id:'aprofundar' };
+    return { id:'pedir_esclarecimento', pergunta:'Aprofundar sobre o quê? Me lembra do assunto.' };
   }
 
   // "Em quê?" / "Principalmente onde?" — depois de uma análise de concentração.
@@ -10100,8 +10131,9 @@ function resolverContinuacao(textoOriginal, ctx){
   }
 
   // "Quanto representa?" — peso do último ativo citado.
-  if(curto && /quanto representa|representa quanto|quanto (e |é )?isso|quanto vale isso/.test(t) && assistantUltimoTicker){
-    return { id:'peso_ticker', ticker:assistantUltimoTicker };
+  if(curto && /quanto representa|representa quanto|quanto (e |é )?isso|quanto vale isso/.test(t)){
+    if(assistantUltimoTicker) return { id:'peso_ticker', ticker:assistantUltimoTicker };
+    return { id:'pedir_esclarecimento', pergunta:'De qual ativo você quer saber o peso na carteira?' };
   }
 
   // "Tenho muito risco (se eu fizer isso)?" — depois de considerar comprar um ativo.
@@ -10110,7 +10142,7 @@ function resolverContinuacao(textoOriginal, ctx){
   }
 
   // "E se eu colocar/investir só R$ X (reais)?" — simulação pontual ou mensal.
-  if(/^e se/.test(t) && /\d/.test(t)){
+  if(/^(e )?se (eu )?/.test(t) && /\d/.test(t)){
     const valor = assistExtrairValor(textoOriginal);
     if(valor){
       if(/por mes|mensal|mensalmente|todo mes/.test(t)) return { id:'simulacao_aporte_mensal', valor };
@@ -10118,19 +10150,89 @@ function resolverContinuacao(textoOriginal, ctx){
     }
   }
   // "Quanto tempo?" — reaproveita a última simulação de aporte mensal.
-  if(curto && /quanto tempo|em quanto tempo/.test(t) && assistantUltimaMetrica==='simulacao_aporte_mensal'){
-    return { id:'simulacao_aporte_mensal', reusarUltimoValor:true };
+  if(curto && /quanto tempo|em quanto tempo/.test(t)){
+    if(assistantUltimaMetrica==='simulacao_aporte_mensal') return { id:'simulacao_aporte_mensal', reusarUltimoValor:true };
+    return { id:'pedir_esclarecimento', pergunta:'Tempo para quê? Me conta o objetivo (ex.: "quanto tempo para chegar aos 50 mil?").' };
   }
 
   // "Quero chegar aos X mil" — meta genérica por valor (existente ou não).
-  if(/quero chegar|quero atingir|meu objetivo e chegar/.test(t)){
+  if(/quero chegar|quero atingir|quero juntar|meu objetivo e chegar|minha meta e|estou perto d[eo]/.test(t)){
     const valor = assistExtrairValor(textoOriginal);
     if(valor) return { id:'meta_valor_generico', valorMeta:valor };
   }
-  // "Quanto falta?" — reaproveita o último valor de meta mencionado, mesmo
-  // sem uma meta formalmente criada.
-  if(curto && /quanto falta/.test(t) && assistantUltimoValorMeta){
-    return { id:'meta_valor_generico', valorMeta:assistantUltimoValorMeta };
+  // Pergunta composta: "quanto tempo para chegar aos 100 mil investindo
+  // 4.500 por mês?" — tem o alvo E o aporte mensal na MESMA mensagem.
+  if(/quanto tempo/.test(t) && /\d/.test(t)){
+    const valores = (textoOriginal.match(/[\d.,]+\s*(mil)?/g)||[]).map(s=>assistExtrairValor(s)).filter(Boolean);
+    if(valores.length>=2){
+      const alvo = Math.max(...valores), mensal = Math.min(...valores);
+      return { id:'simulacao_aporte_mensal', valor:mensal, valorMeta:alvo };
+    }
+  }
+  // "Quanto falta?" / "Quanto tempo falta?" / "Quando vou chegar?" —
+  // reaproveita o último valor de meta mencionado, mesmo sem uma meta
+  // formalmente criada. Só quando a mensagem NÃO menciona "meta" (senão
+  // a intenção 'metas' do classificador principal já responde melhor,
+  // mesmo sem um valor específico em contexto).
+  if(curto && !/meta/.test(t) && /quanto falta|quanto tempo falta|quando (vou chegar|chego|atinjo)|estou no ritmo|estou perto da meta|quanto preciso investir/.test(t)){
+    if(assistantUltimoValorMeta) return { id:'meta_valor_generico', valorMeta:assistantUltimoValorMeta };
+    return { id:'pedir_esclarecimento', pergunta:'Falta para qual meta? Me diga o valor (ex.: "quanto falta pros 50 mil").' };
+  }
+
+  // "Não entendi" / "Explica melhor" / "Como assim" — reformula a última
+  // resposta de forma mais simples, nunca repete a mesma resposta. Sem
+  // nenhum contexto anterior, pede de forma curta para o utilizador contar
+  // sobre o quê (nunca o fallback genérico grande).
+  if(curto && /nao entendi|explica melhor|como assim|nao ficou claro|mais simples|^resumo$|explica simples|me explica isso|como funciona isso|que negocio e esse|isso serve pra que|isso significa o que|qual e a ideia|pra que eu preciso saber disso/.test(t)){
+    if(assistantUltimaMetrica) return { id:'simplificar' };
+    return { id:'pedir_esclarecimento', pergunta:'Sobre o que você quer saber? Pode ser sobre o seu patrimônio, algum ativo, ou um conceito.' };
+  }
+  // Pronomes/perguntas muito curtas sem contexto suficiente — pergunta
+  // curta e específica, nunca o fallback genérico.
+  if(t==='e eu' || t==='e eu?'){
+    if(assistantUltimaMetrica==='ativo' && assistantUltimoTicker) return { id:'ativo', ticker:assistantUltimoTicker };
+    return { id:'pedir_esclarecimento', pergunta:'E você, o quê? Me dá um pouco mais de contexto.' };
+  }
+  // "E no meu caso?" — sai da explicação genérica e usa os dados reais,
+  // para o último conceito explicado.
+  if(curto && (/no meu caso|no caso do meu/.test(t) || t==='e o meu')){
+    if(assistantUltimoConceito) return { id:'educacao', textoOriginalOverride: assistantUltimoConceito, forcarPessoal:true };
+    return { id:'pedir_esclarecimento', pergunta:'No seu caso, sobre o quê? Me lembra do assunto.' };
+  }
+
+  // "Qual?" isolado — resolve pela última comparação em aberto.
+  if(t==='qual' || t==='qual?' || t==='qual deles' || t==='qual dos dois'){
+    if(assistantUltimosComparados && assistantUltimosComparados.length===2 && !['twr','xirr'].includes(assistantUltimosComparados[0])){
+      return { id:'comparar_ativos', tickers:assistantUltimosComparados };
+    }
+    if(assistantUltimosTickers.length===2) return { id:'comparar_ativos', tickers:assistantUltimosTickers.slice() };
+    return { id:'pedir_esclarecimento', pergunta:'Qual ativo você quer comparar?' };
+  }
+  // "E o outro?" — o ativo dos dois últimos citados que NÃO é o atual.
+  if(curto && /e o outro|a outra|qual deles/.test(t)){
+    if(assistantUltimosTickers.length===2){
+      const outro = assistantUltimosTickers.find(tk=>tk!==assistantUltimoTicker) || assistantUltimosTickers[0];
+      return { id:'ativo', ticker:outro };
+    }
+    return { id:'pedir_esclarecimento', pergunta:'O outro o quê? Me dê um pouco mais de contexto.' };
+  }
+
+  // "Vou colocar/investir mais R$ X em renda variável/fixa/TICKER" — decisão
+  // em curso, tratada como simulação (nunca altera a carteira de verdade).
+  if(/vou (colocar|investir|aportar|por)/.test(t) && /\d/.test(t)){
+    const valor = assistExtrairValor(textoOriginal);
+    if(valor){
+      const ativoMsg = detectarAtivoQualquer(textoOriginal, ctx);
+      if(ativoMsg) return { id:'simulacao_valor', valor, ticker:ativoMsg.ticker };
+      if(/renda variavel|\brv\b|acoes/.test(t)) return { id:'simulacao_classe', valor, classe:'rv' };
+      if(/renda fixa|\brf\b/.test(t)) return { id:'simulacao_classe', valor, classe:'rf' };
+    }
+  }
+
+  // Palavra interrogativa isolada, sem contexto suficiente para resolver —
+  // nunca o fallback genérico grande, sempre uma pergunta curta e específica.
+  if(/^(quanto|qual|como assim)\??$/.test(t)){
+    return { id:'pedir_esclarecimento', pergunta:'Pode me contar um pouco mais sobre o que você quer saber?' };
   }
 
   return null;
@@ -10152,12 +10254,12 @@ function classificarIntencaoAssistente(textoOriginal, ctx){
   // "o que é concentração") — a resposta de educação já mescla definição
   // com o dado real do utilizador quando aplicável. "oq"/"oq é" também
   // conta (abreviação comum).
-  const perguntaConceito = testa(['o que e ','oque e ','oq e ','oq é','o que significa','me explica','explica ','diferenca entre']);
+  const perguntaConceito = testa(['o que e ','oque e ','oq e ','oq é','o que q e ','o que sao ','oque sao ','o que significa','me explica','explica ','diferenca entre']);
 
   const ativo = detectarAtivoQualquer(textoOriginal, ctx);
   const doisTickers = detectarDoisTickers(textoOriginal, ctx);
   if(doisTickers.length===2) return {id:'comparar_ativos', tickers:doisTickers};
-  if(testa(['duas maiores posicoes','minhas maiores posicoes','maiores posicoes','qual acao eu deveria priorizar','qual devo priorizar'])) return {id:'comparar_ativos', tickers:null};
+  if(testa(['duas maiores posicoes','minhas maiores posicoes','maiores posicoes','qual acao eu deveria priorizar','qual devo priorizar','compara esses dois','compara essas duas'])) return {id:'comparar_ativos', tickers: assistantUltimosTickers.length===2 ? assistantUltimosTickers.slice() : null};
 
   // Um ativo específico mencionado (da carteira ou só conhecido pelo
   // Patrium) tem prioridade sobre uma pergunta de conceito genérica —
@@ -10166,63 +10268,98 @@ function classificarIntencaoAssistente(textoOriginal, ctx){
   // compra ("pensando em comprar X"), que tem prioridade mesmo se X já
   // fizer parte da carteira — a intenção ali é decidir, não consultar.
   if(ativo && testa(['custo medio','preco medio'])) return {id:'custo_medio', ticker:ativo.ticker};
-  if(testa(['seria interessante','vale a pena eu','vale a pena comprar','deveria comprar','pensando em comprar','pensando em investir em','penso em comprar'])) return {id:'considerar_compra', ticker: ativo?ativo.ticker:null, usarUltimoTicker: !ativo};
-  if(testa(['pensando em vender','deveria vender','vale a pena vender','penso em vender'])) return {id:'considerar_venda', ticker: ativo?ativo.ticker:null, usarUltimoTicker: !ativo};
+  if(testa(['seria interessante','vale a pena eu','vale a pena comprar','deveria comprar','pensando em comprar','pensando em investir em','penso em comprar','quero comprar mais','quero colocar mais dinheiro','e se eu comprar mais'])) return {id:'considerar_compra', ticker: ativo?ativo.ticker:null, usarUltimoTicker: !ativo};
+  if(testa(['pensando em vender','deveria vender','vale a pena vender','penso em vender','quero vender','e se eu vender'])) return {id:'considerar_venda', ticker: ativo?ativo.ticker:null, usarUltimoTicker: !ativo};
   if(ativo) return { id:'ativo', ticker:ativo.ticker, possuido:ativo.possuido };
 
+  // "Quanto eu tenho?" / "Quanto tenho?" (sem mencionar nenhum ativo) é
+  // sempre sobre o patrimônio total, checado ANTES da continuação curta
+  // "eu tenho?" para nunca ser sequestrado por ela.
+  if(/^quanto (eu )?tenho\s*$/.test(t) && !ativo) return {id:'patrimonio'};
+
   // Referências que dependem do último ativo mencionado na conversa
-  // ("Eu tenho?").
-  if(testa(['eu tenho','possuo isso','tenho isso','tenho esse','ja tenho'])) return {id:'ativo', usarUltimoTicker:true};
+  // ("Eu tenho?") — só para mensagens realmente curtas E quando já existe
+  // um ativo em contexto, senão "Quanto eu tenho?" (uma pergunta completa
+  // sobre patrimônio) seria incorretamente tratada como esta continuação.
+  const palavrasMsg = t.split(' ').filter(Boolean).length;
+  if(palavrasMsg<=3 && assistantUltimoTicker && testa(['eu tenho','possuo isso','tenho isso','tenho esse','ja tenho'])) return {id:'ativo', usarUltimoTicker:true};
 
   if(perguntaConceito) return {id:'educacao'};
 
   // Histórico e diagnóstico temporal — checados antes das intenções de
   // "estado atual" (ex.: "quando comecei a investir" não é sobre RV hoje).
-  if(testa(['quando comecei','desde o comeco','desde que comecei'])) return {id:'historico_geral'};
+  if(testa(['quando comecei','desde o comeco','desde que comecei']) || /quanto (eu )?tinha (antes|ha)/.test(t) || /como estava minha carteira/.test(t) || /minha carteira (cresceu|evoluiu)/.test(t) || /em que mes investi mais/.test(t) || /quando minha carteira mais cresceu/.test(t) || /qual foi meu (melhor|pior) mes/.test(t)) return {id:'historico_geral'};
+  if(/o que causou meu crescimento|meu crescimento veio dos aportes/.test(t)) return {id:'causa_patrimonio'};
+  if(/^por que cresceu\??$/.test(t)) return {id:'causa_patrimonio'};
   if(testa(['quando comecei a comprar acoes','comecei a investir em acoes','comecei a comprar acoes'])) return {id:'historico_acoes'};
-  if(testa(['aportando consistentemente','consistencia dos meus aportes','estou aportando bem','aporto com regularidade'])) return {id:'consistencia_aportes'};
+  if(testa(['aportando consistentemente','consistencia dos meus aportes','estou aportando bem','aporto com regularidade']) || /aportando (regularmente|com regularidade)/.test(t) || /(tenho sido|estou sendo) consistente/.test(t)) return {id:'consistencia_aportes'};
   if(testa(['ficando mais agressiv','mais ações recentemente','mais acoes recentemente','minha concentracao aumentou','aumentei minha exposicao','mudou minha estrategia','como minha estrategia mudou','como minha carteira mudou'])) return {id:'evolucao_estrategia'};
-  if(testa(['estou evoluindo','melhor que antes','esta melhorando','minha evolucao esta consistente','estou progredindo','acho que estou evoluindo','evoluindo bem'])) return {id:'diagnostico_evolucao'};
+  if(testa(['estou evoluindo','melhor que antes','esta melhorando','minha evolucao','estou progredindo','acho que estou evoluindo','evoluindo bem','fazendo um bom trabalho','estou indo bem']) || /bolso.*cresc|bolso.*indo bem|ficando mais rico|dinheiro.*(aument|cresc)|dinheirinho.*cresc|(^| )acumulando(\s|$)|construindo (patrimonio|alguma coisa)|juntando (dinheiro|uma grana)|patrimonio.*andando|grana.*andando.*frente|evoluindo financeiramente|indo pra frente|como (ta|tá|esta) meu bolso|to crescendo\??$|progredindo de verdade|vida financeira.*melhorando/.test(t)) return {id:'diagnostico_evolucao'};
 
   // Afirmações espontâneas — o utilizador nem sempre pergunta, mas está
   // abrindo espaço para o Assistente ajudar com dados reais.
-  if(testa(['preocupado com minha carteira','preocupado com meu patrimonio','tenho medo de perder dinheiro','medo de perder dinheiro'])) return {id:'preocupado_carteira'};
+  if(testa(['preocupado com minha carteira','preocupado com meu patrimonio','tenho medo de perder dinheiro','medo de perder dinheiro','estou inseguro','nao estou satisfeito','medo de estar fazendo errado','nao gosto de ver a carteira cair','carteira muito conservadora','carteira muito agressiva']) || /to (meio )?perdido|nao sei se to fazendo certo|acho que to exagerando|nao gostei desse resultado|isso me assustou|to satisfeito|acho que to indo bem|to com medo|nao sei se fiz a escolha certa|me deixou incomodado|confiante na minha estrategia|to nervoso com|to aliviado|fiquei surpreso com esse resultado/.test(t)) return {id:'preocupado_carteira'};
+  if(testa(['concentrado em bancos','concentracao em bancos','muito concentrado em bancos'])) return {id:'confirmar_setor', setor:'bancos'};
+  if(testa(['por que meu patrimonio cresceu','por que meu patrimonio aumentou','porque meu patrimonio cresceu'])) return {id:'causa_patrimonio'};
+  if(testa(['por que minha renda variavel aumentou','por que minha renda variavel cresceu','porque minha renda variavel subiu'])) return {id:'causa_rv'};
+  if(testa(['estou muito conservador','conservador demais','estou muito agressivo','agressivo demais','estou diversificando'])) return {id:'opiniao_perfil'};
+  if(testa(['o que voce acha','oque voce acha','voce acha','faz sentido','e uma boa ideia','estou fazendo certo','voce faria isso','vale a pena','o que voce faria','no meu lugar','fazendo tudo errado','fazendo errado','mudaria alguma coisa','ta bom assim','esta bom assim'])) return {id:'opiniao'};
+  if(testa(['quero diversificar','preciso diversificar','minha diversificacao','como posso diversificar']) || /espalhado o suficiente|ovos em varias cestas|diversificando direito|bem distribuida|tudo muito junto|dependendo demais de (um setor|uma acao)|investimentos diferentes o suficiente|carteira.*equilibrada|espalhado o bastante|redondinha|espalhado direitinho|investimentos.*variados|tipos de ativos|bichos diferentes|numa cesta so|repensar minha estrategia|segurar minhas posicoes|reequilibrar tudo|mudar de abordagem|parar de comprar tanto/.test(t)) return {id:'opiniao_perfil'};
+  if(/muito banco na carteira|tudo num ativo|tudo em um ativo/.test(t)) return {id:'concentracao'};
+  if(testa(['quero ficar mais agressivo','quero ser mais agressivo','quero assumir mais risco','quero investir de forma mais agressiva','quero reduzir risco','quero aumentar risco'])) return {id:'opiniao_perfil'};
   if(testa(['o que mais te preocupa','o que te preocupa'])) return {id:'pontos_atencao'};
   if(testa(['estou investindo pouco','invisto pouco','coloco pouco dinheiro'])) return {id:'investindo_pouco'};
   if(testa(['quero aumentar minha renda fixa','aumentar renda fixa','quero mais renda fixa'])) return {id:'aumentar_rf'};
   if(testa(['nao gosto de tanta oscilacao','nao gosto de oscilacao','naoo gosto de volatilidade'])) return {id:'nao_gosta_oscilacao'};
   if(testa(['quero comecar a investir em fiis','comecar a investir em fiis','quero investir em fiis'])) return {id:'comecar_categoria', categoria:'fii'};
+  if(testa(['quero comecar a investir','quero comecar na bolsa'])) return {id:'rv'};
   if(testa(['maior aporte','melhor periodo','pior periodo','maior fase de aportes'])) return {id:'historico_geral'};
 
   // Referências ordinais à posição ("qual minha maior posição", depois "e a
   // segunda?") — usa sempre o ranking real de computeConcentracaoAtivo().
-  if(testa(['minha maior posicao','qual e minha maior','qual minha maior'])) return {id:'ranking_posicao', ordinal:1, ticker: ctx.conc[0]?ctx.conc[0].ticker:null};
+  // "Cadê meu maior ganho?" / "qual foi meu melhor investimento?" — família
+  // semântica de destaque/resultado por ativo, checada antes do ranking por
+  // peso (que é sobre TAMANHO da posição, não sobre RESULTADO).
+  if(/cade meu maior ganho|onde eu mais ganhei|o que mais me deu dinheiro|qual foi meu melhor investimento|qual foi o que mais rendeu|onde eu me sai melhor|qual foi meu destaque|o que ta puxando minha carteira|quem ta carregando minha carteira|qual ta fazendo mais dinheiro|qual ta me dando mais retorno|onde ta meu melhor resultado|me deu mais alegria|me surpreendeu positivamente|carro chefe da minha carteira|jogada mais certeira/.test(t)) return {id:'melhor_pior_ativo', ordem:'melhor'};
+  if(/qual foi meu pior investimento|onde eu mais perdi|o que mais me tirou dinheiro|me decepcionou mais|pior escolha ate agora/.test(t)) return {id:'melhor_pior_ativo', ordem:'pior'};
+
+  // Perguntas sobre a capacidade/confiabilidade do próprio Assistente
+  // (não são perguntas de investimento).
+  if(/ce entende disso|voce manja de investimento|voce manja mesmo|voce sabe analisar isso|voce entende minha carteira|voce consegue ver isso|da pra voce analisar|voce sabe o que ta fazendo|o que voce consegue fazer|voce consegue analisar|voce consegue simular|voce consegue comparar|voce ta craque nisso|posso confiar no que voce/.test(t)) return {id:'capacidade_assistente'};
+  if(/isso aqui e confiavel|isso e de verdade\\??$|esses numeros sao reais|isso aqui e meu mesmo|esse valor e atualizado|esse numero veio de onde|voce ta inventando isso|isso e baseado nos meus dados|essa simulacao mudou alguma coisa|voce mexeu na minha carteira|voce registrou alguma coisa|voce ta usando (minha carteira|meus numeros|meus dados)|voce alterou alguma coisa|voce ta vendo meus numeros de verdade|chute ou e real|isso que voce mostrou/.test(t)) return {id:'transparencia_dados'};
+
+  if(testa(['minha maior posicao','qual e minha maior','qual minha maior','e a primeira'])) return {id:'ranking_posicao', ordinal:1, ticker: ctx.conc[0]?ctx.conc[0].ticker:null};
   if(testa(['segunda maior','a segunda posicao','e a segunda'])) return {id:'ranking_posicao', ordinal:2, ticker: ctx.conc[1]?ctx.conc[1].ticker:null};
   if(testa(['terceira maior','a terceira posicao','e a terceira'])) return {id:'ranking_posicao', ordinal:3, ticker: ctx.conc[2]?ctx.conc[2].ticker:null};
   if(testa(['minha menor posicao','a menor posicao'])) return {id:'ranking_posicao', ordinal:-1, ticker: ctx.conc.length?ctx.conc[ctx.conc.length-1].ticker:null};
 
-  if(testa(['analis','como esta minha carteira','como ta minha carteira','visao geral','resumo da carteira','como esta a carteira'])) return {id:'analise_completa'};
+  if(testa(['analis','como esta minha carteira','como ta minha carteira','visao geral','resumo da carteira','como esta a carteira','vida financeira','minha situacao financeira','como estou financeiramente','estou financeiramente'])) return {id:'analise_completa'};
+  if(testa(['quero ganhar mais','quero mais retorno'])) return {id:'opiniao_perfil'};
   if(testa(['o que posso melhorar','me ajuda a melhorar','como melhoro'])) return {id:'melhorar'};
   if(testa(['ponto de atencao','pontos de atencao','o que esta errado','problema na carteira','problemas na carteira'])) return {id:'pontos_atencao'};
   if(testa(['fazendo bem','pontos positivos','o que esta bom','o que ta bom'])) return {id:'pontos_positivos'};
   if(testa(['twr'])) return {id:'twr'};
   if(testa(['xirr'])) return {id:'xirr'};
   if(testa(['custo medio','preco medio'])) return {id:'custo_medio'};
-  if(testa(['dividend','provento',' jcp'])) return {id:'dividendos'};
-  if(testaFuzzy(['saude'],1) || testa(['saude patrim','indice de saude'])) return {id:'saude'};
+  if(testa(['dividend','provento',' jcp']) || /quanto recebi\b/.test(t) || /caiu na (minha )?conta|investimentos me pagaram|ativos me deram|recebi sem vender|entrou de dividendos|recebendo renda dos meus investimentos|quem (mais )?me pagou|investimentos.*me pagando|qual me paga mais|me sustentando|melhor pagador|renda passiva|vivendo de renda/.test(t)) return {id:'dividendos'};
+  if(testaFuzzy(['saude'],1) || testa(['saude patrim','indice de saude']) || /minha pontuacao|qual (meu|minha) score/.test(t)) return {id:'saude'};
   if(testa(['radar'])) return {id:'radar'};
   if(testa(['selo','conquista','medalha'])) return {id:'selos'};
-  if(testa(['concentrad','concentrac','maior risco','meu risco'])) return {id:'concentracao'};
+  if(testa(['concentrad','concentrac','maior risco','meu risco']) || /preso numa coisa so|tudo concentrado|dinheiro demais num lugar|apostando demais|algo grande demais|dependente de (algo|uma coisa|uma empresa)|ovos.*mesma cesta|posicao.*exagerada|pesando demais|mais exposto|coisa que ta exagerada|pe atras numa posicao|carregando tudo sozinha|coisa so.*dominando|depende de um ativo so|quase tudo numa empresa|excesso em algum lugar|mais vulneravel|muita coisa em uma acao|muita coisa numa acao/.test(t)) return {id:'concentracao'};
   if(testa(['alocac','distribuic'])) return {id:'alocacao'};
-  if(testa(['perfil'])) return {id:'perfil'};
+  if(testa(['perfil']) || /^sou (conservador|moderado|arrojado)/.test(t) || /minha carteira esta mais agressiva|assumindo mais risco do que deveria/.test(t)) return {id:'perfil'};
+  if(/quanto falta/.test(t)){
+    const valorFalta = assistExtrairValor(textoOriginal);
+    if(valorFalta) return {id:'meta_valor_generico', valorMeta:valorFalta};
+  }
   if(testa(['meta','falta pra','falta para','falta pro','faltam'])) return {id:'metas'};
-  if(testa(['renda fix','rdb','cdb','tesouro','lci','lca','cri','cra','debenture',' rf ']) || t==='rf') return {id:'rf'};
-  if(testa(['renda variavel','acoes','ações','bolsa','fiis','etf','bdr',' rv ']) || t==='rv') return {id:'rv'};
+  if(testa(['renda fix','rdb','cdb','tesouro','lci','lca','cri','cra','debenture',' rf ']) || t==='rf' || /qual produto.*retorno/.test(t) || /muito na renda fixa|dinheiro demais parado|rf (ta |esta )?boa|conservador demais|quanto (tenho )?guardado|quanto (ta |esta )?protegido|rendendo sem (eu )?fazer nada|dinheiro seguro.*cresc|colocar mais no seguro|vale a pena continuar na renda fixa|dinheiro parado.*rendendo|careta demais|guardado com seguranca|parte segura.*ok|dinheiro sobrando parado|vale continuar.*parte segura|tenho em cada produto/.test(t)) return {id:'rf'};
+  if(testa(['renda variavel','acoes','ações','bolsa','fiis','etf','bdr',' rv ']) || t==='rv' || /tenho muito risco\??$/.test(t) || /assumindo risco demais/.test(t) || /pesado nas acoes|muita bolsa|exposto a bolsa|arriscando muito nas acoes|pouca renda variavel|deveria ter mais bolsa|acoes.*indo bem|parte mais arriscada|quanto.*na bolsa|me arriscando demais|muito agressivo|(ta|esta) perigoso|tranquilo demais|jogando muito pesado|dinheiro demais em coisa arriscada|isso pode dar ruim|to protegido|quanto (eu )?posso perder|aguenta uma queda|se der uma queda|limite do risco|me dar mal|bomba relogio|mercado despencar|sendo imprudente|sob controle.*risco|perder num dia ruim|risco.*pequena|acoes suficientes/.test(t)) return {id:'rv'};
   if(testa(['retirei','retirad','saquei','saque'])) return {id:'retiradas'};
-  if(testa(['aportei','aportes','aporte','coloquei','ja investi','quanto investi'])) return {id:'aportes'};
-  if(testaFuzzy(['rentabilidade'],3) || testa(['rendiment','rentabil','ganhei','perdi','resultado','performance','desempenho'])) return {id:'performance'};
-  if(testaFuzzy(['patrimonio'],2) || testa(['patrim'])) return {id:'patrimonio'};
-  if(testa(['oi','ola','opa','eae','bom dia','boa tarde','boa noite'])) return {id:'saudacao'};
+  if(testa(['aportei','aportes','aporte','coloquei','ja investi','quanto investi']) || /aportando (pouco|demais|o suficiente|todo mes)/.test(t) || /coloc(ando|ei) dinheiro/.test(t) || /quant(os|o).*(mes|meses).*(investi|aportei)/.test(t) || /venho investindo|invisto por mes|apliquei na carteira|investi nos ultimos meses/.test(t) || /colocando dinheiro suficiente|ritmo (ta |esta )?bom|conseguindo aportar|colocando cada vez mais|diminuindo (meus )?aportes|aportes (tao|estao) crescendo|mantendo o ritmo|meu ritmo|devo aportar mais|deveria aportar mais|invisto o suficiente|contribuindo (direito |bem )?pra carteira|habito de investir|colocando uma grana|guardar dinheiro/.test(t)) return {id:'aportes'};
+  if(testaFuzzy(['rentabilidade'],3) || testa(['rendiment','rentabil','ganhei','perdi','resultado','performance','desempenho','meus investimentos','estou ganhando']) || /carteira rendeu|meu retorno|dando lucro|bom retorno|retorno real|positivo ou negativo|qual metrica|minha carteira caiu/.test(t)) return {id:'performance'};
+  if(testaFuzzy(['patrimonio'],2) || testa(['patrim']) || /quanto (eu )?(ja )?(tenho|acumulei|construi|possuo)\b(?! em)/.test(t) || /(valor|total) da minha carteira/.test(t) || /minha carteira esta crescendo/.test(t) || /(como|to|tô) estou indo/.test(t) || /financeiramente|minhas financas/.test(t) || /estou bem financeiramente/.test(t) || /quanto dinheiro (eu )?tenho/.test(t) || /^qual (e |é )?meu total/.test(t) || /quanto vale minha carteira/.test(t)) return {id:'patrimonio'};
+  if(testa(['ola','opa','eae','bom dia','boa tarde','boa noite','tudo bem','me ajuda','pode me ajudar','vamos analisar','quero conversar']) || /\boi\b/.test(t)) return {id:'saudacao'};
   if(testa(['obrigad','valeu','falou','ate mais'])) return {id:'despedida'};
   return {id:'desconhecido'};
 }
@@ -10398,10 +10535,15 @@ const ASSIST_RESPOSTAS = {
       return ASSIST_RESPOSTAS.twr(ctx, {}, ultimoTicker, textoOriginal, 'tecnico') + '\n\n' + ASSIST_RESPOSTAS.xirr(ctx, {}, ultimoTicker, textoOriginal, 'tecnico');
     }
     const fnAnterior = ASSIST_RESPOSTAS[assistantUltimaMetrica];
-    if(fnAnterior){
+    if(fnAnterior && assistantUltimoIntentObj){
       try{
-        const resp = fnAnterior(ctx, {ticker:ultimoTicker}, ultimoTicker, textoOriginal, 'tecnico');
-        return typeof resp==='object' ? resp.texto : resp;
+        const resp = fnAnterior(ctx, assistantUltimoIntentObj, ultimoTicker, textoOriginal, 'tecnico');
+        const texto = typeof resp==='object' ? resp.texto : resp;
+        // Se a função ainda não varia por profundidade, o texto sai
+        // idêntico ao anterior — nunca repetir a mesma resposta como se
+        // fosse uma explicação, é melhor reconhecer o limite.
+        if(texto && texto!==assistantUltimaRespostaTexto) return texto;
+        if(texto) return texto + '\n\nNão tenho uma explicação mais técnica além dessa para esse dado específico, mas posso detalhar outra parte da sua carteira se ajudar.';
       }catch(e){}
     }
     return 'Pode me lembrar sobre o que você quer que eu aprofunde?';
@@ -10414,23 +10556,105 @@ const ASSIST_RESPOSTAS = {
     if(i.setor==='bancos'){
       return ehBanco
         ? `Sim, os seus dados confirmam isso: ${maior.ticker} (um banco) é a sua maior posição, com ${fmtNum(maior.peso.toFixed(1))}% da Renda Variável.`
-        : `Na verdade não, pelos seus dados a maior concentração está em ${maior.ticker}, que não é do setor bancário.`;
+        : `A concentração existe, mas não principalmente em bancos. A maior posição é ${maior.ticker}, com ${fmtNum(maior.peso.toFixed(1))}% da Renda Variável, que não é do setor bancário.`;
     }
     return `Sua maior posição é ${maior.ticker}, com ${fmtNum(maior.peso.toFixed(1))}% da Renda Variável.`;
   },
-  peso_ticker(ctx, i){
+  peso_ticker(ctx, i, ultimoTicker, textoOriginal, profundidade){
     if(!i.ticker) return 'De qual ativo você quer saber o peso na carteira?';
     const item = ctx.conc.find(c=>c.ticker===i.ticker);
     if(!item) return `${i.ticker} não representa nada na sua Renda Variável no momento (sem posição).`;
     const p = ctx.positions.find(x=>x.ticker===i.ticker);
-    return `**${i.ticker}** representa **${fmtNum(item.peso.toFixed(1))}%** da sua Renda Variável${p?`, valendo ${fmtMoney(p.marketValue)}`:''}.`;
+    let r = `**${i.ticker}** representa **${fmtNum(item.peso.toFixed(1))}%** da sua Renda Variável${p?`, valendo ${fmtMoney(p.marketValue)}`:''}.`;
+    if(profundidade==='tecnico' && p){
+      r += `\n\nEsse percentual é calculado dividindo o valor de mercado de ${i.ticker} (${fmtMoney(p.marketValue)}) pelo valor total da sua Renda Variável (${fmtMoney(ctx.rv.marketValue)}), não pelo patrimônio total.`;
+    }
+    return r;
+  },
+  pedir_esclarecimento(ctx, i){
+    return i.pergunta || 'Pode me contar um pouco mais sobre o que você quer saber?';
+  },
+  simplificar(ctx, i, ultimoTicker, textoOriginal){
+    // Nunca repete a resposta anterior — reformula na profundidade básica,
+    // reaproveitando o objeto de intenção completo (nunca só o ticker).
+    const fnAnterior = ASSIST_RESPOSTAS[assistantUltimaMetrica];
+    if(fnAnterior && assistantUltimoIntentObj){
+      try{
+        const resp = fnAnterior(ctx, assistantUltimoIntentObj, ultimoTicker, textoOriginal, 'basico');
+        const texto = typeof resp==='object' ? resp.texto : resp;
+        if(texto && texto!==assistantUltimaRespostaTexto) return texto;
+      }catch(e){}
+    }
+    return assistantUltimaRespostaTexto
+      ? 'Deixa eu simplificar: ' + assistantUltimaRespostaTexto.split('\n')[0].replace(/\*\*/g,'')
+      : 'Pode me contar de novo o que você quer entender?';
+  },
+  simulacao_classe(ctx, i){
+    const nomeClasse = i.classe==='rv' ? 'Renda Variável' : 'Renda Fixa';
+    const atual = i.classe==='rv' ? ctx.rv.marketValue : ctx.rf.saldo;
+    const novoTotal = ctx.patr.patrimonio + i.valor;
+    const novoValorClasse = atual + i.valor;
+    const pctAntes = ctx.patr.patrimonio>0 ? (atual/ctx.patr.patrimonio)*100 : null;
+    const pctDepois = novoTotal>0 ? (novoValorClasse/novoTotal)*100 : null;
+    let r = `**Hoje:** ${nomeClasse} é ${fmtMoney(atual)}${pctAntes!==null?` (${fmtNum(pctAntes.toFixed(1))}% do patrimônio)`:''}.\n`;
+    r += `**Se você colocasse mais ${fmtMoney(i.valor)}:** ${nomeClasse} passaria para aproximadamente ${fmtMoney(novoValorClasse)}${pctDepois!==null?`, cerca de ${fmtNum(pctDepois.toFixed(1))}% do patrimônio`:''}.\n`;
+    r += '\nIsso é uma simulação hipotética, não altera a sua carteira real.';
+    return r;
+  },
+  causa_patrimonio(ctx){
+    const partes = [];
+    if(ctx.patr.aportesExternos>0) partes.push(`aportes (${fmtMoney(ctx.patr.aportesExternos)} colocados por você)`);
+    if(ctx.rv.dividends>0) partes.push(`dividendos recebidos (${fmtMoney(ctx.rv.dividends)})`);
+    const valorizacao = ctx.rv.unrealized+ctx.rv.realized;
+    if(Math.abs(valorizacao)>0.01) partes.push(`${valorizacao>=0?'valorização':'desvalorização'} da Renda Variável (${fmtMoneySigned(valorizacao)})`);
+    if(ctx.rf.rendimento>0) partes.push(`rendimento da Renda Fixa (${fmtMoney(ctx.rf.rendimento)})`);
+    if(partes.length===0) return ASSIST_DISCLAIMER_HISTORICO;
+    return `Seu patrimônio de ${fmtMoney(ctx.patr.patrimonio)} vem principalmente de: ${partes.join(', ')}.`;
+  },
+  causa_rv(ctx){
+    if(ctx.rv.capital<=0) return 'Você ainda não tem posições de Renda Variável para eu decompor a evolução.';
+    const partes = [`Capital investido (o que você aportou): ${fmtMoney(ctx.rv.capital)}`];
+    partes.push(`Valorização não realizada: ${fmtMoneySigned(ctx.rv.unrealized)}`);
+    if(ctx.rv.realized!==0) partes.push(`Resultado já realizado (vendas): ${fmtMoneySigned(ctx.rv.realized)}`);
+    if(ctx.rv.dividends>0) partes.push(`Dividendos: ${fmtMoney(ctx.rv.dividends)}`);
+    return `Sua Renda Variável hoje vale ${fmtMoney(ctx.rv.marketValue)}. ${partes.join('. ')}.`;
+  },
+  opiniao(ctx, i, ultimoTicker, textoOriginal){
+    // "O que você acha?" / "Faz sentido?" / "Vale a pena?" — primeiro olha
+    // o ASSUNTO da própria pergunta (diversificação, concentração, risco),
+    // depois o contexto da conversa, só then cai num diagnóstico geral.
+    const t = normalizarTexto(textoOriginal||'');
+    if(/divers/.test(t)) return ASSIST_RESPOSTAS.opiniao_perfil(ctx);
+    if(/concentrad|concentrac/.test(t)) return ASSIST_RESPOSTAS.concentracao(ctx);
+    if(/indo bem|caminho certo/.test(t)) return ASSIST_RESPOSTAS.diagnostico_evolucao(ctx);
+    if(ultimoTicker && (assistantUltimaMetrica==='considerar_compra' || assistantUltimaMetrica==='risco_se_comprar' || assistantUltimaMetrica==='simulacao_valor')){
+      return ASSIST_RESPOSTAS.considerar_compra(ctx, {ticker:ultimoTicker});
+    }
+    return ASSIST_RESPOSTAS.diagnostico_evolucao(ctx);
+  },
+  opiniao_perfil(ctx){
+    const partes = [];
+    if(ctx.perfil){
+      const p = PERFIS_INVESTIDOR[ctx.perfil.tipo];
+      partes.push(`Seu perfil declarado é **${p.nome}**.`);
+      if(ctx.bucket){
+        const bp = PERFIS_INVESTIDOR[ctx.bucket];
+        partes.push(ctx.bucket===ctx.perfil.tipo
+          ? 'A composição real da sua carteira está alinhada com isso.'
+          : `A composição real da sua carteira está mais próxima de um perfil ${bp.nome.toLowerCase()}, uma diferença real entre o que você declarou e o que os dados mostram.`);
+      }
+    }
+    if(ctx.conc.length>0) partes.push(`Sobre diversificação: você tem ${ctx.conc.length} ativo(s) em Renda Variável, e a maior posição (${ctx.conc[0].ticker}) representa ${fmtNum(ctx.conc[0].peso.toFixed(1))}% dela.`);
+    if(ctx.alloc.total>0) partes.push(`No total, ${fmtNum(ctx.alloc.rfPct.toFixed(1))}% está em Renda Fixa e ${fmtNum(ctx.alloc.rvPct.toFixed(1))}% em Renda Variável.`);
+    if(partes.length===0) return ASSIST_DISCLAIMER_SEM_DADOS;
+    return partes.join(' ');
   },
   preocupado_carteira(ctx){
     const atencao = ctx.insights.filter(i=>i.tipo==='atencao'||i.tipo==='critica');
     const positivos = ctx.insights.filter(i=>i.tipo==='positivo');
-    let r = 'Entendo. Vamos olhar os dados reais para ver o que realmente merece atenção. ';
-    if(atencao.length===0) r += 'Pelos dados disponíveis, não encontrei nenhum ponto crítico agora, isso é um bom sinal.';
-    else r += `Hoje há ${atencao.length} ponto(s) de atenção real(is) nos seus dados: ${atencao[0].texto.replace(/<[^>]+>/g,'')}`;
+    let r = '';
+    if(atencao.length===0) r = 'Pelos dados disponíveis, não encontrei nenhum ponto crítico agora, isso é um bom sinal.';
+    else r = `Hoje há ${atencao.length} ponto(s) de atenção real(is) nos seus dados: ${atencao[0].texto.replace(/<[^>]+>/g,'')}`;
     if(positivos.length>0) r += ` Por outro lado, ${positivos.length} ponto(s) positivo(s) também aparecem nos seus dados.`;
     r += ' Se quiser, posso detalhar qualquer um desses pontos.';
     return r;
@@ -10447,10 +10671,10 @@ const ASSIST_RESPOSTAS = {
     return r;
   },
   nao_gosta_oscilacao(ctx){
-    let r = 'Entendo, isso é um dado importante sobre você. ';
-    if(ctx.alloc.total>0) r += `Hoje a sua carteira tem ${fmtNum(ctx.alloc.rvPct.toFixed(1))}% em Renda Variável (a parte que mais oscila) e ${fmtNum(ctx.alloc.rfPct.toFixed(1))}% em Renda Fixa.`;
+    let r = '';
+    if(ctx.alloc.total>0) r = `Hoje a sua carteira tem ${fmtNum(ctx.alloc.rvPct.toFixed(1))}% em Renda Variável (a parte que mais oscila) e ${fmtNum(ctx.alloc.rfPct.toFixed(1))}% em Renda Fixa.`;
     if(ctx.perfil) r += ` Seu perfil declarado é ${PERFIS_INVESTIDOR[ctx.perfil.tipo].nome}, vale conferir se combina com essa preferência por menos oscilação.`;
-    return r;
+    return r || 'Ainda não tenho dados suficientes da sua alocação para avaliar isso.';
   },
   comecar_categoria(ctx, i){
     const nomes = { fii:'Fundos Imobiliários (FIIs)' };
@@ -10561,7 +10785,22 @@ const ASSIST_RESPOSTAS = {
     partes.push(ctx.xirr!==null ? `XIRR: ${fmtPct(ctx.xirr)}` : `XIRR: ${ASSIST_DISCLAIMER_HISTORICO}`);
     return partes.join('\n');
   },
-  ranking_posicao(ctx, i){
+  melhor_pior_ativo(ctx, i){
+    if(ctx.positions.length===0) return 'Você ainda não tem ativos de Renda Variável para eu comparar resultados.';
+    const comResultado = ctx.positions.filter(p=>p.hasRealPrice);
+    if(comResultado.length===0) return ASSIST_DISCLAIMER_SEM_DADOS+' (preços não atualizados para calcular resultado por ativo).';
+    const ordenados = [...comResultado].sort((a,b)=> i.ordem==='pior' ? a.totalResultPct-b.totalResultPct : b.totalResultPct-a.totalResultPct);
+    const alvo = ordenados[0];
+    const rotulo = i.ordem==='pior' ? 'pior resultado' : 'melhor resultado';
+    return `Seu ativo com ${rotulo} até agora é **${alvo.ticker}**, com ${fmtNum(alvo.totalResultPct.toFixed(1))}% (${fmtMoneySigned(alvo.totalResult)}). Isso é desempenho passado, não garante nada sobre o futuro.`;
+  },
+  capacidade_assistente(){
+    return 'Consigo consultar os dados reais da sua carteira no Patrium: patrimônio, posições, Renda Fixa, Renda Variável, histórico, dividendos, TWR, XIRR, concentração, metas, perfil e Saúde Patrimonial. Também explico conceitos financeiros e faço simulações hipotéticas (que nunca alteram a sua carteira de verdade). Não tenho cotações de mercado em tempo real além do que já está registado no Patrium, e não executo compra, venda ou qualquer alteração sozinho.';
+  },
+  transparencia_dados(ctx){
+    return 'Uso exclusivamente os dados que você já tem registados no Patrium — nada é inventado. Quando mostro um número da sua carteira, ele vem direto dos seus lançamentos reais. Quando faço uma simulação, deixo isso explícito e nunca altero nada de verdade. Quando explico um conceito, é conhecimento geral, sem depender dos seus dados.';
+  },
+  ranking_posicao(ctx, i, ultimoTicker, textoOriginal, profundidade){
     if(ctx.conc.length===0) return 'Você ainda não tem ativos de Renda Variável para eu ranquear.';
     const item = i.ordinal===-1 ? ctx.conc[ctx.conc.length-1] : ctx.conc[i.ordinal-1];
     if(!item) return `Você só tem ${ctx.conc.length} ativo(s) na Renda Variável, não há um "${i.ordinal}º maior" para mostrar.`;
@@ -10569,20 +10808,24 @@ const ASSIST_RESPOSTAS = {
     const rotulo = i.ordinal===-1 ? 'menor posição' : i.ordinal===1 ? 'maior posição' : `${i.ordinal}ª maior posição`;
     let r = `Sua ${rotulo} é **${item.ticker}**, representando ${fmtNum(item.peso.toFixed(1))}% da sua Renda Variável.`;
     if(posicao) r += `\nValor de mercado: ${fmtMoney(posicao.marketValue)}`;
+    if(profundidade==='tecnico') r += `\n\nO ranking é feito comparando o valor de mercado de cada ativo em Renda Variável, do maior para o menor — não considera Renda Fixa nem o patrimônio total, só a fatia em ações/FIIs/ETFs/BDRs.`;
     return r;
   },
-  concentracao(ctx){
+  concentracao(ctx, i, ultimoTicker, textoOriginal, profundidade){
     if(ctx.conc.length===0) return 'Você ainda não tem ativos de Renda Variável para avaliar concentração.';
     const maior = ctx.conc[0];
     let r = `Sua maior posição é **${maior.ticker}**, que representa **${fmtNum(maior.peso.toFixed(1))}%** da sua Renda Variável.`;
     if(maior.peso>=50) r += '\n\nIsso é uma concentração elevada, um ponto de atenção real: uma movimentação desse ativo tem bastante impacto no resultado da carteira.';
     else if(maior.peso>=30) r += '\n\nÉ uma concentração relevante, vale acompanhar.';
     else r += '\n\nÉ um nível de concentração saudável, sem depender demais de um único ativo.';
+    if(profundidade==='tecnico') r += `\n\nO percentual de concentração é sempre calculado sobre a Renda Variável (não sobre o patrimônio total): valor do ativo dividido pela soma de todos os ativos em Renda Variável. Um patamar acima de 30-35% costuma ser considerado elevado, porque um único evento específico daquele ativo passa a mover boa parte do resultado da sua carteira de ações.`;
     return r;
   },
-  alocacao(ctx){
+  alocacao(ctx, i, ultimoTicker, textoOriginal, profundidade){
     if(ctx.alloc.total<=0) return ASSIST_DISCLAIMER_SEM_DADOS;
-    return `**Renda Fixa:** ${fmtNum(ctx.alloc.rfPct.toFixed(1))}% (${fmtMoney(ctx.alloc.rfTotal)})\n**Renda Variável:** ${fmtNum(ctx.alloc.rvPct.toFixed(1))}% (${fmtMoney(ctx.alloc.rvTotal)})`;
+    let r = `**Renda Fixa:** ${fmtNum(ctx.alloc.rfPct.toFixed(1))}% (${fmtMoney(ctx.alloc.rfTotal)})\n**Renda Variável:** ${fmtNum(ctx.alloc.rvPct.toFixed(1))}% (${fmtMoney(ctx.alloc.rvTotal)})`;
+    if(profundidade==='tecnico') r += `\n\nCada percentual é o saldo daquela classe (RF ou RV) dividido pelo patrimônio total (RF + RV + Caixa), recalculado toda vez que o patrimônio muda.`;
+    return r;
   },
   metas(ctx){
     if(ctx.metasPatr.length===0 && ctx.metasQtd.length===0) return 'Você ainda não criou nenhuma meta no Patrium. Pode criar uma meta patrimonial ou por quantidade de ativos na aba Ações.';
@@ -10655,7 +10898,8 @@ const ASSIST_RESPOSTAS = {
     return `Eu priorizaria ${atencao.length===1?'este ponto':'estes '+atencao.length+' pontos'}:\n\n${atencao.map((p,idx)=>`${idx+1}. ${p}`).join('\n\n')}`;
   },
   educacao(ctx, i, ultimoTicker, textoOriginal, profundidade){
-    const t = normalizarTexto(textoOriginal);
+    const textoBusca = (i&&i.textoOriginalOverride) || textoOriginal;
+    const t = normalizarTexto(textoBusca);
     const termo = CONCEITOS_FINANCEIROS.find(c=> t.includes(normalizarTexto(c.termo)));
     if(termo){
       // Prioriza dado pessoal + explicação juntos, quando o conceito tem
@@ -10664,12 +10908,16 @@ const ASSIST_RESPOSTAS = {
       // de profundidade decide o quanto de explicação entra além disso.
       const mapaIntentPessoal = { 'Patrimônio':'patrimonio', 'Aportes':'aportes', 'Retiradas':'retiradas', 'Custo médio':'custo_medio', 'Dividendos':'dividendos', 'Renda Fixa':'rf', 'Renda Variável':'rv', 'Alocação':'alocacao', 'Concentração':'concentracao', 'TWR':'twr', 'XIRR':'xirr', 'Saúde Patrimonial':'saude', 'Perfil do Investidor':'perfil', 'Radar do Investidor':'radar', 'Metas':'metas', 'Selos':'selos' };
       const intentPessoal = mapaIntentPessoal[termo.termo];
+      const forcarPessoal = i && i.forcarPessoal;
       let dadoPessoal = '';
-      if(profundidade!=='basico' && intentPessoal && ASSIST_RESPOSTAS[intentPessoal]){
+      if((profundidade!=='basico' || forcarPessoal) && intentPessoal && ASSIST_RESPOSTAS[intentPessoal]){
         try{ dadoPessoal = ASSIST_RESPOSTAS[intentPessoal](ctx, {}, ultimoTicker, textoOriginal, profundidade); if(typeof dadoPessoal==='object') dadoPessoal=dadoPessoal.texto; }catch(e){ dadoPessoal=''; }
       }
       const base = `**${termo.termo}**\n${termo.oque}`;
-      if(profundidade==='basico') return base;
+      if(profundidade==='basico' && !forcarPessoal){
+        assistantUltimoConceito = termo.termo; // guarda para um possível "e no meu caso?"
+        return base;
+      }
       if(profundidade==='tecnico'){
         let r = `${base}\n\n${termo.comoCalcula}\n\n**Como interpretar:** ${termo.comoInterpretar}\n\n**Quando ter cautela:** ${termo.quandoCautela}`;
         if(dadoPessoal) r += `\n\n**No seu caso:**\n${dadoPessoal}`;
@@ -10678,7 +10926,21 @@ const ASSIST_RESPOSTAS = {
       return dadoPessoal ? `${base}\n\n**No seu caso:**\n${dadoPessoal}` : `${base}\n\n${termo.comoCalcula}`;
     }
     const glossario = GLOSSARY_TERMS.find(g=> t.includes(normalizarTexto(g.termo)));
-    if(glossario) return `**${glossario.termo}**\n${glossario.def}`;
+    if(glossario){
+      // Alguns termos do glossário têm um equivalente pessoal real, mesmo
+      // não estando na lista principal de conceitos.
+      const mapaGlossarioPessoal = { 'Diversificação':'concentracao', 'Volatilidade':'concentracao', 'Liquidez':'rf' };
+      const intentPessoal = mapaGlossarioPessoal[glossario.termo];
+      assistantUltimoConceito = glossario.termo;
+      if(i && i.forcarPessoal && intentPessoal && ASSIST_RESPOSTAS[intentPessoal]){
+        try{
+          const resp = ASSIST_RESPOSTAS[intentPessoal](ctx, {}, ultimoTicker, textoOriginal, profundidade);
+          const texto = typeof resp==='object' ? resp.texto : resp;
+          return `**${glossario.termo}**\n${glossario.def}\n\n**No seu caso:**\n${texto}`;
+        }catch(e){}
+      }
+      return `**${glossario.termo}**\n${glossario.def}`;
+    }
     const extra = ASSIST_TERMOS_EXTRA.find(g=> t.includes(normalizarTexto(g.termo)));
     if(extra) return `**${extra.termo}**\n${extra.def}`;
     return 'Não reconheci esse termo específico. Pode me dizer de outra forma, ou explorar a aba Educação para o glossário completo.';
@@ -10774,12 +11036,16 @@ const ASSIST_NAVEGACAO = {
   ajuda_pdf:{ label:'Gerar relatório PDF', modal:'pdf' },
   ajuda_backup:{ label:'Abrir Backup e dados', modal:'backup' },
   historico_geral:{ label:'Ver Histórico', tab:'historico' },
+  causa_patrimonio:{ label:'Ver Dashboard', tab:'dashboard' },
+  causa_rv:{ label:'Abrir Ações', tab:'acoes' },
+  opiniao_perfil:{ label:'Ver Perfil', tab:'educacao' },
   historico_acoes:{ label:'Ver Histórico', tab:'historico' },
   consistencia_aportes:{ label:'Ver Histórico', tab:'historico' },
   evolucao_estrategia:{ label:'Ver Alocação', tab:'alocacao' },
   diagnostico_evolucao:{ label:'Ver Análises', tab:'analises' },
   considerar_compra:{ label:'Abrir Ações', tab:'acoes' },
   ranking_posicao:{ label:'Abrir Ações', tab:'acoes' },
+  melhor_pior_ativo:{ label:'Abrir Ações', tab:'acoes' },
 };
 // Detecta o nível de profundidade pedido pelo utilizador, tolerante a
 // acento/digitação (reaproveita normalizarTexto()), nunca obriga o
@@ -10812,11 +11078,13 @@ function detectarDoisTickers(textoOriginal, ctx){
 let assistantHistory = [];
 let assistantUltimoTicker = null;
 let assistantUltimaMetrica = null;      // id da última intenção "focada" (posicao/xirr/twr/concentracao/rf/rv/...)
+let assistantUltimoIntentObj = null;    // objeto de intenção completo do último turno (para "por quê?"/"não entendi" não perderem campos como ticker/categoria)
 let assistantUltimoRanking = null;      // último array ordenado usado (ex.: computeConcentracaoAtivo()), para "e a segunda?"
 let assistantUltimosComparados = null;  // ex.: ['rf','rv'] ou ['twr','xirr'] ou [tickerA, tickerB]
 let assistantUltimaRespostaTexto = null;
 let assistantUltimoValorMeta = null;    // último valor numérico de meta mencionado (ex.: 50000)
 let assistantUltimoValorSimulacaoMensal = null; // último valor de aporte mensal simulado (hipotético)
+let assistantUltimoConceito = null;     // último termo de CONCEITOS_FINANCEIROS explicado de forma genérica, para "e no meu caso?"
 // Extrai o primeiro valor em reais mencionado na frase ("500 reais", "4.500", "R$ 50 mil").
 function assistExtrairValor(texto){
   // Trabalha sobre o texto ORIGINAL (não normalizado), porque normalizarTexto()
@@ -10859,6 +11127,7 @@ function responderAssistente(textoOriginal){
   const acoes = (typeof resposta==='object' && resposta.acoes) ? resposta.acoes : (navPadrao ? [navPadrao] : []);
   // Atualiza o contexto da conversa para a próxima mensagem.
   assistantUltimaMetrica = intent.id;
+  assistantUltimoIntentObj = intent;
   assistantUltimaRespostaTexto = texto;
   if(intent.ranking) assistantUltimoRanking = intent.ranking;
   if(intent.comparados) assistantUltimosComparados = intent.comparados;
