@@ -12419,7 +12419,7 @@ async function init(){
 const SUPABASE_URL = 'https://acjbjocmwukmtocxudwg.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_bGaSjpWnKibqowcO1WTaA_lEKRwx4U';
 const PATRIUM_PRODUCT_ID = '63df3710-b1c6-11f1-ac16-9998ac7f49b1';
-const PRUMO_LOGIN_URL = 'https://prumo.bussolafinanceirays.com/login';
+const PATRIUM_LOGIN_URL = 'https://patrium.bussolafinanceirays.com/login';
 const supabaseAuthClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
 function authGateMostrarSemAcesso(){
@@ -12432,7 +12432,7 @@ function authGateMostrarSemAcesso(){
     const btn = document.createElement('a');
     btn.id = 'authGateVoltarBtn';
     btn.className = 'auth-gate-btn';
-    btn.href = PRUMO_LOGIN_URL;
+    btn.href = PATRIUM_LOGIN_URL;
     btn.textContent = 'Voltar para o login';
     box.appendChild(btn);
   }
@@ -12447,7 +12447,7 @@ function authGateMostrarErro(mensagem){
     const btn = document.createElement('a');
     btn.id = 'authGateVoltarBtn';
     btn.className = 'auth-gate-btn';
-    btn.href = PRUMO_LOGIN_URL;
+    btn.href = PATRIUM_LOGIN_URL;
     btn.textContent = 'Voltar para o login';
     box.appendChild(btn);
   }
@@ -12465,7 +12465,7 @@ async function verificarAcessoEIniciarPatrium(){
   }
   if(!session || !session.user){
     // Sem sessão autenticada: nunca chega a carregar o conteúdo do Patrium.
-    window.location.href = PRUMO_LOGIN_URL;
+    window.location.href = PATRIUM_LOGIN_URL;
     return;
   }
   let temAcessoAtivo = false;
