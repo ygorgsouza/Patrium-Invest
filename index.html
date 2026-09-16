@@ -1102,6 +1102,7 @@ a:focus-visible, [tabindex]:focus-visible, .help-cat-filter:focus-visible, .faq-
       <button class="icon-btn" id="btnRelatorioMensal" title="Relatório mensal em PDF">📄</button>
       <button class="icon-btn" id="themeToggle" title="Alternar tema">🌓</button>
       <button class="icon-btn" id="backupToggle" title="Backup e dados">⇅</button>
+      <button class="icon-btn" id="btnLogoutPatrium" title="Sair">⏻</button>
       <button class="btn btn-primary" id="btnNovoAporte">+ Novo investimento</button>
     </div>
   </div>
@@ -12495,6 +12496,24 @@ async function verificarAcessoEIniciarPatrium(){
   init();
 }
 verificarAcessoEIniciarPatrium();
+
+/* ===================== LOGOUT — Supabase Auth =====================
+   Usa a mesma instância supabaseAuthClient já criada acima para encerrar
+   a sessão e redireciona o utilizador para o login do Patrium. Nenhuma
+   outra funcionalidade foi alterada. */
+async function fazerLogoutPatrium(){
+  const btn = document.getElementById('btnLogoutPatrium');
+  if(btn){ btn.disabled = true; btn.style.opacity = '0.6'; btn.style.pointerEvents = 'none'; }
+  try{
+    const { error } = await supabaseAuthClient.auth.signOut();
+    if(error) console.error('Falha ao encerrar sessão do Supabase', error);
+  }catch(e){
+    console.error('Falha ao encerrar sessão do Supabase', e);
+  }finally{
+    window.location.href = PATRIUM_LOGIN_URL;
+  }
+}
+document.getElementById('btnLogoutPatrium').addEventListener('click', fazerLogoutPatrium);
 </script>
 </body>
 </html>
