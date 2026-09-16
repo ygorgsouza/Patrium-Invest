@@ -935,16 +935,21 @@ a:focus-visible, [tabindex]:focus-visible, .help-cat-filter:focus-visible, .faq-
 .onboard-logo-slot{ display:flex; justify-content:center; margin-bottom:18px; }
 
 /* ===================== ÍNDICE DE SAÚDE PATRIMONIAL ===================== */
-.indice-saude-score-wrap{ display:flex; align-items:center; gap:18px; margin-bottom:20px; padding-bottom:18px; border-bottom:1px solid var(--line-soft); }
+.indice-saude-score-wrap{ display:flex; align-items:center; gap:20px; margin-bottom:20px; padding-bottom:18px; border-bottom:1px solid var(--line-soft); }
 .indice-saude-score-ring{
-  flex:none; width:76px; height:76px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-  font-size:22px; font-weight:800; font-family:var(--font-mono, monospace); color:#fff;
+  flex:none; width:92px; height:92px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-mono, monospace); color:#fff;
   background:conic-gradient(var(--accent) calc(var(--pct,0) * 1%), var(--surface-3) 0);
   position:relative;
 }
-.indice-saude-score-ring::before{ content:""; position:absolute; inset:6px; border-radius:50%; background:var(--surface); }
-.indice-saude-score-ring span{ position:relative; color:var(--text); }
+.indice-saude-score-ring::before{ content:""; position:absolute; inset:7px; border-radius:50%; background:var(--surface); }
+.indice-saude-score-ring #indiceSaudeNumero{ position:relative; display:flex; flex-direction:column; align-items:center; line-height:1; }
+.indice-saude-score-ring .isr-num{ color:var(--text); font-size:25px; font-weight:800; }
+.indice-saude-score-ring .isr-den{ color:var(--text-faint); font-size:10px; font-weight:700; letter-spacing:.02em; margin-top:2px; }
 .indice-saude-status{ font-weight:800; font-size:16px; }
+@media (max-width:480px){
+  .indice-saude-score-wrap{ flex-direction:column; text-align:center; gap:12px; }
+}
 .indice-saude-sec-title{ font-weight:800; font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; margin:16px 0 8px; display:flex; align-items:center; gap:8px; }
 .indice-saude-item{ display:flex; gap:8px; align-items:flex-start; padding:6px 0; font-size:13px; line-height:1.5; }
 .indice-saude-item span{ flex:none; }
@@ -1051,6 +1056,9 @@ a:focus-visible, [tabindex]:focus-visible, .help-cat-filter:focus-visible, .faq-
       </div>
     </div>
     <div class="top-actions">
+      <button class="btn btn-sm" id="btnSeletorCarteira" title="Trocar carteira" style="display:flex; align-items:center; gap:6px; max-width:160px;">
+        <span>📁</span><span id="seletorCarteiraNome" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Minha carteira</span>
+      </button>
       <button class="icon-btn bell-wrap" id="btnCentralAlertas" title="Central de Alertas">🔔<span class="bell-badge hidden" id="bellBadgeCount">0</span></button>
       <button class="icon-btn" id="btnCentralAjuda" title="Central de Ajuda">❓</button>
       <button class="icon-btn" id="btnConfiguracoes" title="Configurações">⚙️</button>
@@ -1335,20 +1343,6 @@ a:focus-visible, [tabindex]:focus-visible, .help-cat-filter:focus-visible, .faq-
       </div>
     </div>
 
-    <!-- Metas patrimoniais — por VALOR em R$, complementares às metas de
-         quantidade abaixo. Reflete sempre o patrimônio já calculado pelo
-         Patrium (computePatrimonio()), nunca um valor próprio. -->
-    <div class="card" style="margin-bottom:20px;">
-      <div class="flex-between" style="flex-wrap:wrap; gap:12px; margin-bottom:14px;">
-        <div>
-          <h3 style="margin:0 0 4px; font-size:15px;">Metas patrimoniais<span class="info-dot" data-help-cat="Metas">?</span></h3>
-          <p class="section-hint mb-0">Um valor em reais que você quer alcançar de patrimônio total, com prazo opcional. Reflete automaticamente o seu patrimônio calculado.</p>
-        </div>
-        <button class="btn btn-primary" id="btnNovaMetaPatrimonial">+ Nova meta patrimonial</button>
-      </div>
-      <div id="metasPatrimoniaisLista"></div>
-    </div>
-
     <!-- Metas por quantidade de ativos — nunca uma meta de valor. A quantidade
          atual vem sempre da posição real; o valor em R$ é só uma estimativa
          auxiliar que muda com o preço, sem nunca alterar a meta em si. -->
@@ -1629,7 +1623,7 @@ a:focus-visible, [tabindex]:focus-visible, .help-cat-filter:focus-visible, .faq-
       </div>
       <div class="table-wrap">
         <table class="data" id="tabelaResultadoMensal">
-          <thead><tr><th>Mês</th><th>Patrimônio inicial</th><th>Aportes</th><th>Retiradas</th><th>Rendimento</th><th>Patrimônio final</th><th>Rentabilidade</th></tr></thead>
+          <thead><tr><th>Mês</th><th>Patrimônio inicial</th><th>Aportes (líquido)</th><th>Retiradas</th><th>Rendimento</th><th>Patrimônio final</th><th>Rentabilidade</th></tr></thead>
           <tbody id="resultadoMensalTbody"></tbody>
         </table>
       </div>
@@ -1672,6 +1666,12 @@ a:focus-visible, [tabindex]:focus-visible, .help-cat-filter:focus-visible, .faq-
         <h3 style="margin:0 0 12px; font-size:15px;">Evolução do aportado por classe</h3>
         <div class="chart-box"><canvas id="chartRfVsRv"></canvas></div>
       </div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <h3 style="margin:0 0 4px; font-size:15px;">Evolução do valor por classe, Renda Fixa × Renda Variável</h3>
+      <p class="section-hint" style="margin-bottom:12px;">Diferente do gráfico de aportado acima: aqui é o valor real de mercado de cada classe em cada momento (saldo/cotação), não só o quanto foi colocado.</p>
+      <div class="chart-box"><canvas id="chartValorPorClasse"></canvas></div>
     </div>
 
     <div class="card">
@@ -1942,6 +1942,21 @@ a:focus-visible, [tabindex]:focus-visible, .help-cat-filter:focus-visible, .faq-
     </div>
 
     <div class="grid grid-3" id="projResumo"></div>
+
+    <!-- Metas patrimoniais — por VALOR em R$. Movida de Ações para Projeções
+         (mesma ideia: "onde posso chegar"). Reflete sempre o patrimônio já
+         calculado pelo Patrium (computePatrimonio()), nunca um valor próprio.
+         Nenhuma lógica mudou, só a localização na interface. -->
+    <div class="card" style="margin-top:20px;">
+      <div class="flex-between" style="flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+        <div>
+          <h3 style="margin:0 0 4px; font-size:15px;">Metas patrimoniais<span class="info-dot" data-help-cat="Metas">?</span></h3>
+          <p class="section-hint mb-0">Um valor em reais que você quer alcançar de patrimônio total, com prazo opcional. Reflete automaticamente o seu patrimônio calculado.</p>
+        </div>
+        <button class="btn btn-primary" id="btnNovaMetaPatrimonial">+ Nova meta patrimonial</button>
+      </div>
+      <div id="metasPatrimoniaisLista"></div>
+    </div>
   </section>
 
   <!-- ===================== COMPARAR ===================== -->
@@ -2090,7 +2105,7 @@ a:focus-visible, [tabindex]:focus-visible, .help-cat-filter:focus-visible, .faq-
 <!-- ===================== MODAL: RELATÓRIO MENSAL PDF ===================== -->
 <div class="modal-overlay" id="modalRelatorioMensal">
   <div class="modal">
-    <div class="modal-head"><h3>Relatório mensal em PDF</h3><button class="icon-btn" data-close="modalRelatorioMensal">✕</button></div>
+    <div class="modal-head"><h3>Relatórios em PDF</h3><button class="icon-btn" data-close="modalRelatorioMensal">✕</button></div>
     <div class="modal-body">
       <p class="section-hint">Um relatório completo do mês escolhido, com os mesmos dados e cálculos do Patrium, pronto para guardar ou imprimir.</p>
       <div class="field" style="max-width:220px;">
@@ -2098,10 +2113,22 @@ a:focus-visible, [tabindex]:focus-visible, .help-cat-filter:focus-visible, .faq-
         <input type="month" id="relatorioMesInput">
       </div>
       <div id="relatorioStatus" class="small text-faint" style="margin-top:10px;"></div>
+      <div style="margin-top:8px;">
+        <button class="btn btn-primary" id="btnGerarRelatorioPDF">📄 Gerar PDF mensal</button>
+      </div>
+      <hr style="margin:20px 0; border:none; border-top:1px solid var(--line);">
+      <p class="section-hint">Relatório anual: consolida o ano inteiro — patrimônio, investimentos, rendimentos, aportes, dividendos e metas.</p>
+      <div class="field" style="max-width:220px;">
+        <label>Ano de referência</label>
+        <input type="number" id="relatorioAnoInput" min="2000" max="2100" step="1">
+      </div>
+      <div id="relatorioAnoStatus" class="small text-faint" style="margin-top:10px;"></div>
+      <div style="margin-top:8px;">
+        <button class="btn btn-primary" id="btnGerarRelatorioAnualPDF">📄 Gerar PDF anual</button>
+      </div>
     </div>
     <div class="modal-foot">
-      <button class="btn" data-close="modalRelatorioMensal">Cancelar</button>
-      <button class="btn btn-primary" id="btnGerarRelatorioPDF">📄 Gerar PDF</button>
+      <button class="btn" data-close="modalRelatorioMensal">Fechar</button>
     </div>
   </div>
 </div>
@@ -2449,7 +2476,7 @@ a:focus-visible, [tabindex]:focus-visible, .help-cat-filter:focus-visible, .faq-
   <div class="modal">
     <div class="modal-head"><h3>Registar dividendo</h3><button class="icon-btn" data-close="modalDividendo">✕</button></div>
     <div class="modal-body">
-      <div class="field"><label>Empresa (ticker)</label><input type="text" id="divTicker" style="text-transform:uppercase;"></div>
+      <div class="field"><label>Empresa (ticker)</label><input type="text" id="divTicker" list="divTickerList" placeholder="Digite ou escolha da lista" style="text-transform:uppercase;"><datalist id="divTickerList"></datalist></div>
       <div class="field"><label>Data</label><input type="date" id="divData"></div>
       <div class="field-row">
         <div class="field"><label>Quantidade de ações</label><input type="number" id="divQtd"></div>
@@ -2687,6 +2714,26 @@ a:focus-visible, [tabindex]:focus-visible, .help-cat-filter:focus-visible, .faq-
 </div>
 
 <!-- ===================== MODAL: BACKUP ===================== -->
+<div class="modal-overlay" id="modalCarteiras">
+  <div class="modal">
+    <div class="modal-head"><h3>Minhas carteiras</h3><button class="icon-btn" data-close="modalCarteiras">✕</button></div>
+    <div class="modal-body">
+      <p class="section-hint">Cada carteira tem os seus próprios investimentos, Renda Fixa, dividendos, metas e relatórios — completamente separados. Útil para separar "Minha carteira", "Carteira da família" etc.</p>
+      <div id="carteirasLista" style="margin-top:8px;"></div>
+      <div class="field" style="margin-top:16px;">
+        <label>Nova carteira</label>
+        <div class="flex gap-8">
+          <input type="text" id="novaCarteiraNomeInput" placeholder="Ex.: Carteira da família" style="flex:1;">
+          <button class="btn btn-primary" id="btnCriarCarteira">+ Criar</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" data-close="modalCarteiras">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalBackup">
   <div class="modal">
     <div class="modal-head"><h3>Dados e backup</h3><button class="icon-btn" data-close="modalBackup">✕</button></div>
@@ -2698,6 +2745,11 @@ a:focus-visible, [tabindex]:focus-visible, .help-cat-filter:focus-visible, .faq-
         <button class="btn btn-block" id="btnExportCsv">⬇ Exportar transações (CSV)</button>
         <label class="btn btn-block" for="importFile" style="text-align:center;">⬆ Importar dados (JSON)</label>
         <input type="file" id="importFile" accept=".json" class="hidden">
+        <hr class="line">
+        <p class="section-hint" style="margin-bottom:2px;">Backup de TODAS as suas carteiras, num único ficheiro.</p>
+        <button class="btn btn-block" id="btnExportTodasCarteiras">⬇ Exportar todas as carteiras (JSON)</button>
+        <label class="btn btn-block" for="importAllFile" style="text-align:center;">⬆ Importar todas as carteiras (JSON)</label>
+        <input type="file" id="importAllFile" accept=".json" class="hidden">
         <hr class="line">
         <button class="btn btn-block" id="btnCarregarDemo">↻ Carregar / restaurar dados de demonstração</button>
         <button class="btn btn-block btn-danger" id="btnLimparDemo">Remover dados de demonstração</button>
@@ -2902,13 +2954,50 @@ function showSaveSuccess(modalId, message, afterFn){
    Camada de armazenamento isolada por trás de funções assíncronas.
    Hoje usa localStorage; no futuro, troca-se apenas o corpo destas
    funções por chamadas Supabase (ex.: supabase.from('patrium_data')...)
-   sem precisar de tocar no resto do app. */
+   sem precisar de tocar no resto do app.
+
+   MÚLTIPLAS CARTEIRAS (item 16): Store.load()/Store.save() continuam com
+   a MESMA assinatura de sempre (nenhuma das ~40 chamadas existentes no
+   resto do ficheiro precisou de mudar) — só que agora operam sobre a
+   chave de armazenamento da carteira ATIVA, não sempre a mesma chave fixa.
+   A carteira "default" usa exatamente STORAGE_KEY (a mesma chave de
+   sempre), então quem já tinha dados guardados não perde nada nem precisa
+   de nenhuma migração especial — os seus dados já "são" a primeira
+   carteira. Carteiras adicionais usam STORAGE_KEY+'__'+id, isoladas entre
+   si. Isto funciona porque DATA é `let` (reatribuível): todas as ~150
+   funções de cálculo já leem DATA.x por referência à variável, nunca por
+   valor copiado — trocar a carteira ativa e re-renderizar é suficiente
+   para toda a aplicação (incluindo o Assistente) passar a refletir só os
+   dados da carteira selecionada, sem tocar em nenhuma função de cálculo. */
 const STORAGE_KEY = 'patrium_invest_v1';
 const SCHEMA_VERSION = 11;
+const PORTFOLIOS_META_KEY = 'patrium_portfolios_meta_v1';
+let PORTFOLIOS_META = null; // { activeId, list:[{id,nome,createdAt}] }
+function portfolioStorageKey(id){ return id==='default' ? STORAGE_KEY : STORAGE_KEY+'__'+id; }
+function ensurePortfoliosMeta(){
+  if(PORTFOLIOS_META) return PORTFOLIOS_META;
+  try{
+    const raw = localStorage.getItem(PORTFOLIOS_META_KEY);
+    if(raw){ PORTFOLIOS_META = JSON.parse(raw); }
+  }catch(e){ console.error('Falha ao ler metadados de carteiras', e); }
+  if(!PORTFOLIOS_META || !PORTFOLIOS_META.activeId || !Array.isArray(PORTFOLIOS_META.list) || PORTFOLIOS_META.list.length===0){
+    // Primeira vez (ou meta corrompida): cria a carteira "default", que
+    // aponta para a MESMA chave de sempre — dados pré-existentes de quem
+    // já usava o Patrium continuam exatamente onde estavam.
+    PORTFOLIOS_META = { activeId:'default', list:[{id:'default', nome:'Minha carteira', createdAt: todayISO()}] };
+    try{ localStorage.setItem(PORTFOLIOS_META_KEY, JSON.stringify(PORTFOLIOS_META)); }catch(e){}
+  }
+  return PORTFOLIOS_META;
+}
+function savePortfoliosMeta(){
+  try{ localStorage.setItem(PORTFOLIOS_META_KEY, JSON.stringify(PORTFOLIOS_META)); return true; }
+  catch(e){ console.error('Falha ao guardar metadados de carteiras', e); return false; }
+}
 const Store = {
   async load(){
     try{
-      const raw = localStorage.getItem(STORAGE_KEY);
+      ensurePortfoliosMeta();
+      const raw = localStorage.getItem(portfolioStorageKey(PORTFOLIOS_META.activeId));
       if(!raw) return null;
       let data;
       try{ data = JSON.parse(raw); }
@@ -2923,11 +3012,12 @@ const Store = {
   },
   async save(data){
     try{
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      ensurePortfoliosMeta();
+      localStorage.setItem(portfolioStorageKey(PORTFOLIOS_META.activeId), JSON.stringify(data));
       return true;
     }catch(e){ console.error('Store.save falhou', e); addToast('Não foi possível guardar os dados (armazenamento cheio?).'); return false; }
   },
-  async clear(){ localStorage.removeItem(STORAGE_KEY); }
+  async clear(){ ensurePortfoliosMeta(); localStorage.removeItem(portfolioStorageKey(PORTFOLIOS_META.activeId)); }
 };
 
 /* Migração de schema: cada versão só soma campos que faltam, nunca apaga
@@ -3077,6 +3167,122 @@ function emptyData(){
 }
 
 let DATA = null; // estado em memória, carregado no INIT
+
+/* ===================== GESTÃO DE CARTEIRAS =====================
+   Cada carteira tem os seus próprios dados, completamente isolados (chave
+   de localStorage própria — ver portfolioStorageKey acima). Trocar de
+   carteira reatribui DATA e manda re-renderizar tudo; como toda a
+   aplicação (dashboard, patrimônio, rentabilidade, metas, relatórios e o
+   Assistente) já lê sempre a variável DATA, nunca uma cópia, a troca
+   propaga sozinha para o sistema inteiro. */
+function listarCarteiras(){ ensurePortfoliosMeta(); return PORTFOLIOS_META.list.slice(); }
+function carteiraAtivaId(){ ensurePortfoliosMeta(); return PORTFOLIOS_META.activeId; }
+async function criarNovaCarteira(nome){
+  ensurePortfoliosMeta();
+  const id = 'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  PORTFOLIOS_META.list.push({ id, nome: nome.trim()||'Nova carteira', createdAt: todayISO() });
+  savePortfoliosMeta();
+  await trocarCarteira(id, /*novaCarteiraVazia*/true);
+  return id;
+}
+function renomearCarteira(id, novoNome){
+  ensurePortfoliosMeta();
+  const p = PORTFOLIOS_META.list.find(x=>x.id===id);
+  if(!p) return false;
+  p.nome = novoNome.trim() || p.nome;
+  savePortfoliosMeta();
+  return true;
+}
+async function eliminarCarteira(id){
+  ensurePortfoliosMeta();
+  if(PORTFOLIOS_META.list.length<=1) return false; // nunca elimina a última carteira restante
+  const idx = PORTFOLIOS_META.list.findIndex(x=>x.id===id);
+  if(idx===-1) return false;
+  try{ localStorage.removeItem(portfolioStorageKey(id)); }catch(e){}
+  PORTFOLIOS_META.list.splice(idx,1);
+  if(PORTFOLIOS_META.activeId===id){
+    PORTFOLIOS_META.activeId = PORTFOLIOS_META.list[0].id;
+    savePortfoliosMeta();
+    await carregarCarteiraAtiva();
+  } else {
+    savePortfoliosMeta();
+  }
+  return true;
+}
+async function trocarCarteira(id, novaCarteiraVazia){
+  ensurePortfoliosMeta();
+  if(!PORTFOLIOS_META.list.some(x=>x.id===id)) return false;
+  PORTFOLIOS_META.activeId = id;
+  savePortfoliosMeta();
+  await carregarCarteiraAtiva(novaCarteiraVazia);
+  return true;
+}
+async function carregarCarteiraAtiva(novaCarteiraVazia){
+  let stored = novaCarteiraVazia ? null : await Store.load();
+  if(!stored){ stored = emptyData(); await Store.save(stored); }
+  DATA = stored;
+  Object.values(CHARTS).forEach(ch=>ch.destroy());
+  for(const k in CHARTS) delete CHARTS[k];
+  renderAll();
+  if(document.getElementById('tab-projecoes').classList.contains('active')) renderProjecoes();
+  renderSeletorCarteiras();
+}
+function renderSeletorCarteiras(){
+  const el = document.getElementById('seletorCarteiraNome');
+  if(!el) return;
+  ensurePortfoliosMeta();
+  const ativa = PORTFOLIOS_META.list.find(x=>x.id===PORTFOLIOS_META.activeId);
+  el.textContent = ativa ? ativa.nome : 'Minha carteira';
+}
+function renderModalCarteiras(){
+  const lista = document.getElementById('carteirasLista');
+  if(!lista) return;
+  ensurePortfoliosMeta();
+  lista.innerHTML = PORTFOLIOS_META.list.map(p=>{
+    const ativa = p.id===PORTFOLIOS_META.activeId;
+    return `<div class="flex-between" style="padding:12px 0; border-bottom:1px solid var(--line-soft);">
+      <div class="flex" style="align-items:center; gap:10px;">
+        <span style="font-size:16px;">${ativa?'✔':'📁'}</span>
+        <div>
+          <strong style="font-size:14.5px;">${escapeHtml(p.nome)}</strong>
+          ${ativa?'<div class="small text-faint">Carteira ativa</div>':''}
+        </div>
+      </div>
+      <div class="flex gap-6">
+        ${!ativa?`<button class="btn btn-sm" data-carteira-usar="${p.id}">Usar</button>`:''}
+        <button class="icon-btn btn-sm" style="width:28px;height:28px;" data-carteira-renomear="${p.id}" title="Renomear">✎</button>
+        ${PORTFOLIOS_META.list.length>1?`<button class="icon-btn btn-sm" style="width:28px;height:28px;" data-carteira-eliminar="${p.id}" title="Eliminar">🗑</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  lista.querySelectorAll('[data-carteira-usar]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      await trocarCarteira(btn.dataset.carteiraUsar);
+      renderModalCarteiras();
+      addToast('Carteira trocada. ✓');
+    });
+  });
+  lista.querySelectorAll('[data-carteira-renomear]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.dataset.carteiraRenomear;
+      const atual = PORTFOLIOS_META.list.find(x=>x.id===id);
+      const novo = prompt('Nome da carteira:', atual?atual.nome:'');
+      if(novo && novo.trim()){ renomearCarteira(id, novo.trim()); renderModalCarteiras(); renderSeletorCarteiras(); }
+    });
+  });
+  lista.querySelectorAll('[data-carteira-eliminar]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.dataset.carteiraEliminar;
+      const p = PORTFOLIOS_META.list.find(x=>x.id===id);
+      askConfirm('Eliminar carteira', `Isto apaga TODOS os dados de "${p?p.nome:''}" (investimentos, Renda Fixa, dividendos, metas, tudo). Esta ação é irreversível. Tem a certeza?`, async ()=>{
+        await eliminarCarteira(id);
+        renderModalCarteiras();
+        addToast('Carteira eliminada.');
+      });
+    });
+  });
+}
+
 
 
 /* ===================== CALC ENGINE =====================
@@ -3869,12 +4075,28 @@ function computePatrimonyGoals(){
   const valorAtual = computePatrimonio().patrimonio;
   const contribMensal = computeMonthlyContributions();
   const hoje = todayISO();
+  // Ritmo atual (média dos últimos 3 meses de aportes) — calculado sempre,
+  // com ou sem prazo definido, para toda meta poder mostrar "nesse ritmo,
+  // faltam X meses". Só com dados insuficientes (<3 meses) fica null,
+  // nunca inventamos uma média a partir de menos histórico que isso.
+  let ritmoAtualGeral = null;
+  if(contribMensal.length>=3){
+    const recentes = contribMensal.slice(-3);
+    ritmoAtualGeral = round2(recentes.reduce((s,m)=>s+m.total,0)/recentes.length);
+  }
   return (DATA.patrimonyGoals||[]).map(g=>{
     const valorObjetivo = g.valorObjetivo;
     const progressoReal = valorObjetivo>0 ? (valorAtual/valorObjetivo)*100 : null;
     const progressoExibicao = progressoReal===null ? 0 : Math.max(0, Math.min(progressoReal, 100));
     const concluida = progressoReal!==null && progressoReal>=100;
     const faltam = Math.max(0, round2(valorObjetivo - valorAtual));
+
+    // Previsão pelo ritmo atual — independe de a meta ter prazo ou não.
+    // Só existe quando há ritmo válido (>0) e a meta ainda não foi
+    // atingida; senão fica null e a interface mostra "dados insuficientes",
+    // nunca um número inventado.
+    const previsaoMeses = (!concluida && ritmoAtualGeral!==null && ritmoAtualGeral>0)
+      ? Math.ceil(faltam/ritmoAtualGeral) : null;
 
     let prazo = null;
     if(g.dataLimite){
@@ -3887,16 +4109,14 @@ function computePatrimonyGoals(){
         percentualTempo = totalDias>0 ? Math.max(0, Math.min(100, (decorridoDias/totalDias)*100)) : null;
       }
       // Ritmo necessário só é calculado com prazo futuro e meta ainda não
-      // concluída. Ritmo atual só com pelo menos 3 meses de aportes
-      // registados — dados insuficientes nunca viram um status inventado.
-      let ritmoNecessario = null, ritmoAtual = null, statusRitmo = null;
+      // concluída. Ritmo atual (ritmoAtualGeral, calculado acima) só com pelo
+      // menos 3 meses de aportes registados — dados insuficientes nunca
+      // viram um status inventado.
+      let ritmoNecessario = null, statusRitmo = null;
       if(!concluida && diasRestantes>0 && mesesRestantes>0){
         ritmoNecessario = round2(faltam/mesesRestantes);
       }
-      if(contribMensal.length>=3){
-        const recentes = contribMensal.slice(-3);
-        ritmoAtual = round2(recentes.reduce((s,m)=>s+m.total,0)/recentes.length);
-      }
+      const ritmoAtual = ritmoAtualGeral;
       if(!concluida && ritmoNecessario!==null && ritmoNecessario>0 && ritmoAtual!==null){
         const razao = ritmoAtual/ritmoNecessario;
         statusRitmo = razao>=1.1 ? 'acima' : razao>=0.9 ? 'no-ritmo' : 'atencao';
@@ -3907,6 +4127,7 @@ function computePatrimonyGoals(){
     return {
       id:g.id, nome:g.nome, observacao:g.observacao||null, createdAt:g.createdAt||null,
       valorObjetivo, valorAtual: round2(valorAtual), progressoReal, progressoExibicao, concluida, faltam, prazo,
+      ritmoAtual: ritmoAtualGeral, previsaoMeses,
     };
   }).sort((a,b)=> (b.progressoExibicao - a.progressoExibicao));
 }
@@ -5242,8 +5463,8 @@ const CONCEITOS_FINANCEIROS = [
     oque:'Objetivos que você define dentro do Patrium, de dois tipos independentes: por quantidade de um ativo, ou por valor total de patrimônio.',
     comoCalcula:'Meta de quantidade: acompanha a sua posição real de um ativo (nunca a altera). Meta patrimonial: acompanha o patrimônio total já calculado (Patrimônio = RF + RV + Caixa), nunca um valor próprio ou fictício.',
     comoInterpretar:'O progresso de qualquer meta reflete automaticamente os seus dados reais, se o patrimônio ou a posição diminuir, o progresso diminui corretamente também.',
-    quandoCautela:'Só metas com data limite mostram ritmo necessário e status ("no ritmo"/"atenção"), e só quando há aportes suficientes registados para calcular isso com confiança.',
-    linkTab:'acoes', linkLabel:'Ver Metas em Ações' },
+    quandoCautela:'Só metas com data limite mostram ritmo necessário e status ("no ritmo"/"atenção"), e só quando há aportes suficientes registados para calcular isso com confiança. Metas de quantidade ficam na aba Ações; metas patrimoniais ficam na aba Projeções.',
+    linkTab:'projecoes', linkLabel:'Ver Metas patrimoniais em Projeções' },
   { termo:'Selos', icone:'🏅', cat:'Planejamento',
     oque:'Marcos automáticos da sua jornada como investidor, desbloqueados sozinhos a partir dos seus dados reais.',
     comoCalcula:'Cada selo tem uma condição objetiva calculada dos seus dados (ex.: patrimônio ≥ R$10 mil, 5 vendas registadas, backup exportado), nunca é marcado manualmente e nunca conta um comportamento arriscado como conquista.',
@@ -5272,7 +5493,7 @@ const HELP_FAQ = [
   { cat:'Começando', q:'Posso usar o Patrium em mais de um dispositivo?', a:'Os dados ficam só no navegador onde foram criados. Para usar noutro dispositivo, exporte um backup (JSON) em "Backup e dados" e importe-o no outro aparelho.' },
   { cat:'Performance', q:'Qual a diferença entre TWR e XIRR?', a:'TWR mede a performance da carteira independente de quando e quanto você aportou, é a métrica certa para avaliar "o quão bem investido" você está. XIRR considera as datas e os valores exatos de cada aporte/retirada, é a métrica certa para saber o retorno anualizado que você de fato obteve sobre o seu dinheiro.' },
   { cat:'Performance', q:'Por que a "rentabilidade sobre aportes" às vezes parece estranha?', a:'Essa é uma métrica simples (ganho dividido pelo total aportado), útil como referência rápida, mas ela distorce quando há aportes grandes no meio do período. Para uma leitura confiável de performance, use TWR e XIRR.' },
-  { cat:'Performance', q:'Por que o TWR e o XIRR às vezes mostram "Dados insuficientes"?', a:'Essas métricas exigem um histórico mínimo de datas e valores para serem calculadas com confiança. Se a carteira é muito recente ou tem poucos eventos registados, o Patrium prefere mostrar essa mensagem a inventar um número.' },
+  { cat:'Performance', q:'Por que o TWR e o XIRR às vezes mostram "Dados insuficientes"?', a:'Essas métricas exigem um histórico mínimo de datas e valores para serem calculadas com confiança. Se a carteira é muito recente ou tem poucos eventos registrados, o Patrium prefere mostrar essa mensagem a inventar um número.' },
   { cat:'Performance', q:'O que significa "Resultado realizado" versus "não realizado"?', a:'Resultado realizado é o lucro ou prejuízo já efetivado numa venda. Resultado não realizado é o ganho ou perda "no papel" de uma posição que você ainda mantém, calculado pela diferença entre o preço atual e o seu preço médio.' },
   { cat:'Renda Fixa', q:'O que significa "aporte externo" vs. "interno" na Renda Fixa?', a:'Externo é dinheiro novo, que entrou de fora do Patrium. Interno é dinheiro que já estava dentro do Patrium (por exemplo, veio do Caixa ou de uma venda) e só mudou de lugar. Essa distinção garante que uma simples transferência interna nunca infle artificialmente o seu XIRR/TWR.' },
   { cat:'Renda Fixa', q:'Posso retirar dinheiro da Renda Fixa?', a:'Sim, de duas formas: transferindo para o Caixa (o patrimônio total não muda) ou retirando definitivamente do Patrium (o patrimônio reduz e isso conta como retirada externa no cálculo de retorno).' },
@@ -5289,15 +5510,15 @@ const HELP_FAQ = [
   { cat:'Metas', q:'O que acontece se eu excluir uma meta?', a:'Só a meta é removida. A sua posição real no ativo continua exatamente igual, nenhuma venda ou movimentação é criada.' },
   { cat:'Análises', q:'O que é "De onde veio o crescimento"?', a:'É a decomposição do crescimento do seu patrimônio em Aportes (dinheiro novo), Valorização (ganho de mercado) e Dividendos, sem nenhum valor contado duas vezes.' },
   { cat:'Análises', q:'Como é calculada a concentração?', a:'Pelo peso de cada ativo sobre o total da sua Renda Variável, não sobre o patrimônio total. Isso mostra especificamente o quão concentrada está a parte da carteira sujeita a maior oscilação.' },
-  { cat:'Análises', q:'O que é a Saúde da carteira?', a:'Um resumo de vários indicadores da sua carteira (diversificação, concentração, regularidade de aportes, entre outros), com um status geral e um motivo curto explicando o que mais está a pesar nesse status.' },
+  { cat:'Análises', q:'O que é a Saúde da carteira?', a:'Um resumo de vários indicadores da sua carteira (diversificação, concentração, regularidade de aportes, entre outros), com um status geral e um motivo curto explicando o que mais está pesando nesse status.' },
   { cat:'Alocação', q:'O que significa "alocação-alvo" (RF/RV)?', a:'É a distribuição que você define como referência entre Renda Fixa e Renda Variável. O Patrium compara a sua alocação real com esse alvo, sem nunca alterar a sua carteira automaticamente.' },
   { cat:'Calendário', q:'O que aparece no Calendário?', a:'Uma visão mês a mês de todos os seus eventos financeiros: aportes, resgates, compras, vendas e dividendos, na data em que aconteceram.' },
   { cat:'Projeções', q:'As Projeções são uma promessa de retorno?', a:'Não. São uma simulação hipotética baseada em premissas que você mesmo define (aporte mensal, taxa esperada), útil para visualizar cenários, nunca uma garantia do que vai acontecer.' },
   { cat:'Comparar', q:'O que a aba Comparar faz?', a:'Compara lado a lado indicadores entre dois ou mais ativos da sua carteira ou pesquisados, facilitando ver diferenças de preço, rentabilidade e outros dados disponíveis.' },
   { cat:'Alertas', q:'De onde vêm os alertas?', a:'São gerados automaticamente a partir da sua própria carteira (ex.: concentração alta, queda relevante de preço, preço desatualizado), nunca de fora, nada é "enviado" para você.' },
   { cat:'Alertas', q:'O que acontece quando eu marco os alertas como lidos?', a:'O ícone vermelho de notificação no sino some. Os alertas continuam disponíveis normalmente na Central de Alertas e na aba Alertas, nada é apagado.' },
-  { cat:'Backup', q:'Como faço backup dos meus dados?', a:'No ícone ⇅ do cabeçalho, use "Exportar dados (JSON)" para baixar um ficheiro com tudo. Guarde-o em local seguro, é o único jeito de recuperar os dados caso limpe o navegador.' },
-  { cat:'Backup', q:'Como restauro um backup?', a:'No ícone ⇅ do cabeçalho, use "Importar dados (JSON)" e selecione o ficheiro exportado anteriormente. Isto substitui os dados atuais pelos do backup.' },
+  { cat:'Backup', q:'Como faço backup dos meus dados?', a:'No ícone ⇅ do cabeçalho, use "Exportar dados (JSON)" para baixar um arquivo com tudo. Guarde-o em local seguro, é o único jeito de recuperar os dados caso limpe o navegador.' },
+  { cat:'Backup', q:'Como restauro um backup?', a:'No ícone ⇅ do cabeçalho, use "Importar dados (JSON)" e selecione o arquivo exportado anteriormente. Isto substitui os dados atuais pelos do backup.' },
   { cat:'Backup', q:'O que são os dados de demonstração?', a:'Uma carteira fictícia de exemplo, útil para explorar o Patrium antes de registar os seus dados reais. Pode ser removida a qualquer momento em "Remover dados de demonstração".' },
   { cat:'Educação', q:'O que é o perfil de investidor no Patrium?', a:'Um resultado (Conservador, Moderado ou Arrojado) calculado a partir das suas respostas no questionário de onboarding, usado para gerar dicas mais personalizadas na aba Educação. Pode ser refeito a qualquer momento.' },
   { cat:'Educação', q:'O que são os selos conquistados?', a:'Marcos automáticos da sua jornada como investidor (ex.: primeiro aporte, patrimônio de R$ 10 mil, carteira diversificada), desbloqueados a partir dos seus próprios dados reais, sem nenhuma ação manual necessária.' },
@@ -5307,11 +5528,11 @@ const HELP_FAQ = [
   { cat:'Ações', q:'O Patrium me deixa vender mais ações do que eu tenho?', a:'Não. Ao escolher "Venda" no formulário, o campo de quantidade mostra quantas unidades você tem disponíveis e se ajusta automaticamente ao máximo, nunca é possível registar uma venda maior do que a sua posição real.' },
   { cat:'Renda Fixa', q:'Como retiro dinheiro da Renda Fixa de forma rápida?', a:'Use o botão "↓ Retirar dinheiro" na aba Renda Fixa, ele já abre o formulário certo com o campo de resgate em foco, sem precisar navegar por outras opções.' },
   { cat:'Começando', q:'O que é o botão "Explorar" ao cadastrar um investimento?', a:'Ao lado de cada categoria e de cada ativo sugerido no "+ Novo investimento", "Explorar" abre uma explicação sobre o que é aquele ativo, como funciona, o peso sugerido por perfil de investidor e dicas práticas, tudo antes de você decidir cadastrar algo.' },
-  { cat:'Como funciona', q:'O que é "patrimônio" exatamente, no Patrium?', a:'É a soma de tudo o que está investido: o saldo em Renda Fixa, mais o valor de mercado da Renda Variável, mais o que estiver no Caixa. Não inclui bens fora do Patrium (imóveis, veículos), só o que está registado aqui.' },
+  { cat:'Como funciona', q:'O que é "patrimônio" exatamente, no Patrium?', a:'É a soma de tudo o que está investido: o saldo em Renda Fixa, mais o valor de mercado da Renda Variável, mais o que estiver no Caixa. Não inclui bens fora do Patrium (imóveis, veículos), só o que está registrado aqui.' },
   { cat:'Como funciona', q:'Qual a diferença entre saldo e fluxo de caixa?', a:'Saldo é "quanto tem agora" num ponto no tempo (ex.: o saldo de um produto de Renda Fixa hoje). Fluxo de caixa é "o que entrou ou saiu" num período (ex.: quanto você aportou este mês). O Patrium usa saldos para o patrimônio atual e fluxos para calcular rentabilidade (TWR/XIRR) e para separar "quanto veio de aportes" de "quanto veio de valorização".' },
   { cat:'Como funciona', q:'Qual a diferença entre aporte e valorização?', a:'Aporte é dinheiro novo que você colocou, de fora. Valorização é o ganho (ou perda) que o mercado gerou sobre o que já estava investido. O card "De onde veio o crescimento" separa exatamente essas duas fontes, sem nunca contar o mesmo real duas vezes.' },
   { cat:'Como funciona', q:'Qual a diferença entre resultado realizado e não realizado?', a:'Realizado é definitivo, já aconteceu numa venda. Não realizado é "no papel", de uma posição que você ainda tem, e pode mudar até o dia em que for vendida.' },
-  { cat:'Como funciona', q:'Por que alguns indicadores precisam de histórico para funcionar?', a:'Métricas como TWR e XIRR dependem de comparar valores em datas diferentes, sem um mínimo de eventos e tempo registados, o cálculo simplesmente não tem base suficiente para ser confiável. Nesses casos, o Patrium prefere mostrar "Dados insuficientes" a arriscar um número que engana.' },
+  { cat:'Como funciona', q:'Por que alguns indicadores precisam de histórico para funcionar?', a:'Métricas como TWR e XIRR dependem de comparar valores em datas diferentes, sem um mínimo de eventos e tempo registrados, o cálculo simplesmente não tem base suficiente para ser confiável. Nesses casos, o Patrium prefere mostrar "Dados insuficientes" a arriscar um número que engana.' },
   { cat:'Como funciona', q:'Por que alguns dados aparecem como "indisponíveis"?', a:'Sempre que falta uma informação necessária para um cálculo correto (um preço atual, um histórico mínimo, uma data), o Patrium mostra isso claramente em vez de estimar ou inventar um valor. É uma escolha deliberada de transparência.' },
 ];
 let helpCurrentCat = 'Todos';
@@ -5710,6 +5931,11 @@ function renderBackupReminder(){
   document.getElementById('btnBackupReminderExportar').addEventListener('click', ()=>{
     try{ localStorage.setItem('patrium_backup_reminder_last_shown', hoje); }catch(err){}
     document.getElementById('btnExportJson').click();
+    // Remove o alerta imediatamente da Dashboard — não espera um novo render/reload.
+    // O botão real de exportação (btnExportJson) já atualiza lastBackupAt e persiste,
+    // então na próxima vez que renderBackupReminder() rodar ele simplesmente não vai
+    // mais achar motivo para reaparecer.
+    el.innerHTML = '';
   });
 }
 /* Checklist "Primeiros passos" — ensina o produto sem virar um tutorial
@@ -5732,7 +5958,7 @@ function abrirModalIndiceSaude(){
   if(indice.score===null) return;
   const cor = indice.score>=75?'var(--positive)':indice.score>=50?'var(--warning)':'var(--negative)';
   document.getElementById('indiceSaudeRing').style.background = `conic-gradient(${cor} calc(${indice.score} * 1%), var(--surface-3) 0)`;
-  document.getElementById('indiceSaudeNumero').textContent = indice.score+'/100';
+  document.getElementById('indiceSaudeNumero').innerHTML = `<span class="isr-num">${indice.score}</span><span class="isr-den">/ 100</span>`;
   document.getElementById('indiceSaudeStatus').textContent = indice.status;
   document.getElementById('indiceSaudeStatus').style.color = cor;
   const bloco = (titulo, icone, itens, vazio)=> `<div class="indice-saude-sec-title"><span>${icone}</span><span>${titulo}</span></div>` +
@@ -6056,7 +6282,7 @@ function renderDashboard(){
         <span class="small text-faint">${fmtMoney(metaPrincipal.valorAtual)} alcançados</span>
       </div>
       <div class="perfil-radar-track" style="margin:8px 0 4px;"><div class="perfil-radar-fill" style="width:${metaPrincipal.progressoExibicao.toFixed(0)}%; background:${cor};"></div></div>
-      <div class="mono small" style="font-weight:700; color:${cor};">${fmtNum(metaPrincipal.progressoReal.toFixed(1))}%</div>
+      <div class="mono small" style="font-weight:700; color:${cor};">${fmtNum(metaPrincipal.progressoExibicao.toFixed(1))}%${metaPrincipal.progressoReal>100?' (meta atingida)':''}</div>
     </div>`;
   } else {
     proximaMetaEl.innerHTML = '';
@@ -6224,6 +6450,16 @@ function renderMetasPatrimoniais(){
         ${p.statusRitmo ? ` · <strong style="color:${statusInfo[p.statusRitmo].cor};">${statusInfo[p.statusRitmo].txt}</strong>` : (!m.concluida && p.ritmoNecessario!==null ? ' · <span class="text-faint">Dados insuficientes para avaliar o ritmo atual (é preciso pelo menos 3 meses de aportes registados)</span>' : '')}
       </div>`;
     }
+    // Ritmo atual + previsão pelo ritmo — mostrado em TODA meta (com ou
+    // sem prazo definido), atualizado sozinho a cada render porque vem de
+    // computePatrimonyGoals() (que recalcula a cada chamada a partir dos
+    // dados reais). Quando faltam dados (menos de 3 meses de aportes),
+    // avisa em vez de inventar uma média.
+    const ritmoHtml = m.concluida ? '' : (
+      m.ritmoAtual===null
+        ? `<div class="small text-faint" style="margin-top:4px;">Ritmo atual: dados insuficientes para estimar (é preciso pelo menos 3 meses de aportes registados).</div>`
+        : `<div class="small text-soft" style="margin-top:4px;">Ritmo atual (média dos últimos 3 meses): <strong>${fmtMoney(m.ritmoAtual)}/mês</strong>${m.previsaoMeses!==null ? ` · nesse ritmo, faltam <strong>${fmtNum(m.previsaoMeses)} mês(es)</strong> (~${fmtNum((m.previsaoMeses/12).toFixed(1))} ano(s))` : (m.ritmoAtual<=0 ? ' · sem aportes recentes, não dá para prever quando a meta seria atingida' : '')}</div>`
+    );
     return `<div style="padding:16px 0; border-bottom:1px solid var(--line-soft);">
       <div class="flex-between" style="flex-wrap:wrap; gap:10px; margin-bottom:8px;">
         <div>
@@ -6238,12 +6474,13 @@ function renderMetasPatrimoniais(){
       </div>
       <div class="flex-between" style="align-items:baseline; margin-bottom:6px;">
         <span class="mono" style="font-size:13.5px;">${fmtMoney(m.valorAtual)} <span class="text-faint">de</span> ${fmtMoney(m.valorObjetivo)}</span>
-        <span class="mono" style="font-weight:800; color:${cor};">${fmtNum(m.progressoReal.toFixed(1))}%</span>
+        <span class="mono" style="font-weight:800; color:${cor};">${fmtNum(m.progressoExibicao.toFixed(1))}%</span>
       </div>
       <div style="height:8px; background:var(--surface-3); border-radius:99px; overflow:hidden;">
         <div style="height:100%; width:${m.progressoExibicao.toFixed(1)}%; background:${cor}; border-radius:99px; transition:width .3s ease;"></div>
       </div>
       <div class="small text-soft" style="margin-top:6px;">${m.faltam>0 ? `Faltam ${fmtMoney(m.faltam)}` : 'Meta completa'}</div>
+      ${ritmoHtml}
       ${prazoHtml}
     </div>`;
   }).join('') : `<div class="empty"><div class="empty-icon">🎯</div><h3>Nenhuma meta patrimonial definida</h3><p>Defina um valor em reais que você quer alcançar de patrimônio total, o Patrium acompanha o progresso automaticamente.</p></div>`;
@@ -7309,6 +7546,22 @@ function renderAnalises(periodKey){
     {label:'Renda Variável (aportado)', data:rvSeries, borderColor:c.rv, backgroundColor:'transparent', tension:.3, pointRadius:2, pointHoverRadius:6, borderWidth:2}
   ], { plugins:{ tooltip: rfVsRvTooltip } }));
 
+  /* Evolução do VALOR de mercado por classe (item 4) — diferente do gráfico
+     acima (que é só o dinheiro aportado, acumulado). Aqui reaproveitamos
+     computeAllocacaoAsOf(), a MESMA função já usada e testada para saber a
+     divisão RF×RV numa data passada — nenhum cálculo paralelo. Um ponto por
+     mês (fim de cada mês com histórico), igual ao resto de Análises. */
+  const valorPorClasseSeries = allMonths.map(mk=>{
+    const [yy,mm] = mk.split('-').map(Number);
+    const fimDoMes = `${mk}-${String(new Date(yy,mm,0).getDate()).padStart(2,'0')}`;
+    const alloc = computeAllocacaoAsOf(fimDoMes<=todayISO() ? fimDoMes : todayISO());
+    return { rf: alloc.rf, rv: alloc.rv };
+  });
+  deferChartRender('chartValorPorClasse', ()=> renderLineChart('chartValorPorClasse', allMonths.map(monthLabel), [
+    {label:'Renda Fixa (valor)', data:valorPorClasseSeries.map(v=>v.rf), borderColor:c.rf, backgroundColor:c.rf+'22', tension:.3, pointRadius:2, pointHoverRadius:6, borderWidth:2, fill:true},
+    {label:'Renda Variável (valor)', data:valorPorClasseSeries.map(v=>v.rv), borderColor:c.rv, backgroundColor:c.rv+'22', tension:.3, pointRadius:2, pointHoverRadius:6, borderWidth:2, fill:true}
+  ], { plugins:{ tooltip: rfVsRvTooltip } }));
+
   if(monthly.length){
     const totals = monthly.map(m=>m.total);
     document.getElementById('aportesMedia').textContent = fmtMoney(totals.reduce((a,b)=>a+b,0)/totals.length);
@@ -7667,7 +7920,11 @@ function renderCentralAlertas(){
       ${itens.map((a,i)=>{
         const tab = ALERT_CATEGORY_TAB[a.category] || 'alertas';
         const lido = lidosSet.has(alertSignature(a));
-        return `<div class="alert-central-item" data-tab-destino="${tab}" data-idx="${i}" data-sig="${escapeHtml(alertSignature(a))}" style="${lido?'opacity:.55;':''}">
+        // Alerta de backup (categoria "Dados", texto menciona "backup"): em vez de
+        // navegar para Operações, o clique deve executar o backup diretamente —
+        // é uma ação, não uma navegação.
+        const isBackupAlert = a.category==='Dados' && /backup/i.test(a.text);
+        return `<div class="alert-central-item" data-tab-destino="${tab}" data-idx="${i}" data-sig="${escapeHtml(alertSignature(a))}" data-backup-action="${isBackupAlert?'1':''}" style="${lido?'opacity:.55;':''}">
           <span class="alert-central-dot ${!lido?'alert-central-dot-pulse':''}" style="background:${dotColor[a.level]||'var(--line)'};"></span>
           <div style="flex:1;">
             <div style="font-size:13.5px;">${icons[a.level]||'•'} ${a.text}</div>
@@ -7688,6 +7945,16 @@ function renderCentralAlertas(){
         DATA.settings.alertasLidos.push(sig);
         await Store.save(DATA);
         updateBellBadge();
+      }
+      // Alerta de backup: executa a exportação direto, não navega para lugar
+      // nenhum. Depois de exportar, o alerta deixa de ser gerado sozinho (porque
+      // lastBackupAt foi atualizado), então ele "some" na próxima leitura.
+      if(el.dataset.backupAction==='1'){
+        closeModal('modalCentralAlertas');
+        document.getElementById('btnExportJson').click();
+        try{ localStorage.setItem('patrium_backup_reminder_last_shown', todayISO()); }catch(err){}
+        renderBackupReminder();
+        return;
       }
       closeModal('modalCentralAlertas');
       const tabBtn = document.querySelector(`.tab-btn[data-tab="${el.dataset.tabDestino}"]`);
@@ -8038,7 +8305,28 @@ document.getElementById('btnRelatorioMensal').addEventListener('click', ()=>{
   const hoje = new Date();
   document.getElementById('relatorioMesInput').value = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}`;
   document.getElementById('relatorioStatus').textContent = '';
+  document.getElementById('relatorioAnoInput').value = hoje.getFullYear();
+  document.getElementById('relatorioAnoStatus').textContent = '';
   openModal('modalRelatorioMensal');
+});
+document.getElementById('btnGerarRelatorioAnualPDF').addEventListener('click', async ()=>{
+  const ano = parseInt(document.getElementById('relatorioAnoInput').value, 10);
+  if(!ano){ addToast('Escolha um ano.'); return; }
+  const btn = document.getElementById('btnGerarRelatorioAnualPDF');
+  const status = document.getElementById('relatorioAnoStatus');
+  btn.disabled = true; btn.textContent = 'Gerando...';
+  status.textContent = 'Montando o relatório anual com os seus dados, isso pode levar alguns segundos...';
+  try{
+    await gerarRelatorioAnualPDF(ano);
+    status.textContent = 'Relatório anual gerado e baixado com sucesso. ✓';
+    addToast('Relatório anual em PDF gerado. 📄');
+  }catch(e){
+    console.error(e);
+    status.textContent = 'Não foi possível gerar o relatório agora.';
+    addToast('Ocorreu um erro ao gerar o PDF, tente novamente.');
+  }finally{
+    btn.disabled = false; btn.textContent = '📄 Gerar PDF anual';
+  }
 });
 document.getElementById('btnGerarRelatorioPDF').addEventListener('click', async ()=>{
   const mesAno = document.getElementById('relatorioMesInput').value;
@@ -8063,10 +8351,24 @@ document.getElementById('backupToggle').addEventListener('click', ()=>{
   atualizarUltimoBackupLabel();
   openModal('modalBackup');
 });
+document.getElementById('btnSeletorCarteira').addEventListener('click', ()=>{
+  renderModalCarteiras();
+  openModal('modalCarteiras');
+});
+document.getElementById('btnCriarCarteira').addEventListener('click', async ()=>{
+  const input = document.getElementById('novaCarteiraNomeInput');
+  const nome = input.value.trim();
+  if(!nome){ addToast('Digite um nome para a nova carteira.'); return; }
+  await criarNovaCarteira(nome);
+  input.value = '';
+  renderModalCarteiras();
+  addToast(`Carteira "${nome}" criada. ✓`);
+});
 document.getElementById('btnExportJson').addEventListener('click', async ()=>{
   const blob = new Blob([JSON.stringify(DATA, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href=url; a.download = `patrium-invest-backup-${todayISO()}.json`; a.click();
+  const nomeCarteiraSlug = (PORTFOLIOS_META && PORTFOLIOS_META.list.find(p=>p.id===PORTFOLIOS_META.activeId)?.nome || 'carteira').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+  const a = document.createElement('a'); a.href=url; a.download = `patrium-invest-backup-${nomeCarteiraSlug}-${todayISO()}.json`; a.click();
   URL.revokeObjectURL(url);
   DATA.settings.lastBackupAt = new Date().toISOString();
   await Store.save(DATA);
@@ -8103,6 +8405,58 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
       closeModal('modalBackup');
       addToast('Dados importados com sucesso.');
     }catch(err){ addToast('Não foi possível ler o ficheiro.'); }
+  };
+  reader.readAsText(file);
+});
+/* Backup em lote (todas as carteiras num único ficheiro) — item 16.
+   Reaproveita a MESMA chave de armazenamento por carteira já usada por
+   Store/portfolioStorageKey, só lendo/escrevendo diretamente no
+   localStorage para cada uma, sem depender de qual está ativa no momento. */
+document.getElementById('btnExportTodasCarteiras').addEventListener('click', ()=>{
+  ensurePortfoliosMeta();
+  const portfolios = PORTFOLIOS_META.list.map(p=>{
+    let data = null;
+    try{ const raw = localStorage.getItem(portfolioStorageKey(p.id)); data = raw ? JSON.parse(raw) : emptyData(); }
+    catch(e){ data = emptyData(); }
+    return { id:p.id, nome:p.nome, createdAt:p.createdAt, data };
+  });
+  const payload = { patriumMultiBackup:true, exportedAt:new Date().toISOString(), activeId:PORTFOLIOS_META.activeId, portfolios };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download = `patrium-invest-backup-todas-carteiras-${todayISO()}.json`; a.click();
+  URL.revokeObjectURL(url);
+  DATA.settings.lastBackupAt = new Date().toISOString();
+  Store.save(DATA);
+  atualizarUltimoBackupLabel();
+  addToast(`Backup de ${portfolios.length} carteira(s) exportado.`);
+});
+document.getElementById('importAllFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    let imported;
+    try{ imported = JSON.parse(ev.target.result); }
+    catch(err){ addToast('Não foi possível ler o ficheiro.'); return; }
+    if(!imported.patriumMultiBackup || !Array.isArray(imported.portfolios) || imported.portfolios.length===0){
+      addToast('Este não é um ficheiro de backup de todas as carteiras. Use "Importar dados (JSON)" para um backup de uma única carteira.');
+      return;
+    }
+    askConfirm('Substituir TODAS as carteiras',
+      `Isto vai SUBSTITUIR a lista inteira de carteiras (${imported.portfolios.length} no ficheiro) pelas carteiras e dados deste backup. As carteiras atuais deste navegador que não estiverem no ficheiro serão perdidas. Recomendamos exportar um backup de tudo antes, se ainda não tiver um recente. Tem a certeza?`,
+      async ()=>{
+        imported.portfolios.forEach(p=>{
+          const migrated = migrateData(p.data);
+          try{ localStorage.setItem(portfolioStorageKey(p.id), JSON.stringify(migrated)); }catch(err){}
+        });
+        PORTFOLIOS_META = {
+          activeId: imported.portfolios.some(p=>p.id===imported.activeId) ? imported.activeId : imported.portfolios[0].id,
+          list: imported.portfolios.map(p=>({ id:p.id, nome:p.nome||'Carteira', createdAt:p.createdAt||todayISO() }))
+        };
+        savePortfoliosMeta();
+        await carregarCarteiraAtiva();
+        closeModal('modalBackup');
+        addToast(`${imported.portfolios.length} carteira(s) importada(s) com sucesso.`);
+      });
   };
   reader.readAsText(file);
 });
@@ -8722,6 +9076,11 @@ document.getElementById('btnSalvarAporte').addEventListener('click', async ()=>{
 document.getElementById('btnNovoDividendo').addEventListener('click', ()=>{
   document.getElementById('divData').value = todayISO();
   document.getElementById('divTicker').value=''; document.getElementById('divQtd').value=''; document.getElementById('divPorAcao').value=''; document.getElementById('divTotalCalc').value='';
+  // Sugere os tickers que o utilizador já tem na carteira (posições com qty>0),
+  // sem duplicar. Continua sendo um <input> de texto livre — digitar um ticker
+  // novo funciona normalmente, exatamente como "Cadastrar nova empresa".
+  const tickersCarteira = [...new Set(computePositions().filter(p=>p.qty>0.0000001).map(p=>p.ticker))].sort();
+  document.getElementById('divTickerList').innerHTML = tickersCarteira.map(t=>`<option value="${escapeHtml(t)}"></option>`).join('');
   openModal('modalDividendo');
 });
 function recalcDivTotal(){
@@ -9611,14 +9970,17 @@ async function gerarRelatorioMensalPDF(mesAno){
   function garanteEspaco(altura){ if(y+altura > PH-16){ novaPagina(); } }
   function tituloSecao(texto){
     y += 6;
-    garanteEspaco(20);
+    // Garante espaço para o título E pelo menos uma primeira linha de
+    // conteúdo abaixo dele — nunca um título isolado no fim da página
+    // com o conteúdo empurrado para a página seguinte.
+    garanteEspaco(38);
     doc.setFillColor(...NAVY); doc.rect(MX, y, PW-2*MX, 9, 'F');
     doc.setTextColor(255,255,255); doc.setFontSize(11); doc.setFont('helvetica','bold');
     doc.text(texto, MX+3, y+6.2);
     y += 15;
   }
   function subtitulo(texto){
-    garanteEspaco(8);
+    garanteEspaco(16); // título + pelo menos uma linha do que vem a seguir
     doc.setTextColor(...GOLD); doc.setFontSize(9.5); doc.setFont('helvetica','bold');
     doc.text(texto, MX, y);
     y += 6;
@@ -9712,8 +10074,7 @@ async function gerarRelatorioMensalPDF(mesAno){
   statChip(MX, 118, 'Saúde Patrimonial', indiceResumo.score!==null?`${indiceResumo.score}/100 — ${indiceResumo.status}`:'Dados insuficientes', indiceResumo.score!==null?(indiceResumo.score>=75?EMERALD:indiceResumo.score>=50?GOLD:[190,60,60]):FAINT);
   y += 26;
 
-  // ===== PÁGINA 3 — EVOLUÇÃO PATRIMONIAL =====
-  novaPagina();
+  // ===== EVOLUÇÃO PATRIMONIAL =====
   tituloSecao('Evolução patrimonial');
   linhaKV('Patrimônio no início do mês', fmtMoney(periodo.patrInicial));
   linhaKV('Patrimônio no fim do mês', fmtMoney(periodo.patrFinal));
@@ -9745,8 +10106,7 @@ async function gerarRelatorioMensalPDF(mesAno){
     }
   }catch(e){}
 
-  // ===== PÁGINA 4 — ALOCAÇÃO =====
-  novaPagina();
+  // ===== ALOCAÇÃO =====
   const allocFim = computeAllocacaoAsOf(end);
   const conc = computeConcentracaoAtivo();
   tituloSecao('Alocação');
@@ -9763,8 +10123,7 @@ async function gerarRelatorioMensalPDF(mesAno){
     tabela(['Ativo','% da carteira de ações'], conc.slice(0,10).map(c=>[c.ticker, fmtNum(c.peso.toFixed(1))+'%']));
   }
 
-  // ===== PÁGINA 5 — RENDA FIXA =====
-  novaPagina();
+  // ===== RENDA FIXA =====
   const rf = computeRfTotals();
   const rfProds = computeRfProducts();
   tituloSecao('Renda Fixa');
@@ -9780,8 +10139,7 @@ async function gerarRelatorioMensalPDF(mesAno){
     if(rfProds.length) tabela(['Produto','Instituição','Saldo atual','Rendimento'], rfProds.map(p=>[p.name, p.instituicao||'—', fmtMoney(p.saldoAtual), fmtMoneySigned(p.rendimento)]));
   }
 
-  // ===== PÁGINA 6 — RENDA VARIÁVEL =====
-  novaPagina();
+  // ===== RENDA VARIÁVEL =====
   const rv = computeRvTotals();
   const positions = computePositions().filter(p=>p.qty>0.0000001);
   tituloSecao('Renda Variável');
@@ -9796,8 +10154,7 @@ async function gerarRelatorioMensalPDF(mesAno){
       positions.map(p=>[p.ticker, fmtNum(p.qty), fmtMoney(p.avgPrice), p.hasRealPrice?fmtMoney(p.curPrice):'—', fmtMoney(p.marketValue), p.hasRealPrice?fmtMoneySigned(p.unrealizedPL):'—']));
   }
 
-  // ===== PÁGINA 7 — DESEMPENHO (resultado, dividendos, TWR, XIRR) =====
-  novaPagina();
+  // ===== DESEMPENHO (resultado, dividendos, TWR, XIRR) =====
   const twr = computeTWR();
   const xirr = computeXIRR();
   const divPorMes = computeDividendsByMonth();
@@ -9815,8 +10172,7 @@ async function gerarRelatorioMensalPDF(mesAno){
     tabela(['Mês','Total recebido'], divPorMes.slice(-6).map(m=>[monthLabel(m.month), fmtMoney(m.total)]));
   }
 
-  // ===== PÁGINA 8 — METAS (patrimoniais + quantidade) =====
-  novaPagina();
+  // ===== METAS (patrimoniais + quantidade) =====
   const metasPatr = computePatrimonyGoals();
   const metasQtd = computeQuantityGoals();
   tituloSecao('Metas');
@@ -9828,7 +10184,7 @@ async function gerarRelatorioMensalPDF(mesAno){
       const metaPrincipalPdf = computePatrimonyGoalPrincipal();
       metasPatr.forEach(m=>{
         const destaque = metaPrincipalPdf && m.id===metaPrincipalPdf.id;
-        linhaKV(`${destaque?'★ ':''}${m.nome}${m.concluida?' (atingida)':''}`, `${fmtMoney(m.valorAtual)} / ${fmtMoney(m.valorObjetivo)} (${fmtNum(m.progressoReal.toFixed(1))}%)`, m.concluida?EMERALD:INK);
+        linhaKV(`${destaque?'★ ':''}${m.nome}${m.concluida?' (atingida)':''}`, `${fmtMoney(m.valorAtual)} / ${fmtMoney(m.valorObjetivo)} (${fmtNum(m.progressoExibicao.toFixed(1))}%)`, m.concluida?EMERALD:INK);
         if(m.prazo) paragrafo(`Prazo: ${fmtDate(m.prazo.dataLimite)}${m.prazo.vencida?' (vencido)':''}${m.prazo.statusRitmo?' · '+({acima:'Acima do ritmo',['no-ritmo']:'No ritmo',atencao:'Atenção ao ritmo'}[m.prazo.statusRitmo]):''}`, {tamanho:8, cor:FAINT});
       });
       y += 2;
@@ -9840,8 +10196,7 @@ async function gerarRelatorioMensalPDF(mesAno){
     }
   }
 
-  // ===== PÁGINA 9 — PERFIL DO INVESTIDOR =====
-  novaPagina();
+  // ===== PERFIL DO INVESTIDOR =====
   tituloSecao('Perfil do investidor');
   const perfil = DATA.settings.investorProfile;
   if(!perfil){
@@ -9873,8 +10228,7 @@ async function gerarRelatorioMensalPDF(mesAno){
     }
   }
 
-  // ===== PÁGINA 10 — SAÚDE PATRIMONIAL =====
-  novaPagina();
+  // ===== SAÚDE PATRIMONIAL =====
   const indice = computeIndiceSaudePatrimonial();
   tituloSecao('Índice de Saúde Patrimonial');
   paragrafo('Este é um indicador de organização e qualidade da carteira segundo critérios do Patrium, não é uma promessa de retorno nem uma nota de investimento.', {tamanho:8.3, cor:FAINT});
@@ -9886,16 +10240,14 @@ async function gerarRelatorioMensalPDF(mesAno){
     if(indice.melhorar.length){ subtitulo('Pontos de atenção'); indice.melhorar.forEach(f=>paragrafo('• '+f, {tamanho:8.6})); }
   }
 
-  // ===== PÁGINA 11 — INSIGHTS =====
-  novaPagina();
+  // ===== INSIGHTS =====
   const insights = computeInsightsCompletos();
   tituloSecao('Insights');
   paragrafo('Leituras automáticas geradas só a partir dos seus dados, nunca uma recomendação de compra ou venda.', {tamanho:8.3, cor:FAINT});
   if(insights.length===0) paragrafo('Histórico insuficiente para gerar insights neste momento.');
   else insights.forEach(i=> paragrafo('• '+i.texto.replace(/<[^>]+>/g,''), {tamanho:8.8}));
 
-  // ===== PÁGINA 12 — CONCLUSÃO =====
-  novaPagina();
+  // ===== CONCLUSÃO =====
   tituloSecao('Conclusão');
   const fraseFechamento = periodo.ganhosPeriodo>=0
     ? `${mesLabel} fechou em terreno positivo, com um resultado de ${fmtMoneySigned(periodo.ganhosPeriodo)}. O patrimônio total encerrou em ${fmtMoney(patr.patrimonio)}.`
@@ -9906,7 +10258,7 @@ async function gerarRelatorioMensalPDF(mesAno){
   if(pontoPositivo) paragrafo('Principal ponto positivo: '+pontoPositivo.texto.replace(/<[^>]+>/g,''), {tamanho:8.8});
   if(pontoAtencao) paragrafo('Principal ponto de atenção: '+pontoAtencao.texto.replace(/<[^>]+>/g,''), {tamanho:8.8});
   const metaPrincipalConclusao = computePatrimonyGoalPrincipal();
-  if(metaPrincipalConclusao) paragrafo(`Próxima meta: ${metaPrincipalConclusao.nome}, ${fmtNum(metaPrincipalConclusao.progressoReal.toFixed(1))}% concluída.`, {tamanho:8.8});
+  if(metaPrincipalConclusao) paragrafo(`Próxima meta: ${metaPrincipalConclusao.nome}, ${fmtNum(metaPrincipalConclusao.progressoExibicao.toFixed(1))}% concluída.`, {tamanho:8.8});
   const dicas = computeDicasPersonalizadas();
   if(dicas.length){
     y += 2;
@@ -9924,6 +10276,282 @@ async function gerarRelatorioMensalPDF(mesAno){
 
   rodape();
   doc.save(`patrium-relatorio-${mesAno}.pdf`);
+}
+
+/* ===== Relatório ANUAL (item 13) =====
+   Mesma lógica e mesmas funções de cálculo do relatório mensal acima —
+   nenhuma matemática nova, só um intervalo maior (o ano inteiro) e uma
+   consolidação mês a mês. Reaproveita computeResultadoMensal() (já usada
+   e testada no item 4) para a tabela mês a mês, e computeResultadoIntervalo()
+   para os totais do ano. */
+async function gerarRelatorioAnualPDF(ano){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  const PW = 210, PH = 297, MX = 18;
+  const NAVY = [11,18,36], EMERALD = [12,152,104], GOLD = [156,122,34], INK = [28,32,42], FAINT = [120,128,140], LINE=[224,227,232];
+  const nome = (DATA.settings.userName||'').trim();
+  const anoLabel = String(ano);
+  const start = `${ano}-01-01`;
+  const hoje = todayISO();
+  const fimDoAno = `${ano}-12-31`;
+  const end = fimDoAno < hoje ? fimDoAno : hoje;
+
+  let y = MX;
+  let pagina = 1;
+  const LOGO_MINI_W = 5, LOGO_MINI_H = LOGO_MINI_W * (440/316);
+  function rodape(){
+    try{ doc.addImage(PATRIUM_LOGO_SRC, 'PNG', MX, PH-14.5, LOGO_MINI_H*(316/440), LOGO_MINI_H); }catch(e){}
+    doc.setFontSize(7.5); doc.setTextColor(...FAINT); doc.setFont('helvetica','normal');
+    doc.text('Patrium Invest · Relatório gerado automaticamente a partir dos seus dados · Não é recomendação de investimento', MX+9, PH-10);
+    doc.text(String(pagina), PW-MX, PH-10, { align:'right' });
+  }
+  function novaPagina(){
+    rodape();
+    doc.addPage();
+    pagina++;
+    y = MX;
+    try{ doc.addImage(PATRIUM_LOGO_SRC, 'PNG', MX, 6, LOGO_MINI_H*(316/440), LOGO_MINI_H); }catch(e){}
+    doc.setFontSize(8); doc.setTextColor(...FAINT);
+    doc.text('Patrium Invest', MX+9, 10);
+    doc.text(`Ano de ${anoLabel}`, PW-MX, 10, { align:'right' });
+    doc.setDrawColor(...LINE); doc.line(MX, 13, PW-MX, 13);
+    y = 20;
+  }
+  function garanteEspaco(altura){ if(y+altura > PH-16){ novaPagina(); } }
+  function tituloSecao(texto){
+    y += 6;
+    // Garante espaço para o título E pelo menos uma primeira linha de
+    // conteúdo abaixo dele — nunca um título isolado no fim da página
+    // com o conteúdo empurrado para a página seguinte.
+    garanteEspaco(38);
+    doc.setFillColor(...NAVY); doc.rect(MX, y, PW-2*MX, 9, 'F');
+    doc.setTextColor(255,255,255); doc.setFontSize(11); doc.setFont('helvetica','bold');
+    doc.text(texto, MX+3, y+6.2);
+    y += 15;
+  }
+  function subtitulo(texto){
+    garanteEspaco(16); // título + pelo menos uma linha do que vem a seguir
+    doc.setTextColor(...GOLD); doc.setFontSize(9.5); doc.setFont('helvetica','bold');
+    doc.text(texto, MX, y);
+    y += 6;
+  }
+  function paragrafo(texto, opts){
+    opts = opts||{};
+    doc.setTextColor(...(opts.cor||INK)); doc.setFontSize(opts.tamanho||9.5); doc.setFont('helvetica', opts.negrito?'bold':'normal');
+    const linhas = doc.splitTextToSize(texto, PW-2*MX);
+    garanteEspaco(linhas.length*4.6+2);
+    doc.text(linhas, MX, y);
+    y += linhas.length*4.6+2;
+  }
+  function linhaKV(label, valor, cor){
+    garanteEspaco(6);
+    doc.setFontSize(9); doc.setTextColor(...FAINT); doc.setFont('helvetica','normal');
+    doc.text(label, MX, y);
+    doc.setTextColor(...(cor||INK)); doc.setFont('helvetica','bold');
+    doc.text(String(valor), PW-MX, y, { align:'right' });
+    y += 5.6;
+  }
+  function tabela(head, body, opts){
+    garanteEspaco(14);
+    doc.autoTable({
+      head:[head], body, startY:y, margin:{left:MX, right:MX}, theme:'grid',
+      headStyles:{ fillColor:NAVY, textColor:255, fontSize:8.5, fontStyle:'bold' },
+      bodyStyles:{ fontSize:8.3, textColor:INK },
+      alternateRowStyles:{ fillColor:[245,247,250] },
+      ...opts,
+    });
+    y = doc.lastAutoTable.finalY + 8;
+  }
+  function statChip(x, w, label, valor, cor){
+    doc.setDrawColor(...LINE); doc.setFillColor(250,250,252);
+    doc.roundedRect(x, y, w, 18, 2, 2, 'FD');
+    doc.setFontSize(7.3); doc.setTextColor(...FAINT); doc.text(label, x+3, y+6);
+    doc.setFontSize(11); doc.setTextColor(...(cor||INK)); doc.setFont('helvetica','bold');
+    doc.text(String(valor), x+3, y+14);
+  }
+
+  // ===== CAPA =====
+  doc.setFillColor(...NAVY); doc.rect(0,0,PW,PH,'F');
+  try{
+    const logoW = 32, logoH = logoW * (440/316);
+    doc.addImage(PATRIUM_LOGO_SRC, 'PNG', PW/2-logoW/2, 55, logoW, logoH);
+  }catch(e){}
+  doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(22);
+  doc.text('Relatório Anual', PW/2, 110, { align:'center' });
+  doc.setFontSize(15); doc.setFont('helvetica','normal'); doc.setTextColor(...[220,220,225]);
+  doc.text(anoLabel, PW/2, 120, { align:'center' });
+  doc.setDrawColor(...GOLD); doc.setLineWidth(0.6); doc.line(PW/2-25, 128, PW/2+25, 128);
+  doc.setFontSize(12); doc.setTextColor(255,255,255);
+  doc.text(nome ? `Preparado para ${nome}` : 'Relatório Patrium Invest', PW/2, 140, { align:'center' });
+  doc.setFontSize(8.5); doc.setTextColor(...[170,175,185]);
+  doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')}, com dados até ${fmtDate(end)}`, PW/2, 260, { align:'center' });
+  doc.text('Cálculos idênticos aos exibidos no aplicativo Patrium Invest', PW/2, 266, { align:'center' });
+
+  novaPagina();
+
+  // ===== RESUMO EXECUTIVO DO ANO =====
+  const patr = computePatrimonio();
+  const full = buildTimeline();
+  const periodo = computeResultadoIntervalo(start, end, full);
+  const twrAno = computeTWRInterval(start, end, full);
+  const xirrGeral = computeXIRR(); // XIRR do Patrium é sempre desde o início — não existe versão "do ano" ainda
+  const indiceResumo = computeIndiceSaudePatrimonial();
+  tituloSecao('Resumo executivo do ano');
+  const variacaoAno = round2(periodo.patrFinal - periodo.patrInicial);
+  paragrafo(periodo.patrInicial>0 || periodo.patrFinal>0
+    ? `${nome?nome+', s':'S'}eu patrimônio foi de ${fmtMoney(periodo.patrInicial)} para ${fmtMoney(periodo.patrFinal)} em ${anoLabel}, uma variação de ${fmtMoneySigned(variacaoAno)}.`
+    : `Não há dados suficientes registados em ${anoLabel} para um resumo executivo.`);
+  y += 2;
+  statChip(MX, 55, 'Patrimônio inicial', fmtMoney(periodo.patrInicial));
+  statChip(MX+58, 55, 'Patrimônio final', fmtMoney(periodo.patrFinal));
+  statChip(MX+116, 55, 'Variação no ano', fmtMoneySigned(variacaoAno), variacaoAno>=0?EMERALD:[190,60,60]);
+  y += 24;
+  statChip(MX, 55, 'Aportes (líquido)', fmtMoney(periodo.aportesPeriodo));
+  statChip(MX+58, 55, 'Retiradas', fmtMoney(periodo.retiradasPeriodo));
+  statChip(MX+116, 55, 'Rendimento do ano', fmtMoneySigned(periodo.ganhosPeriodo), periodo.ganhosPeriodo>=0?EMERALD:[190,60,60]);
+  y += 24;
+  statChip(MX, 55, 'Dividendos no ano', fmtMoney(periodo.divsPeriodo));
+  statChip(MX+58, 55, 'Rentabilidade do ano (TWR)', twrAno.sufficient?fmtPct(twrAno.cumulative):'Dados insuficientes');
+  statChip(MX+116, 55, 'XIRR (desde o início)', xirrGeral!==null?fmtPct(xirrGeral):'Insuficiente');
+  y += 24;
+  statChip(MX, 118, 'Saúde Patrimonial (atual)', indiceResumo.score!==null?`${indiceResumo.score}/100 — ${indiceResumo.status}`:'Dados insuficientes', indiceResumo.score!==null?(indiceResumo.score>=75?EMERALD:indiceResumo.score>=50?GOLD:[190,60,60]):FAINT);
+  y += 26;
+  paragrafo('A rentabilidade do ano usa TWR (Time-Weighted Return), que separa corretamente dinheiro novo aportado de rendimento gerado pela carteira — a mesma lógica usada em todo o Patrium.', {tamanho:7.8, cor:FAINT});
+
+  // ===== EVOLUÇÃO MÊS A MÊS DO ANO =====
+  tituloSecao('Evolução mês a mês');
+  const mesesDoAno = [];
+  for(let m=1; m<=12; m++){
+    const mk = `${ano}-${String(m).padStart(2,'0')}`;
+    if(mk > monthKey(hoje)) break;
+    mesesDoAno.push(mk);
+  }
+  const linhasMensais = mesesDoAno.map(mk=>{
+    const [y2,m2] = mk.split('-').map(Number);
+    const s2 = `${mk}-01`, e2 = `${mk}-${String(new Date(y2,m2,0).getDate()).padStart(2,'0')}`;
+    const r = computeResultadoIntervalo(s2, e2, full);
+    const dadosInsuficientes = r.patrInicial===0 && r.patrFinal===0;
+    return { mesKey:mk, label:MESES_PT[m2-1], ...r, dadosInsuficientes };
+  });
+  if(linhasMensais.every(l=>l.dadosInsuficientes)){
+    paragrafo('Nenhum dado registado em ' + anoLabel + ' até o momento.');
+  } else {
+    tabela(['Mês','Patr. inicial','Aportes (líq.)','Rendimento','Patr. final','Rentabilidade'],
+      linhasMensais.map(r=> r.dadosInsuficientes
+        ? [r.label, 'Dados insuficientes', '', '', '', '']
+        : [r.label, fmtMoney(r.patrInicial), fmtMoneySigned(r.aportesPeriodo), fmtMoneySigned(r.ganhosPeriodo), fmtMoney(r.patrFinal), r.rentabTWR===null?'Insuficiente':fmtPct(r.rentabTWR)]));
+  }
+
+  // Gráfico de evolução patrimonial do ano (mesma técnica do relatório mensal)
+  try{
+    const serieAno = full.filter(p=>p.date<=end);
+    if(serieAno.length>=2){
+      const canvas = document.createElement('canvas'); canvas.width=1000; canvas.height=320;
+      const chartTmp = new Chart(canvas.getContext('2d'), {
+        type:'line',
+        data:{ labels:serieAno.map(p=>fmtDate(p.date)), datasets:[{ data:serieAno.map(p=>p.patrimonio), borderColor:'#0C9868', backgroundColor:'rgba(12,152,104,.12)', fill:true, pointRadius:0, borderWidth:2.5, tension:.25 }] },
+        options:{ responsive:false, animation:false, plugins:{ legend:{display:false} }, scales:{ x:{display:false}, y:{ ticks:{ callback:(v)=>fmtMoney(v) } } } }
+      });
+      await new Promise(r=>setTimeout(r,60));
+      const imgData = canvas.toDataURL('image/png');
+      chartTmp.destroy();
+      garanteEspaco(70);
+      subtitulo('Evolução do patrimônio (histórico completo até o fim do ano)');
+      doc.addImage(imgData, 'PNG', MX, y, PW-2*MX, 58);
+      y += 64;
+    }
+  }catch(e){}
+
+  // ===== INVESTIMENTOS (composição atual) =====
+  tituloSecao('Investimentos');
+  paragrafo('Composição atual da carteira (Renda Fixa, Renda Variável e evolução das classes ao longo do ano já aparecem na aba Análises do aplicativo).', {tamanho:8, cor:FAINT});
+  const rf = computeRfTotals();
+  const rv = computeRvTotals();
+  y += 2;
+  subtitulo('Renda Fixa');
+  if(rf.capital<=0){ paragrafo('Nenhum produto de Renda Fixa registado.'); }
+  else {
+    linhaKV('Capital investido', fmtMoney(rf.capital));
+    linhaKV('Saldo atual', fmtMoney(rf.saldo));
+    linhaKV('Rendimento acumulado', fmtMoneySigned(rf.rendimento), EMERALD);
+  }
+  y += 2;
+  subtitulo('Renda Variável');
+  const positions = computePositions().filter(p=>p.qty>0.0000001);
+  if(positions.length===0){ paragrafo('Nenhuma posição de Renda Variável registada.'); }
+  else {
+    linhaKV('Capital investido', fmtMoney(rv.capital));
+    linhaKV('Valor de mercado', fmtMoney(rv.marketValue));
+    y += 2;
+    tabela(['Ativo','Quantidade','Preço médio','Valor atual'], positions.map(p=>[p.ticker, fmtNum(p.qty), fmtMoney(p.avgPrice), fmtMoney(p.marketValue)]));
+  }
+
+  // ===== APORTES DO ANO =====
+  tituloSecao('Aportes');
+  const aportesDoAno = linhasMensais.filter(l=>!l.dadosInsuficientes);
+  if(aportesDoAno.length===0){
+    paragrafo('Sem aportes registados em ' + anoLabel + '.');
+  } else {
+    const totalAportadoAno = round2(aportesDoAno.reduce((s,l)=>s+l.aportesPeriodo,0));
+    const mediaMensalAno = round2(totalAportadoAno/aportesDoAno.length);
+    linhaKV('Total aportado no ano (líquido de retiradas)', fmtMoney(totalAportadoAno));
+    linhaKV('Média mensal', fmtMoney(mediaMensalAno));
+    y += 2;
+    tabela(['Mês','Aportes (líquido)'], aportesDoAno.map(l=>[l.label, fmtMoneySigned(l.aportesPeriodo)]));
+  }
+
+  // ===== DIVIDENDOS DO ANO =====
+  tituloSecao('Dividendos');
+  const divsPorMesAno = computeDividendsByMonth().filter(m=>m.month.startsWith(String(ano)));
+  if(divsPorMesAno.length===0){
+    paragrafo('Nenhum dividendo registado em ' + anoLabel + '.');
+  } else {
+    const totalDivsAno = round2(divsPorMesAno.reduce((s,m)=>s+m.total,0));
+    linhaKV('Total de dividendos no ano', fmtMoney(totalDivsAno), EMERALD);
+    y += 2;
+    tabela(['Mês','Total recebido'], divsPorMesAno.map(m=>[monthLabel(m.month), fmtMoney(m.total)]));
+  }
+
+  // ===== METAS =====
+  const metasPatr = computePatrimonyGoals();
+  const metasQtd = computeQuantityGoals();
+  tituloSecao('Metas');
+  paragrafo('Estado atual das metas (o histórico de metas ao longo do ano não é guardado separadamente).', {tamanho:8, cor:FAINT});
+  if(metasPatr.length===0 && metasQtd.length===0){
+    paragrafo('Nenhuma meta criada até o momento.');
+  } else {
+    if(metasPatr.length){
+      subtitulo('Metas patrimoniais');
+      metasPatr.forEach(m=>{
+        linhaKV(`${m.nome}${m.concluida?' (atingida)':''}`, `${fmtMoney(m.valorAtual)} / ${fmtMoney(m.valorObjetivo)} (${fmtNum(m.progressoExibicao.toFixed(1))}%)`, m.concluida?EMERALD:INK);
+      });
+      y += 2;
+    }
+    if(metasQtd.length){
+      subtitulo('Metas de quantidade de ativos');
+      tabela(['Meta','Atual / Alvo','% concluído'], metasQtd.map(m=>[m.ticker, `${fmtNum(m.currentQty)} / ${fmtNum(m.targetQty)}`, fmtNum(m.pctComplete.toFixed(0))+'%']));
+    }
+  }
+
+  // ===== ANÁLISE =====
+  tituloSecao('Análise');
+  if(indiceResumo.score===null){
+    paragrafo('Dados ainda insuficientes para o Índice de Saúde Patrimonial.');
+  } else {
+    subtitulo(`Índice de Saúde Patrimonial: ${indiceResumo.score}/100 — ${indiceResumo.status}`);
+    paragrafo('Indicador de organização da carteira, não é uma promessa de retorno.', {tamanho:8, cor:FAINT});
+  }
+  y += 2;
+  const insights = computeInsightsCompletos();
+  if(insights.length){
+    subtitulo('Insights');
+    insights.slice(0,8).forEach(i=> paragrafo('• '+i.texto.replace(/<[^>]+>/g,''), {tamanho:8.6}));
+  }
+  y += 4;
+  paragrafo('Este relatório foi gerado automaticamente pelo Patrium Invest, usando exatamente os mesmos cálculos exibidos no aplicativo. Nenhuma informação aqui é uma recomendação de investimento.', {tamanho:8, cor:FAINT});
+
+  rodape();
+  doc.save(`patrium-relatorio-anual-${ano}.pdf`);
 }
 
 /* ===================== ASSISTENTE PATRIUM =====================
@@ -10237,16 +10865,65 @@ function resolverContinuacao(textoOriginal, ctx){
 
   return null;
 }
+/* Busca na base de perguntas frequentes (HELP_FAQ, já usada pela Central de
+   Ajuda) por palavras-chave — reaproveita o conteúdo já escrito e revisado
+   ali, em vez de o Assistente ter uma base de conhecimento paralela e mais
+   pobre sobre o próprio Patrium (Central de Alertas, Calendário, Backup,
+   Projeções, etc.). Pontua por sobreposição de palavras com a pergunta (q)
+   e a categoria (cat); só retorna algo quando a pontuação é alta o
+   suficiente para ser uma correspondência de verdade, nunca um palpite. */
+function buscarHelpFaq(textoOriginal){
+  const t = normalizarTexto(textoOriginal);
+  const PALAVRAS_GENERICAS = ['como','funciona','o que','oque','significa','faz','serve','para','pra','sao','são','isso','aquilo'];
+  const CATEGORIAS_GENERICAS = ['como funciona','geral','comecando'];
+  let melhor = null, melhorScore = 0;
+  HELP_FAQ.forEach(item=>{
+    const qNorm = normalizarTexto(item.q);
+    if(t.includes(qNorm) || qNorm.includes(t)){
+      if(10>melhorScore){ melhorScore = 10; melhor = item; }
+      return;
+    }
+    // Só palavras realmente distintivas da pergunta contam — "como" e
+    // "funciona" aparecem em quase toda pergunta e em várias categorias
+    // (inclusive a própria categoria chamada "Como funciona"), então não
+    // podem, sozinhas, decidir qual FAQ é a certa.
+    const palavrasQ = qNorm.split(' ').filter(w=>w.length>=4 && !PALAVRAS_GENERICAS.includes(w));
+    let wordScore = 0;
+    palavrasQ.forEach(w=>{ if(t.includes(w)) wordScore += 1; });
+    if(wordScore<1) return;
+    const catNorm = normalizarTexto(item.cat);
+    const catBonus = (!CATEGORIAS_GENERICAS.includes(catNorm) && t.includes(catNorm)) ? 3 : 0;
+    // Exige sinal de verdade: ou 2 palavras de conteúdo batendo, ou 1
+    // palavra + a categoria batendo também — nunca uma palavra solta e
+    // genérica decidindo sozinha (evita "relatório PDF" cair numa FAQ
+    // qualquer só porque "como" e "funciona" aparecem em toda parte).
+    const score = wordScore*2 + catBonus;
+    if(score<4) return;
+    if(score>melhorScore){ melhorScore = score; melhor = item; }
+  });
+  return melhor;
+}
 function classificarIntencaoAssistente(textoOriginal, ctx){
   const t = normalizarTexto(textoOriginal);
   const testa = (arr)=> arr.some(p=> t.includes(p));
   const testaFuzzy = (arr, dist)=> arr.some(p=> contemPalavraSimilar(t, p, dist));
 
+  // Pergunta sobre uma FUNCIONALIDADE do próprio Patrium (ex.: "o que é a
+  // Central de Alertas", "como funciona o calendário", "pra que serve a
+  // Central de Ajuda") — checado ANTES do catch-all genérico de navegação
+  // logo abaixo, para responder com a explicação de verdade em vez de
+  // sempre mandar para a Central de Ajuda sem dizer o que ela vai achar lá.
+  if(testa(['o que e','oque e','como funciona','o que sao','oque sao','pra que serve','para que serve','o que faz','me explica','explica'])){
+    const faqMatch = buscarHelpFaq(textoOriginal);
+    if(faqMatch) return {id:'help_faq', faq:faqMatch};
+  }
+
   // Perguntas "como faço / onde vejo / como registo algo" são sempre sobre
   // NAVEGAÇÃO no produto, checadas antes de qualquer palavra-chave de dados
   // (senão "como registro uma retirada" cairia em "retiradas" por engano).
   if(testa(['como registr','como adiciono','como crio','como cadastro','onde vejo','onde fica','onde encontro','como funciona','como altero','como edito','como faco para','como faço para'])) return {id:'ajuda_navegacao'};
-  if(testa(['pdf','relatorio mensal'])) return {id:'ajuda_pdf'};
+  if(testa(['central de ajuda','o que e a central de ajuda','pra que serve a central de ajuda'])) return {id:'ajuda_central_ajuda'};
+  if(testa(['pdf','relatorio mensal','relatorio pdf'])) return {id:'ajuda_pdf'};
   if(testa(['backup','exportar dados','importar dados'])) return {id:'ajuda_backup'};
 
   // "O que é / significa / explica X" é sempre uma pergunta de conceito,
@@ -10379,7 +11056,7 @@ const ASSIST_RESPOSTAS = {
   despedida(){ return 'Disponha! Qualquer coisa, é só perguntar.'; },
   patrimonio(ctx){
     let r = `**Patrimônio atual:** ${fmtMoney(ctx.patr.patrimonio)}\n**Aportado:** ${fmtMoney(ctx.patr.aportesExternos)}\n**Resultado total:** ${fmtMoneySigned(ctx.patr.ganhoTotal)}`;
-    if(ctx.metaPrincipal) r += `\n\nSua próxima meta (**${ctx.metaPrincipal.nome}**) está em ${fmtNum(ctx.metaPrincipal.progressoReal.toFixed(1))}%.`;
+    if(ctx.metaPrincipal) r += `\n\nSua próxima meta (**${ctx.metaPrincipal.nome}**) está em ${fmtNum(ctx.metaPrincipal.progressoExibicao.toFixed(1))}%${ctx.metaPrincipal.progressoReal>100?' (já ultrapassou o valor definido)':''}.`;
     return r;
   },
   aportes(ctx){
@@ -10388,7 +11065,7 @@ const ASSIST_RESPOSTAS = {
   },
   retiradas(ctx){
     const ret = ctx.patr.caixa.retiradas;
-    if(!ret || ret<=0) return 'Você ainda não registou nenhuma retirada no Patrium.';
+    if(!ret || ret<=0) return 'Você ainda não registrou nenhuma retirada no Patrium.';
     return `O total já retirado do Patrium é de **${fmtMoney(ret)}**.`;
   },
   rf(ctx){
@@ -10504,7 +11181,7 @@ const ASSIST_RESPOSTAS = {
       ? `Você já tem uma meta patrimonial de ${fmtMoney(alvo)} criada, em **${fmtNum(progresso.toFixed(1))}%**.`
       : `Considerando os ${fmtMoney(alvo)} como objetivo: hoje você está em **${fmtNum(progresso.toFixed(1))}%** disso.`;
     r += faltam>0 ? `\nFalta ${fmtMoney(faltam)}.` : '\nVocê já atingiu esse valor!';
-    if(!metaExistente) r += '\n\nSe quiser, posso te ajudar a criar essa meta formalmente na aba Ações, para acompanhar prazo e ritmo automaticamente.';
+    if(!metaExistente) r += '\n\nSe quiser, posso te ajudar a criar essa meta formalmente na aba Projeções, para acompanhar prazo e ritmo automaticamente.';
     return r;
   },
   comparar_crescimento_rf_rv(ctx, i){
@@ -10512,7 +11189,7 @@ const ASSIST_RESPOSTAS = {
       const meses = computeMonthlyContributions().slice(-3);
       if(meses.length===0) return ASSIST_DISCLAIMER_HISTORICO;
       const totalRf = meses.reduce((s,m)=>s+m.rf,0), totalRv = meses.reduce((s,m)=>s+m.rv,0);
-      if(totalRf===0 && totalRv===0) return 'Não houve aportes registados nos últimos meses para comparar.';
+      if(totalRf===0 && totalRv===0) return 'Não houve aportes registrados nos últimos meses para comparar.';
       const maior = totalRf>=totalRv ? 'Renda Fixa' : 'Renda Variável';
       return `Nos últimos ${meses.length} meses, os aportes foram ${fmtMoney(totalRf)} em Renda Fixa e ${fmtMoney(totalRv)} em Renda Variável. **${maior}** recebeu mais aportes recentemente (isso é sobre aportes, não sobre valorização).`;
     }
@@ -10701,7 +11378,7 @@ const ASSIST_RESPOSTAS = {
   },
   historico_acoes(ctx){
     const comprasRv = DATA.transactions.filter(t=>t.type==='compra').sort((a,b)=>a.date.localeCompare(b.date));
-    if(comprasRv.length===0) return 'Você ainda não registou nenhuma compra de ações, FIIs ou outros ativos de Renda Variável no Patrium.';
+    if(comprasRv.length===0) return 'Você ainda não registrou nenhuma compra de ações, FIIs ou outros ativos de Renda Variável no Patrium.';
     const primeira = comprasRv[0];
     return `Você começou a comprar ativos de Renda Variável em **${fmtDate(primeira.date)}**, com a compra de ${primeira.ticker}. Desde então, já são ${ctx.positions.length} ativo(s) diferentes em carteira.`;
   },
@@ -10752,7 +11429,7 @@ const ASSIST_RESPOSTAS = {
     return `O preço médio de **${p.ticker}** é ${fmtMoney(p.avgPrice)}, calculado pela média ponderada de todas as suas compras desse ativo.`;
   },
   dividendos(ctx){
-    if(ctx.rv.dividends<=0) return 'Você ainda não registou nenhum dividendo recebido no Patrium.';
+    if(ctx.rv.dividends<=0) return 'Você ainda não registrou nenhum dividendo recebido no Patrium.';
     let r = `**Dividendos recebidos (total):** ${fmtMoney(ctx.rv.dividends)}`;
     if(ctx.divMesAtual) r += `\nÚltimo mês com registo: ${monthLabel(ctx.divMesAtual.month)}, ${fmtMoney(ctx.divMesAtual.total)}`;
     return r;
@@ -10795,10 +11472,10 @@ const ASSIST_RESPOSTAS = {
     return `Seu ativo com ${rotulo} até agora é **${alvo.ticker}**, com ${fmtNum(alvo.totalResultPct.toFixed(1))}% (${fmtMoneySigned(alvo.totalResult)}). Isso é desempenho passado, não garante nada sobre o futuro.`;
   },
   capacidade_assistente(){
-    return 'Consigo consultar os dados reais da sua carteira no Patrium: patrimônio, posições, Renda Fixa, Renda Variável, histórico, dividendos, TWR, XIRR, concentração, metas, perfil e Saúde Patrimonial. Também explico conceitos financeiros e faço simulações hipotéticas (que nunca alteram a sua carteira de verdade). Não tenho cotações de mercado em tempo real além do que já está registado no Patrium, e não executo compra, venda ou qualquer alteração sozinho.';
+    return 'Consigo consultar os dados reais da sua carteira no Patrium: patrimônio, posições, Renda Fixa, Renda Variável, histórico, dividendos, TWR, XIRR, concentração, metas, perfil e Saúde Patrimonial. Também explico conceitos financeiros e faço simulações hipotéticas (que nunca alteram a sua carteira de verdade). Não tenho cotações de mercado em tempo real além do que já está registrado no Patrium, e não executo compra, venda ou qualquer alteração sozinho.';
   },
   transparencia_dados(ctx){
-    return 'Uso exclusivamente os dados que você já tem registados no Patrium — nada é inventado. Quando mostro um número da sua carteira, ele vem direto dos seus lançamentos reais. Quando faço uma simulação, deixo isso explícito e nunca altero nada de verdade. Quando explico um conceito, é conhecimento geral, sem depender dos seus dados.';
+    return 'Uso exclusivamente os dados que você já tem registrados no Patrium — nada é inventado. Quando mostro um número da sua carteira, ele vem direto dos seus lançamentos reais. Quando faço uma simulação, deixo isso explícito e nunca altero nada de verdade. Quando explico um conceito, é conhecimento geral, sem depender dos seus dados.';
   },
   ranking_posicao(ctx, i, ultimoTicker, textoOriginal, profundidade){
     if(ctx.conc.length===0) return 'Você ainda não tem ativos de Renda Variável para eu ranquear.';
@@ -10828,11 +11505,11 @@ const ASSIST_RESPOSTAS = {
     return r;
   },
   metas(ctx){
-    if(ctx.metasPatr.length===0 && ctx.metasQtd.length===0) return 'Você ainda não criou nenhuma meta no Patrium. Pode criar uma meta patrimonial ou por quantidade de ativos na aba Ações.';
+    if(ctx.metasPatr.length===0 && ctx.metasQtd.length===0) return 'Você ainda não criou nenhuma meta no Patrium. Pode criar uma meta patrimonial na aba Projeções ou uma meta por quantidade de ativos na aba Ações.';
     const partes = [];
     if(ctx.metaPrincipal){
       const m = ctx.metaPrincipal;
-      partes.push(`**${m.nome}**: ${fmtMoney(m.valorAtual)} de ${fmtMoney(m.valorObjetivo)} (**${fmtNum(m.progressoReal.toFixed(1))}%**)${m.concluida?' — atingida! ✓':''}`);
+      partes.push(`**${m.nome}**: ${fmtMoney(m.valorAtual)} de ${fmtMoney(m.valorObjetivo)} (**${fmtNum(m.progressoExibicao.toFixed(1))}%**)${m.concluida?' — atingida! ✓':''}`);
       if(!m.concluida) partes.push(`Falta: ${fmtMoney(m.faltam)}`);
       if(m.prazo && m.prazo.ritmoNecessario!==null) partes.push(`Ritmo necessário para o prazo: ${fmtMoney(m.prazo.ritmoNecessario)}/mês`);
     }
@@ -10874,7 +11551,7 @@ const ASSIST_RESPOSTAS = {
     if(perfTxt.length) bloco.push(`**Performance**\n${perfTxt.join(' · ')}`);
     if(ctx.perfil) bloco.push(`**Perfil**\nDeclarado: ${PERFIS_INVESTIDOR[ctx.perfil.tipo].nome}${ctx.bucket?' · Carteira atual: '+PERFIS_INVESTIDOR[ctx.bucket].nome:''}`);
     if(ctx.indice.score!==null) bloco.push(`**Saúde Patrimonial**\n${ctx.indice.score}/100 (${ctx.indice.status})`);
-    if(ctx.metaPrincipal) bloco.push(`**Meta**\n${ctx.metaPrincipal.nome}: ${fmtNum(ctx.metaPrincipal.progressoReal.toFixed(1))}%`);
+    if(ctx.metaPrincipal) bloco.push(`**Meta**\n${ctx.metaPrincipal.nome}: ${fmtNum(ctx.metaPrincipal.progressoExibicao.toFixed(1))}%`);
     const positivos = ctx.insights.filter(i=>i.tipo==='positivo').slice(0,2).map(i=>i.texto.replace(/<[^>]+>/g,''));
     const atencao = ctx.insights.filter(i=>i.tipo==='atencao').slice(0,2).map(i=>i.texto.replace(/<[^>]+>/g,''));
     if(positivos.length) bloco.push(`**Pontos positivos**\n${positivos.map(p=>'• '+p).join('\n')}`);
@@ -10964,7 +11641,7 @@ const ASSIST_RESPOSTAS = {
       };
     };
     const a = descreve(tkA), b = descreve(tkB);
-    if(a.semDados && b.semDados) return `Não tenho posição registada nem em ${tkA} nem em ${tkB} na sua carteira, não consigo comparar com dados reais.`;
+    if(a.semDados && b.semDados) return `Não tenho posição registrada nem em ${tkA} nem em ${tkB} na sua carteira, não consigo comparar com dados reais.`;
     const bloco = (x)=>{
       if(x.semDados) return `**${x.tk}**\nVocê não tem posição neste ativo no Patrium, não tenho dados reais para comparar.`;
       const linhas = [
@@ -10999,11 +11676,21 @@ const ASSIST_RESPOSTAS = {
     }
     return { texto: partes.join('\n\n') };
   },
-  ajuda_navegacao(){
-    return 'Use o botão "+ Novo investimento" no cabeçalho para registar compras, vendas ou aportes de Renda Fixa. Para mais detalhes sobre qualquer funcionalidade, a Central de Ajuda (ícone ❓) tem uma base de conhecimento completa, organizada por conceito.';
+  help_faq(ctx, i){
+    // Responde com o conteúdo já existente e revisado do HELP_FAQ, e ainda
+    // aponta o caminho na interface quando a pergunta tinha uma aba óbvia
+    // associada (mesmo mapa de categoria→aba usado pela Central de Alertas).
+    const tab = ALERT_CATEGORY_TAB[i.faq.cat];
+    let extra = '';
+    if(tab && document.querySelector(`.tab-btn[data-tab="${tab}"]`)) extra = `\n\n(Você encontra isso na aba correspondente, se quiser ver na prática.)`;
+    return i.faq.a + extra;
   },
-  ajuda_pdf(){ return 'Use o ícone 📄 no cabeçalho para gerar o relatório mensal em PDF, escolhendo o mês de referência.'; },
+  ajuda_navegacao(){
+    return 'Use o botão "+ Novo investimento" no cabeçalho para registrar compras, vendas ou aportes de Renda Fixa. Para mais detalhes sobre qualquer funcionalidade, a Central de Ajuda (ícone ❓) tem uma base de conhecimento completa, organizada por conceito.';
+  },
+  ajuda_pdf(){ return 'Use o ícone 📄 no cabeçalho para gerar relatórios em PDF: o mensal traz o resumo do patrimônio, aportes e retiradas do mês, rendimento e rentabilidade (TWR), dividendos e o progresso das metas; o anual consolida o ano inteiro, com evolução mês a mês, investimentos, aportes, dividendos e metas. Ambos usam exatamente os mesmos dados e cálculos do aplicativo.'; },
   ajuda_backup(){ return 'Use o ícone ⇅ no cabeçalho para exportar ou importar os seus dados em backup (JSON).'; },
+  ajuda_central_ajuda(){ return 'A Central de Ajuda (ícone ❓ no cabeçalho) é uma base de perguntas frequentes organizada por assunto (Começando, Renda Fixa, Ações, Metas, Backup, Alertas, e outros), com busca por palavra-chave. Ela existe ao lado de mim: eu respondo sobre os seus dados e converso naturalmente, ela é ótima para consultar uma explicação escrita e fixa sempre que precisar.'; },
   desconhecido(){
     return 'Não tenho certeza do que você quis dizer. Pode me contar de outro jeito? Por exemplo, me diga o nome do ativo, ou do que da sua carteira você está falando.';
   },
@@ -11020,7 +11707,7 @@ const ASSIST_NAVEGACAO = {
   custo_medio:{ label:'Abrir Ações', tab:'acoes' },
   comparar_ativos:{ label:'Abrir Ações', tab:'acoes' },
   dividendos:{ label:'Ver Dividendos', tab:'dividendos' },
-  metas:{ label:'Ver Metas', tab:'acoes' },
+  metas:{ label:'Ver Metas', tab:'projecoes' },
   perfil:{ label:'Abrir Perfil', tab:'educacao' },
   radar:{ label:'Ver Radar do Investidor', tab:'educacao' },
   selos:{ label:'Ver Selos', tab:'educacao' },
@@ -11104,7 +11791,294 @@ function assistExtrairValor(texto){
   }
   return null;
 }
+
+/* ===================== ASSISTENTE — CADASTRO GUIADO (itens 17-18) =====================
+   Máquina de estados simples de conversa, separada do classificador de
+   intenção normal. Enquanto existir uma ação pendente, TODA mensagem
+   seguinte do utilizador é tratada como resposta a essa ação (não passa
+   pelo classificador normal) — é isto que permite o "Claro, é uma ação,
+   FII ou Renda Fixa? / Qual o ticker? / Quantas ações?" em várias
+   mensagens. Nada é gravado em DATA até o utilizador confirmar
+   explicitamente ("sim") — a REGRA DE SEGURANÇA do item 18.
+   As funções de execução (executarAcaoPendente) escrevem em DATA
+   exatamente na mesma estrutura que os formulários normais usam (mesmos
+   nomes de campo), para nunca criar um "segundo formato" de dado. */
+let assistantPendingAction = null; // { tipo, dados:{}, aguardandoConfirmacao }
+const ASSIST_CATEGORIAS_RV = {
+  acao: { label:'Ação brasileira', emoji:'📈', desc:'uma fatia de uma empresa listada na B3.' },
+  fii: { label:'FII', emoji:'🏢', desc:'fundo que investe em imóveis (shoppings, galpões, escritórios) ou papéis imobiliários, com rendimentos mensais.' },
+  bdr: { label:'BDR', emoji:'🌎', desc:'recibo negociado na B3 que representa uma ação de uma empresa estrangeira, em reais.' },
+  etf: { label:'ETF', emoji:'📊', desc:'uma única compra que já dá exposição a várias empresas de uma vez.' },
+  cripto: { label:'Criptomoeda', emoji:'₿', desc:'ativos digitais como Bitcoin e Ethereum.' },
+};
+
+function assistParseData(texto){
+  const t = texto.toLowerCase().trim();
+  if(/\bhoje\b/.test(t)) return todayISO();
+  if(/\bontem\b/.test(t)) { const d = new Date(); d.setDate(d.getDate()-1); return d.toISOString().slice(0,10); }
+  let m = t.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if(m) return `${m[1]}-${m[2]}-${m[3]}`;
+  m = t.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if(m) return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+  return null;
+}
+function assistCancelarPendente(){ assistantPendingAction = null; return 'Tudo bem, cancelei. Não registrei nada. Se quiser, é só começar de novo quando quiser.'; }
+
+// Detecta o início de um dos fluxos de cadastro guiado. Verificado ANTES
+// do classificador normal (só quando não há já uma ação pendente), e só
+// com verbos claros de comando ("registra", "cadastra", "cria", "quero
+// cadastrar/registrar") — nunca sequestra uma pergunta comum como "quanto
+// aportei esse mês?" (sem verbo de comando, cai no classificador normal).
+function iniciarFluxoCadastro(textoOriginal, t){
+  // "Como cadastro/registro X" é uma pergunta de instrução (cai no
+  // classificador normal → ajuda_navegacao), nunca um comando para
+  // executar agora — só "cadastra/registra/cria X" (imperativo) inicia
+  // um fluxo de verdade.
+  if(/^(como|onde|qual|quais|quando|por que|porque)\b/.test(t)) return null;
+  const comando = /\b(registra|registrar|regista|cadastra|cadastrar|cria|criar|adiciona|adicionar|quero registrar|quero registar|quero cadastrar)\b/.test(t);
+  if(!comando) return null;
+
+  // "Quero cadastrar um investimento" — sem dados ainda, inicia o fluxo
+  // passo a passo do item 17 (pergunta tudo).
+  if(/investimento|uma (acao|ação|posicao)|um ativo/.test(t) && !/dividend|renda fixa|meta/.test(t)){
+    assistantPendingAction = { tipo:'novo_investimento', dados:{}, passo:'tipo' };
+    return 'Claro! Vamos cadastrar um investimento. Primeiro, que tipo é?\n\n📈 **Ação ou FII** — uma posição comprada na bolsa (ex.: PETR4, ITUB4, HGLG11), com quantidade e preço, acompanhada pela cotação de mercado. Isso também vale para ETFs, BDRs e criptomoedas, mesmo formato.\n🏦 **Renda Fixa** — um investimento como CDB, Tesouro Direto, LCI/LCA ou similar, onde você mesmo atualiza o saldo de tempos em tempos, sem cotação de mercado.\n\nQual dos dois?';
+  }
+
+  // "Registra que recebi X de dividendos de TICKER" / "registra 50 de dividendo de PETR4"
+  if(/dividend|provento|\bjcp\b/.test(t)){
+    const valor = assistExtrairValor(textoOriginal);
+    const ativo = detectarAtivoQualquer(textoOriginal, buildAssistantContext());
+    assistantPendingAction = { tipo:'dividendo', dados:{ valor: valor||null, ticker: ativo?ativo.ticker:null, date: todayISO() }, passo:null };
+    return avancarFluxoCadastro('');
+  }
+
+  // "Registra meu saldo da renda fixa em 8.500" — saldo, não aporte.
+  if(/renda fixa|\brf\b/.test(t) && /saldo/.test(t)){
+    const valor = assistExtrairValor(textoOriginal);
+    assistantPendingAction = { tipo:'saldo_rf', dados:{ valor: valor||null, date: todayISO(), produtoId:null }, passo:null };
+    return avancarFluxoCadastro('');
+  }
+
+  // "Registra 500€ de Renda Fixa" — aporte em RF.
+  if(/renda fixa|\brf\b/.test(t)){
+    const valor = assistExtrairValor(textoOriginal);
+    assistantPendingAction = { tipo:'aporte_rf', dados:{ valor: valor||null, date: todayISO(), produtoId:null }, passo:null };
+    return avancarFluxoCadastro('');
+  }
+
+  // "Cria uma meta de €20.000"
+  if(/\bmeta\b/.test(t)){
+    const valor = assistExtrairValor(textoOriginal);
+    assistantPendingAction = { tipo:'meta_patrimonial', dados:{ valor: valor||null, nome:null }, passo:null };
+    return avancarFluxoCadastro('');
+  }
+
+  // "Registra um aporte de €300" (genérico, sem produto/ticker = caixa).
+  if(/aporte|aportei|coloquei/.test(t)){
+    const valor = assistExtrairValor(textoOriginal);
+    assistantPendingAction = { tipo:'aporte_caixa', dados:{ valor: valor||null, date: todayISO() }, passo:null };
+    return avancarFluxoCadastro('');
+  }
+
+  return null;
+}
+
+// Avança o fluxo pendente com a resposta do utilizador (respostaTexto),
+// preenchendo o próximo campo em falta, ou monta o resumo de confirmação
+// quando já há tudo o que é preciso. Só pergunta o que realmente falta —
+// nunca repete uma pergunta sobre um dado que já veio na frase inicial.
+function avancarFluxoCadastro(respostaTexto){
+  const a = assistantPendingAction;
+  const d = a.dados;
+  const t = normalizarTexto(respostaTexto);
+  const ctx = buildAssistantContext();
+
+  if(a.tipo==='novo_investimento'){
+    if(a.passo==='tipo'){
+      if(/renda fixa|\brf\b/.test(t)){
+        // Vira um sub-fluxo de aporte RF, mais simples.
+        assistantPendingAction = { tipo:'aporte_rf', dados:{ valor:null, date: todayISO(), produtoId:null }, passo:null };
+        return avancarFluxoCadastro('');
+      }
+      if(/acao|ação|fii|etf|bdr|cripto/.test(t)){ d.classe = 'rv'; a.passo = 'categoria'; return avancarFluxoCadastro(''); }
+      return 'Não entendi. É uma ação/FII (Renda Variável) ou é Renda Fixa? Pode clicar numa das opções abaixo. ⬇️';
+    }
+    if(a.passo==='categoria'){
+      // Se a mensagem já parece um ticker direto, aceita e pula a
+      // categoria inteira — quem já sabe o que quer não precisa navegar
+      // pelo catálogo.
+      const tickerDireto = respostaTexto.toUpperCase().match(/\b[A-Z]{3,6}\d{1,2}\b/);
+      const criptoDireta = /^(btc|eth|sol|bnb|xrp|ada|doge|avax|ltc|link|dot|matic|trx|shib|atom|uni|xlm|etc|bch|near)$/i.test(respostaTexto.trim());
+      if(criptoDireta){ d.ticker = respostaTexto.trim().toUpperCase(); a.passo = 'qty'; return `Quantas unidades de ${d.ticker} você comprou?`; }
+      if(tickerDireto){ d.ticker = tickerDireto[0]; a.passo = 'qty'; return `Quantas unidades de ${d.ticker} você comprou?`; }
+      const catMap = { acao:'acao', ação:'acao', fii:'fii', bdr:'bdr', etf:'etf', cripto:'cripto', criptomoeda:'cripto' };
+      const chave = Object.keys(catMap).find(k=> t===k || t.split(' ').includes(k));
+      if(!chave){
+        // Primeira entrada no passo (respostaTexto==='') ou resposta não
+        // reconhecida: mostra o menu de categorias com explicação de cada uma.
+        if(respostaTexto!=='') return 'Não entendi. Escolha uma das opções abaixo, ou já me diga o ticker direto (ex.: PETR4). ⬇️';
+        return 'Perfeito! Que tipo de investimento você quer registrar?\n\n📈 **Ação brasileira** — uma fatia de uma empresa listada na B3.\n🏢 **FII** — fundo que investe em imóveis (shoppings, galpões, escritórios) ou papéis imobiliários, com rendimentos mensais.\n🌎 **BDR** — recibo negociado na B3 que representa uma ação de uma empresa estrangeira (Apple, Microsoft etc.), em reais.\n📊 **ETF** — uma única compra que já te dá exposição a várias empresas de uma vez (ex.: um ETF que replica o Ibovespa inteiro).\n₿ **Criptomoeda** — ativos digitais como Bitcoin e Ethereum.\n\nOu, se já sabe, é só me dizer o ticker direto.';
+      }
+      d.categoria = catMap[chave];
+      const cat = d.categoria;
+      const possuidos = new Set(computePositions().filter(p=>p.qty>0.0000001).map(p=>p.ticker));
+      const todos = RV_CATALOG[cat]||[];
+      const jaTem = todos.filter(tk=>possuidos.has(tk));
+      const novos = todos.filter(tk=>!possuidos.has(tk)).slice(0,8);
+      a.passo = 'ticker';
+      const info = ASSIST_CATEGORIAS_RV[cat];
+      let msg = `${info.emoji} ${info.label}: ${info.desc}\n\n`;
+      if(jaTem.length) msg += `Você já tem: ${jaTem.map(tk=>`**${tk}**`).join(', ')} (para comprar mais, é só dizer o ticker).\n\n`;
+      msg += `Algumas opções conhecidas:\n` + novos.map(tk=>`• **${tk}** — ${ASSET_DESC[tk]||'sem descrição'}`).join('\n');
+      msg += `\n\nQual o ticker? (pode clicar numa das sugestões abaixo, ou digitar outro que você já conhece)`;
+      return msg;
+    }
+    if(a.passo==='ticker'){
+      const m = respostaTexto.toUpperCase().match(/[A-Z]{3,6}\d{0,2}/);
+      if(!m) return 'Não consegui identificar o ticker. Pode repetir (ex.: PETR4)?';
+      d.ticker = m[0]; a.passo = 'qty';
+      return `Quantas unidades de ${d.ticker} você comprou?`;
+    }
+    if(a.passo==='qty'){
+      const qty = parseFloat(respostaTexto.replace(',','.').match(/[\d.]+/)?.[0]);
+      if(!qty || qty<=0) return 'Preciso de um número de unidades válido, quantas foram?';
+      d.qty = qty; a.passo = 'preco';
+      return `Qual foi o preço por unidade?`;
+    }
+    if(a.passo==='preco'){
+      const preco = assistExtrairValor(respostaTexto);
+      if(!preco || preco<=0) return 'Preciso do preço por unidade (ex.: "35,20").';
+      d.preco = preco; a.passo = 'data';
+      return `Qual a data da compra? (ex.: hoje, ou 15/09/2026)`;
+    }
+    if(a.passo==='data'){
+      const data = assistParseData(respostaTexto);
+      if(!data) return 'Não entendi a data. Pode dizer "hoje" ou no formato dd/mm/aaaa?';
+      d.date = data; a.passo = 'confirmar'; a.aguardandoConfirmacao = true;
+      return `Vou registrar **${fmtNum(d.qty)} unidade(s) de ${d.ticker}**, compradas em **${fmtDate(d.date)}**, por **${fmtMoney(d.preco)}** por unidade (total ${fmtMoney(d.qty*d.preco)}). Confirmar?`;
+    }
+  }
+
+  if(a.tipo==='aporte_rf' || a.tipo==='saldo_rf'){
+    const rotulo = a.tipo==='aporte_rf' ? 'aporte' : 'saldo';
+    if(d.valor===null){
+      const valor = assistExtrairValor(respostaTexto);
+      if(!valor) return `Qual é o valor do ${rotulo}?`;
+      d.valor = valor;
+    }
+    if(!d.produtoId){
+      const produtos = DATA.rf.products;
+      if(produtos.length===0) return 'Você ainda não tem nenhum produto de Renda Fixa cadastrado no Patrium. Cadastre um produto primeiro na aba Renda Fixa, depois posso registar o valor.';
+      if(produtos.length===1){ d.produtoId = produtos[0].id; d.produtoNome = produtos[0].name; }
+      else {
+        const nomeMatch = produtos.find(p=> t.includes(normalizarTexto(p.name.split(' — ')[0])));
+        if(nomeMatch){ d.produtoId = nomeMatch.id; d.produtoNome = nomeMatch.name; }
+        else return `Em qual produto de Renda Fixa? Você tem: ${produtos.map(p=>p.name).join(', ')}.`;
+      }
+    }
+    a.aguardandoConfirmacao = true;
+    return a.tipo==='aporte_rf'
+      ? `Vou registrar um aporte de **${fmtMoney(d.valor)}** em **${d.produtoNome}**, em ${fmtDate(d.date)}. Confirmar?`
+      : `Vou atualizar o saldo de **${d.produtoNome}** para **${fmtMoney(d.valor)}**, em ${fmtDate(d.date)}. Confirmar?`;
+  }
+
+  if(a.tipo==='dividendo'){
+    if(d.valor===null){
+      const valor = assistExtrairValor(respostaTexto);
+      if(!valor) return 'Qual foi o valor recebido de dividendos?';
+      d.valor = valor;
+    }
+    if(!d.ticker){
+      const ativo = detectarAtivoQualquer(respostaTexto, ctx);
+      if(!ativo) return 'De qual ativo (ticker)?';
+      d.ticker = ativo.ticker;
+    }
+    a.aguardandoConfirmacao = true;
+    return `Vou registrar **${fmtMoney(d.valor)}** de dividendos de **${d.ticker}**, recebidos em ${fmtDate(d.date)}. Confirmar?`;
+  }
+
+  if(a.tipo==='meta_patrimonial'){
+    if(d.valor===null){
+      const valor = assistExtrairValor(respostaTexto);
+      if(!valor) return 'Qual é o valor da meta?';
+      d.valor = valor;
+    }
+    if(!d.nome) d.nome = `Meta de ${fmtMoney(d.valor)}`;
+    a.aguardandoConfirmacao = true;
+    return `Vou criar a meta patrimonial "**${d.nome}**", de **${fmtMoney(d.valor)}**. Confirmar?`;
+  }
+
+  if(a.tipo==='aporte_caixa'){
+    if(d.valor===null){
+      const valor = assistExtrairValor(respostaTexto);
+      if(!valor) return 'Qual é o valor do aporte?';
+      d.valor = valor;
+    }
+    a.aguardandoConfirmacao = true;
+    return `Vou registrar um aporte de **${fmtMoney(d.valor)}** no caixa, em ${fmtDate(d.date)}. Confirmar?`;
+  }
+
+  return assistCancelarPendente();
+}
+
+// Só roda quando a.aguardandoConfirmacao é true. Escreve em DATA exatamente
+// nos mesmos formatos que os formulários normais usam — mesma fonte de
+// verdade, nenhuma lógica de gravação duplicada/paralela.
+function executarAcaoPendente(){
+  const a = assistantPendingAction;
+  const d = a.dados;
+  let mensagem = '';
+  if(a.tipo==='novo_investimento'){
+    DATA.transactions.push({ id:uid(), date:d.date, ticker:d.ticker, type:'compra', qty:round2(d.qty), price:round2(d.preco), fees:0, funding:'externo' });
+    mensagem = `Pronto! Registrei a compra de ${fmtNum(d.qty)} ${d.ticker}. ✓`;
+  } else if(a.tipo==='aporte_rf'){
+    DATA.rf.entries.push({ id:uid(), date:d.date, productId:d.produtoId, aporte:round2(d.valor), saldo:null, note:'Registrado via Assistente', funding:'externo' });
+    mensagem = `Pronto! Registrei o aporte de ${fmtMoney(d.valor)} em ${d.produtoNome}. ✓`;
+  } else if(a.tipo==='saldo_rf'){
+    DATA.rf.entries.push({ id:uid(), date:d.date, productId:d.produtoId, aporte:0, saldo:round2(d.valor), note:'Registrado via Assistente', funding:'externo' });
+    mensagem = `Pronto! Atualizei o saldo de ${d.produtoNome} para ${fmtMoney(d.valor)}. ✓`;
+  } else if(a.tipo==='dividendo'){
+    DATA.dividends.push({ id:uid(), date:d.date, ticker:d.ticker, qty:0, perShare:0, total:round2(d.valor), note:'Registrado via Assistente' });
+    mensagem = `Pronto! Registrei ${fmtMoney(d.valor)} de dividendos de ${d.ticker}. ✓`;
+  } else if(a.tipo==='meta_patrimonial'){
+    DATA.patrimonyGoals.push({ id:uid(), nome:d.nome, valorObjetivo:round2(d.valor), dataLimite:null, observacao:'Criada via Assistente', createdAt:todayISO() });
+    mensagem = `Pronto! Criei a meta "${d.nome}". ✓`;
+  } else if(a.tipo==='aporte_caixa'){
+    DATA.cashMovements.push({ id:uid(), date:d.date, type:'aporte_caixa', amount:round2(d.valor), note:'Registrado via Assistente' });
+    mensagem = `Pronto! Registrei o aporte de ${fmtMoney(d.valor)}. ✓`;
+  }
+  assistantPendingAction = null;
+  Store.save(DATA); // fire-and-forget: localStorage é efetivamente síncrono, e a UI já reflete DATA em memória via renderAll() logo abaixo
+  renderAll();
+  return mensagem;
+}
+
 function responderAssistente(textoOriginal){
+  const t = normalizarTexto(textoOriginal);
+  // Fluxo de cadastro guiado (itens 17-18) tem prioridade total sobre o
+  // classificador normal enquanto estiver em andamento — a mensagem do
+  // utilizador é sempre tratada como resposta ao passo atual, nunca
+  // reclassificada do zero.
+  if(assistantPendingAction){
+    if(assistantPendingAction.aguardandoConfirmacao){
+      if(/^(sim|confirmar|confirmo|pode|isso|isso mesmo|ok|certo|correto)\b/.test(t)){
+        return { texto: executarAcaoPendente(), acoes: [] };
+      }
+      if(/^(nao|não|cancela|cancelar|espera|deixa)\b/.test(t)){
+        return { texto: assistCancelarPendente(), acoes: [] };
+      }
+      return { texto: 'Só preciso que confirme com "sim" para eu registar, ou diga "cancelar" se não quiser mais.', acoes: [] };
+    }
+    if(/^(cancela|cancelar|deixa pra la|deixa)\b/.test(t)){
+      return { texto: assistCancelarPendente(), acoes: [] };
+    }
+    return { texto: avancarFluxoCadastro(textoOriginal), acoes: [] };
+  }
+  const inicioCadastro = iniciarFluxoCadastro(textoOriginal, t);
+  if(inicioCadastro){
+    return { texto: inicioCadastro, acoes: [] };
+  }
   const ctx = buildAssistantContext();
   let intent;
   try{
@@ -11142,7 +12116,12 @@ function responderAssistente(textoOriginal){
 }
 
 /* ---- Interface do Assistente Patrium ---- */
-const ASSIST_SUGESTOES_INICIAIS = ['Como estou financeiramente?','Analise minha carteira','Qual é meu maior risco?','Como está minha evolução?','Tenho muita concentração?'];
+const ASSIST_SUGESTOES_INICIAIS = [
+  { label:'📊 Cadastrar investimento', valor:'quero cadastrar um investimento' },
+  { label:'💰 Registrar dividendo', valor:'quero registrar um dividendo' },
+  { label:'🎯 Criar uma meta', valor:'quero criar uma meta' },
+  'Como estou financeiramente?','Analise minha carteira','Qual é meu maior risco?'
+];
 function assistFormatarTexto(txt){
   return escapeHtml(txt)
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
@@ -11222,9 +12201,13 @@ function assistFormatarCorpoCard(texto){
 }
 function assistRenderSugestoes(lista){
   const wrap = document.getElementById('assistSuggestions');
-  wrap.innerHTML = lista.map(s=>`<button type="button" class="assist-suggestion-chip">${escapeHtml(s)}</button>`).join('');
-  wrap.querySelectorAll('.assist-suggestion-chip').forEach(btn=>{
-    btn.addEventListener('click', ()=>{ document.getElementById('assistInput').value = btn.textContent; assistEnviar(); });
+  wrap.innerHTML = lista.map((s,idx)=>`<button type="button" class="assist-suggestion-chip" data-idx="${idx}">${escapeHtml(typeof s==='string'?s:s.label)}</button>`).join('');
+  wrap.querySelectorAll('.assist-suggestion-chip').forEach((btn,idx)=>{
+    btn.addEventListener('click', ()=>{
+      const item = lista[idx];
+      document.getElementById('assistInput').value = typeof item==='string' ? item : item.valor;
+      assistEnviar();
+    });
   });
 }
 function assistEnviar(){
@@ -11254,7 +12237,47 @@ function assistEnviar(){
       erro = true;
     }
     assistAdicionarMensagem('bot', resultado.texto, erro, resultado.acoes);
+    assistRenderSugestoes(assistSugestoesParaEstadoAtual());
   }, 380);
+}
+/* Chips de resposta rápida contextuais ao passo atual do cadastro guiado —
+   sempre que possível, deixa o utilizador clicar em vez de digitar (itens
+   17-18: "caminho pré-definido", em vez de exigir texto livre). Quando não
+   há cadastro em andamento, volta a mostrar os atalhos iniciais, incluindo
+   sempre os de cadastro — para o caminho ficar visível o tempo todo, não
+   só na primeira mensagem. */
+function assistSugestoesParaEstadoAtual(){
+  if(!assistantPendingAction) return ASSIST_SUGESTOES_INICIAIS;
+  const a = assistantPendingAction;
+  if(a.aguardandoConfirmacao) return [{label:'✅ Confirmar', valor:'sim'}, {label:'❌ Cancelar', valor:'cancelar'}];
+  if(a.tipo==='novo_investimento'){
+    if(a.passo==='tipo') return [
+      {label:'📈 Ação ou FII', valor:'ação'},
+      {label:'🏦 Renda Fixa', valor:'renda fixa'},
+      {label:'❌ Cancelar', valor:'cancelar'}
+    ];
+    if(a.passo==='categoria') return [
+      {label:'📈 Ação', valor:'ação'}, {label:'🏢 FII', valor:'fii'}, {label:'🌎 BDR', valor:'bdr'},
+      {label:'📊 ETF', valor:'etf'}, {label:'₿ Cripto', valor:'cripto'}, {label:'❌ Cancelar', valor:'cancelar'}
+    ];
+    if(a.passo==='ticker'){
+      const cat = a.dados.categoria;
+      const possuidos = new Set(computePositions().filter(p=>p.qty>0.0000001).map(p=>p.ticker));
+      let opcoes;
+      if(cat){
+        const todos = RV_CATALOG[cat]||[];
+        opcoes = todos.filter(tk=>possuidos.has(tk)).concat(todos.filter(tk=>!possuidos.has(tk))).slice(0,8);
+      } else {
+        opcoes = [...possuidos].slice(0,6);
+      }
+      return [...opcoes.map(tk=>({label:tk, valor:tk})), {label:'❌ Cancelar', valor:'cancelar'}];
+    }
+    if(a.passo==='data') return [{label:'Hoje', valor:'hoje'}, {label:'❌ Cancelar', valor:'cancelar'}];
+  }
+  if((a.tipo==='aporte_rf' || a.tipo==='saldo_rf') && !a.dados.produtoId && DATA.rf.products.length>1){
+    return [...DATA.rf.products.slice(0,6).map(p=>({label:p.name, valor:p.name})), {label:'❌ Cancelar', valor:'cancelar'}];
+  }
+  return [{label:'❌ Cancelar', valor:'cancelar'}];
 }
 function assistAbrirPainel(){
   const panel = document.getElementById('assistPanel');
@@ -11327,7 +12350,7 @@ async function init(){
     wrap.appendChild(document.createRange().createContextualFragment(patriumLogoHTML({height:20})));
     wrap.appendChild(primeiro);
   }
-  ['modalAporte','modalGlossarioTermo','modalCentralAjuda','modalCentralAlertas','modalSeloDetalhe','modalDividendo','modalSaldoRf','modalCaixa','modalMetaQtd','modalMetaPatrimonial','modalAtivoDetalhe','modalEditarMovimento','modalBackup','modalConfiguracoes','modalIndiceSaude','modalRelatorioMensal','modalEmpresa','modalEditarRf','modalEditarOperacao','modalConfirm'].forEach(inserirLogoMiniModal);
+  ['modalAporte','modalGlossarioTermo','modalCentralAjuda','modalCentralAlertas','modalSeloDetalhe','modalDividendo','modalSaldoRf','modalCaixa','modalMetaQtd','modalMetaPatrimonial','modalAtivoDetalhe','modalEditarMovimento','modalBackup','modalConfiguracoes','modalIndiceSaude','modalRelatorioMensal','modalEmpresa','modalEditarRf','modalEditarOperacao','modalConfirm','modalCarteiras'].forEach(inserirLogoMiniModal);
   const onboardLogoSlot = document.getElementById('onboardLogoSlot');
   if(onboardLogoSlot) onboardLogoSlot.innerHTML = patriumLogoHTML({height:30});
   const explorarLogoSlot = document.getElementById('explorarModalLogoSlot');
@@ -11338,6 +12361,7 @@ async function init(){
   let stored = await Store.load();
   if(!stored){ stored = buildDemoData(); await Store.save(stored); }
   DATA = stored;
+  renderSeletorCarteiras();
   // O produto deve abrir sempre em modo claro, independentemente do que
   // ficou guardado numa sessão anterior — decisão explícita do utilizador.
   // O botão de alternância continua a funcionar normalmente durante o uso.
