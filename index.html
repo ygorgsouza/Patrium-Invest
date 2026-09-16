@@ -11,6 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 /* ============================================================================
    PATRIUM INVEST, DESIGN SYSTEM
@@ -1045,6 +1046,42 @@ a:focus-visible, [tabindex]:focus-visible, .help-cat-filter:focus-visible, .faq-
 </style>
 </head>
 <body>
+
+<style>
+/* ===== Portão de acesso (autenticação/autorização) — item novo, isolado
+   do resto do design system. Fica por cima de TUDO (z-index acima de
+   qualquer modal existente) até a verificação no Supabase terminar. Não é
+   um "esconder visualmente": enquanto ele existir no DOM, cobre 100% da
+   tela e bloqueia clique em qualquer coisa por baixo. */
+#authGateOverlay{
+  position:fixed; inset:0; z-index:999999; background:#0B1224;
+  display:flex; align-items:center; justify-content:center; padding:24px;
+  font-family:'Inter', system-ui, sans-serif; color:#EAF0FF;
+}
+#authGateOverlay .auth-gate-box{ max-width:420px; text-align:center; }
+#authGateOverlay .auth-gate-spinner{
+  width:34px; height:34px; margin:0 auto 18px; border-radius:50%;
+  border:3px solid rgba(255,255,255,.18); border-top-color:#4FBE8E;
+  animation:authGateSpin .8s linear infinite;
+}
+@keyframes authGateSpin{ to{ transform:rotate(360deg); } }
+#authGateOverlay h2{ font-family:'Fraunces', serif; font-size:20px; margin:0 0 10px; }
+#authGateOverlay p{ font-size:14px; line-height:1.6; color:#B9C2D6; margin:0 0 20px; }
+#authGateOverlay .auth-gate-btn{
+  display:inline-block; padding:11px 22px; border-radius:10px; border:none;
+  background:#4FBE8E; color:#04150E; font-weight:700; font-size:14px; cursor:pointer;
+  text-decoration:none;
+}
+#authGateOverlay .auth-gate-btn:hover{ opacity:.9; }
+@media (prefers-reduced-motion:reduce){ #authGateOverlay .auth-gate-spinner{ animation:none; } }
+</style>
+<div id="authGateOverlay">
+  <div class="auth-gate-box">
+    <div class="auth-gate-spinner" id="authGateSpinner"></div>
+    <h2 id="authGateTitulo">Verificando o seu acesso…</h2>
+    <p id="authGateTexto">Só um instante, estamos confirmando a sua sessão no Patrium Invest.</p>
+  </div>
+</div>
 
 <header class="top">
   <div class="top-inner">
@@ -12372,7 +12409,92 @@ async function init(){
   try{ runInternalTests(); }catch(e){ console.error('Falha ao correr testes internos', e); }
   if(!DATA.settings.onboardingDone){ setTimeout(()=>{ if(!DATA.settings.onboardingDone && !document.getElementById('modalOnboarding').classList.contains('open')) abrirOnboarding(); }, 600); }
 }
-init();
+
+/* ===================== ACESSO — Supabase (autenticação + Purchases) =====================
+   Integrado ao mesmo boot que já existia (a única mudança é QUEM chama
+   init() no final do ficheiro: antes era direto, agora só depois de
+   confirmar sessão + acesso ativo). Nenhuma outra lógica do Patrium foi
+   tocada. O armazenamento dos DADOS da aplicação continua 100% localStorage
+   (Store/DATA) — o Supabase aqui serve só para autenticação/autorização. */
+const SUPABASE_URL = 'https://acjbjocmwukmtocxudwg.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_bGaSjpWnKibqowcO1WTaA_lEKRwx4U';
+const PATRIUM_PRODUCT_ID = '63df3710-b1c6-11f1-ac16-9998ac7f49b1';
+const PRUMO_LOGIN_URL = 'https://prumo.bussolafinanceirays.com/login';
+const supabaseAuthClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+function authGateMostrarSemAcesso(){
+  const spinner = document.getElementById('authGateSpinner');
+  if(spinner) spinner.style.display = 'none';
+  document.getElementById('authGateTitulo').textContent = 'Sem acesso ativo ao Patrium Invest';
+  document.getElementById('authGateTexto').innerHTML = 'A sua conta está autenticada, mas não encontramos uma licença ativa do Patrium Invest associada a ela. Se você acredita que isso é um engano, entre em contato com o suporte.';
+  const box = document.querySelector('#authGateOverlay .auth-gate-box');
+  if(box && !document.getElementById('authGateVoltarBtn')){
+    const btn = document.createElement('a');
+    btn.id = 'authGateVoltarBtn';
+    btn.className = 'auth-gate-btn';
+    btn.href = PRUMO_LOGIN_URL;
+    btn.textContent = 'Voltar para o login';
+    box.appendChild(btn);
+  }
+}
+function authGateMostrarErro(mensagem){
+  const spinner = document.getElementById('authGateSpinner');
+  if(spinner) spinner.style.display = 'none';
+  document.getElementById('authGateTitulo').textContent = 'Não foi possível verificar o seu acesso';
+  document.getElementById('authGateTexto').textContent = mensagem;
+  const box = document.querySelector('#authGateOverlay .auth-gate-box');
+  if(box && !document.getElementById('authGateVoltarBtn')){
+    const btn = document.createElement('a');
+    btn.id = 'authGateVoltarBtn';
+    btn.className = 'auth-gate-btn';
+    btn.href = PRUMO_LOGIN_URL;
+    btn.textContent = 'Voltar para o login';
+    box.appendChild(btn);
+  }
+}
+async function verificarAcessoEIniciarPatrium(){
+  let session;
+  try{
+    const { data, error } = await supabaseAuthClient.auth.getSession();
+    if(error) throw error;
+    session = data ? data.session : null;
+  }catch(e){
+    console.error('Falha ao verificar sessão do Supabase', e);
+    authGateMostrarErro('Não conseguimos confirmar a sua sessão agora. Verifique a sua conexão e tente novamente.');
+    return;
+  }
+  if(!session || !session.user){
+    // Sem sessão autenticada: nunca chega a carregar o conteúdo do Patrium.
+    window.location.href = PRUMO_LOGIN_URL;
+    return;
+  }
+  let temAcessoAtivo = false;
+  try{
+    const { data: compras, error: erroCompras } = await supabaseAuthClient
+      .from('Purchases')
+      .select('access_active')
+      .eq('user_id', session.user.id)
+      .eq('product_id', PATRIUM_PRODUCT_ID)
+      .eq('access_active', true)
+      .limit(1);
+    if(erroCompras) throw erroCompras;
+    temAcessoAtivo = !!(compras && compras.length>0);
+  }catch(e){
+    console.error('Falha ao consultar Purchases no Supabase', e);
+    authGateMostrarErro('Não conseguimos confirmar o seu acesso agora. Verifique a sua conexão e tente novamente.');
+    return;
+  }
+  if(!temAcessoAtivo){
+    authGateMostrarSemAcesso();
+    return;
+  }
+  // Acesso confirmado: remove o portão e SÓ ENTÃO inicia o Patrium normal —
+  // nenhuma função de init()/renderização roda antes deste ponto.
+  const gate = document.getElementById('authGateOverlay');
+  if(gate) gate.remove();
+  init();
+}
+verificarAcessoEIniciarPatrium();
 </script>
 </body>
 </html>
