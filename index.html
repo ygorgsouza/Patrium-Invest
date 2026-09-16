@@ -3987,6 +3987,15 @@ function computeAlerts(){
     if(dias>=10) push('warn','Performance', `Há preços de ações que não são atualizados há ${dias} dias, o que pode distorcer a rentabilidade calculada.`, 'Clique em "Atualizar preços".');
   }
 
+  // ---- Selos / Conquistas ----
+  // Os selos já conquistados aparecem aqui (Central de Alertas) em vez de um
+  // toast automático ao abrir o Patrium — evita a "chuva" de notificações em
+  // card para o primeiro utilizador, cuja carteira de demonstração já nasce
+  // com vários marcos cumpridos.
+  computeMilestones().filter(mst=>mst.achieved).forEach(mst=>{
+    push('pos','Selos', `${mst.icon} Selo conquistado: ${mst.label}`);
+  });
+
   // ---- Dados / integridade ----
   const lastRecon = [...DATA.reconciliations].sort((a,b)=>b.date.localeCompare(a.date))[0];
   if(lastRecon && Math.abs(lastRecon.diferenca) >= 50){
@@ -4909,9 +4918,17 @@ function renderAchievements(){
     el.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openSeloModal(m); } });
   });
   if(newlyUnlocked.length>0){
+    // Antes disparava um toast por selo aqui mesmo ao abrir o Patrium — o que
+    // gerava uma "chuva" de cards logo na entrada de novos utilizadores,
+    // porque os dados fictícios/demo já vêm com vários selos conquistados
+    // desde o primeiro carregamento. Os selos novos continuam a ser
+    // sinalizados normalmente, só que agora exclusivamente na Central de
+    // Alertas (ver computeAlerts, categoria "Selos"), nunca como notificação
+    // automática em card ao entrar. O destaque visual do selo (animação
+    // "just-unlocked") continua a acontecer aqui, mas só é visto quando o
+    // utilizador entra na aba Educação por conta própria.
     DATA.unlockedAchievements = DATA.unlockedAchievements.concat(newlyUnlocked.map(m=>m.id));
     Store.save(DATA);
-    newlyUnlocked.forEach(m=> addToast(`🎉 Novo selo desbloqueado: ${m.label}`));
     requestAnimationFrame(()=>{ newlyUnlocked.forEach(m=>{ const el = wrap.querySelector(`[data-selo="${m.id}"]`); if(el) el.classList.add('just-unlocked'); }); });
   }
 }
@@ -7920,7 +7937,7 @@ function renderAlertas(){
    vermelho, guardando a assinatura de cada alerta já visto em
    DATA.settings.alertasLidos. Se um alerta novo aparecer depois (texto
    diferente), o sino volta a mostrar contagem normalmente. */
-const ALERT_CATEGORY_TAB = { 'Ações':'acoes', 'Renda Fixa':'rendafixa', 'Dividendos':'dividendos', 'Carteira':'alocacao', 'Performance':'historico', 'Dados':'operacoes' };
+const ALERT_CATEGORY_TAB = { 'Ações':'acoes', 'Renda Fixa':'rendafixa', 'Dividendos':'dividendos', 'Carteira':'alocacao', 'Performance':'historico', 'Dados':'operacoes', 'Selos':'educacao' };
 function alertSignature(a){ return a.category+'|'+a.text; }
 function alertasNaoLidos(){
   const lidos = new Set(DATA.settings.alertasLidos||[]);
@@ -7943,7 +7960,7 @@ function renderCentralAlertas(){
   }
   // Agrupa por categoria, cada grupo ordenado por severidade — em vez de
   // uma lista única misturando todos os temas.
-  const categoriasOrdem = ['Ações','Renda Fixa','Carteira','Dividendos','Performance','Dados'];
+  const categoriasOrdem = ['Ações','Renda Fixa','Carteira','Dividendos','Performance','Selos','Dados'];
   const porCategoria = {};
   alerts.forEach(a=>{ (porCategoria[a.category]=porCategoria[a.category]||[]).push(a); });
   const categoriasPresentes = [...new Set(alerts.map(a=>a.category))].sort((a,b)=>{
