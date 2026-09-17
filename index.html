@@ -5069,7 +5069,7 @@ function renderPerfilCard(){
       <p class="small text-faint" style="margin:0;">Responda um questionário rápido para receber dicas personalizadas para o seu jeito de investir.</p></div>
       <button class="btn btn-primary" id="btnIniciarOnboardingPerfil">Começar questionário</button>
     </div>`;
-    document.getElementById('btnIniciarOnboardingPerfil').addEventListener('click', abrirOnboarding);
+    document.getElementById('btnIniciarOnboardingPerfil').addEventListener('click', ()=>abrirOnboarding(true));
     return;
   }
   const p = PERFIS_INVESTIDOR[perfil.tipo];
@@ -5141,7 +5141,7 @@ function renderPerfilCard(){
   ${hist.length>=1?'<div class="stat-label" style="margin-top:14px; margin-bottom:2px;">Evolução do perfil que você declarou</div>':''}
   ${evolucaoHtml}
   <p class="small text-faint" style="margin:14px 0 0;">Recomendamos rever o seu perfil periodicamente ou quando os seus objetivos financeiros mudarem.</p>`;
-  document.getElementById('btnRefazerPerfil').addEventListener('click', abrirOnboarding);
+  document.getElementById('btnRefazerPerfil').addEventListener('click', ()=>abrirOnboarding(true));
 }
 function computeDicasPersonalizadas(){
   const dicas = [];
@@ -5703,7 +5703,7 @@ document.addEventListener('click', (e)=>{
     });
   }
 });
-document.getElementById('btnReverOnboarding').addEventListener('click', ()=>{ closeModal('modalCentralAjuda'); abrirOnboarding(); });
+document.getElementById('btnReverOnboarding').addEventListener('click', ()=>{ closeModal('modalCentralAjuda'); abrirOnboarding(true); });
 
 /* ===================== ONBOARDING =====================
    Passos 1 a 6: perguntas de perfil (com pontuação para classificar em
@@ -5774,7 +5774,17 @@ const ONBOARD_PERGUNTAS = [
 ];
 let onboardStepAtual = 1;
 let onboardRespostas = {};
-function onboardTotalSteps(){ return 1 + ONBOARD_PERGUNTAS.length + 1 + 4; } // intro + perguntas + resultado + 4 passos de tour
+// Quando o questionário é reaberto pela aba Educação (ou pela Central de
+// Ajuda) para reavaliar o perfil, não faz sentido obrigar o utilizador a
+// passar pelas 4 telas do tour do produto de novo — isso empurrava o
+// salvamento do perfil para muito depois de ele já ter visto o resultado,
+// e se ele fechasse o modal ali (ex.: clicando em "Pular", pensando que
+// tinha terminado), a resposta nunca era gravada. onboardModoRetake pula
+// o tour nesses casos; onboardPerfilSalvoNestaSessao evita salvar/duplicar
+// o histórico mais de uma vez na mesma passagem pelo questionário.
+let onboardModoRetake = false;
+let onboardPerfilSalvoNestaSessao = false;
+function onboardTotalSteps(){ return 1 + ONBOARD_PERGUNTAS.length + 1 + (onboardModoRetake ? 0 : 4); } // intro + perguntas + resultado (+ 4 passos de tour, só na primeira vez)
 function computeInvestorProfileFromAnswers(respostas){
   const scores = Object.values(respostas);
   const media = scores.reduce((s,v)=>s+v,0) / scores.length;
@@ -5842,6 +5852,13 @@ function showOnboardStep(step){
   document.getElementById('onboardStepPct').textContent = Math.round((step/total)*100)+'%';
   document.getElementById('onboardProgressFill').style.width = (step/total*100)+'%';
   document.getElementById('onboardStepsContainer').innerHTML = onboardStepHtml(step);
+  // Assim que o passo de resultado é alcançado, o perfil já foi respondido
+  // por completo — salva imediatamente, para o resultado nunca depender de
+  // o utilizador concluir mais alguma coisa depois (tour ou não).
+  const resultStep = 2 + ONBOARD_PERGUNTAS.length;
+  if(step===resultStep && !onboardPerfilSalvoNestaSessao && Object.keys(onboardRespostas).length===ONBOARD_PERGUNTAS.length){
+    salvarPerfilOnboarding();
+  }
   document.querySelectorAll('#onboardStepsContainer .onboard-opt').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       onboardRespostas[btn.dataset.pid] = parseInt(btn.dataset.score,10);
@@ -5868,19 +5885,29 @@ function onboardAvancar(){
   if(onboardStepAtual>=total){ finalizarOnboarding(); return; }
   showOnboardStep(onboardStepAtual+1);
 }
-function finalizarOnboarding(){
-  if(Object.keys(onboardRespostas).length===ONBOARD_PERGUNTAS.length){
-    DATA.settings.investorProfile = computeInvestorProfileFromAnswers(onboardRespostas);
-    DATA.settings.investorProfileHistory = (DATA.settings.investorProfileHistory||[]).concat([DATA.settings.investorProfile]);
-  }
-  DATA.settings.onboardingDone = true;
+function salvarPerfilOnboarding(){
+  DATA.settings.investorProfile = computeInvestorProfileFromAnswers(onboardRespostas);
+  DATA.settings.investorProfileHistory = (DATA.settings.investorProfileHistory||[]).concat([DATA.settings.investorProfile]);
+  onboardPerfilSalvoNestaSessao = true;
   Store.save(DATA);
-  closeModal('modalOnboarding');
   renderEducacao();
   renderPrimeirosPassos();
   addToast('Perfil atualizado. Confira as suas dicas personalizadas na aba Educação. 🧭');
 }
-function abrirOnboarding(){
+function finalizarOnboarding(){
+  // Salvaguarda: normalmente o perfil já foi salvo assim que o passo de
+  // resultado apareceu (showOnboardStep). Isto só entra em ação se, por
+  // algum motivo, esse passo nunca tiver sido alcançado.
+  if(!onboardPerfilSalvoNestaSessao && Object.keys(onboardRespostas).length===ONBOARD_PERGUNTAS.length){
+    salvarPerfilOnboarding();
+  }
+  DATA.settings.onboardingDone = true;
+  Store.save(DATA);
+  closeModal('modalOnboarding');
+}
+function abrirOnboarding(retake){
+  onboardModoRetake = !!retake;
+  onboardPerfilSalvoNestaSessao = false;
   onboardStepAtual = 1;
   onboardRespostas = (DATA.settings.investorProfile && DATA.settings.investorProfile.respostas) ? {...DATA.settings.investorProfile.respostas} : {};
   showOnboardStep(1);
@@ -10667,7 +10694,8 @@ function buildAssistantContext(){
   const milestones = computeMilestones();
   const nome = (DATA.settings.userName||'').trim();
   const divMesAtual = computeDividendsByMonth().slice(-1)[0];
-  return { patr, rf, rv, positions, alloc, conc, twr, xirr, indice, perfil, bucket, metasPatr, metaPrincipal, metasQtd, insights, comportamento, rfProds, milestones, nome, divMesAtual };
+  const divYields = computeDividendYields();
+  return { patr, rf, rv, positions, alloc, conc, twr, xirr, indice, perfil, bucket, metasPatr, metaPrincipal, metasQtd, insights, comportamento, rfProds, milestones, nome, divMesAtual, divYields };
 }
 
 // Nomes comuns de empresas → ticker (pequeno, só os mais citados; cobre
@@ -10770,6 +10798,47 @@ function resolverContinuacao(textoOriginal, ctx){
   const t = normalizarTexto(textoOriginal);
   const curto = t.split(' ').filter(Boolean).length<=6;
 
+  // Resposta curta ao esclarecimento "quando você diz melhor, quer dizer
+  // valorização, dividendos ou contribuição?" — nunca repete a pergunta.
+  if(curto && assistantUltimaMetrica==='melhor_pior_ativo' && assistantUltimoIntentObj && assistantUltimoIntentObj.criterio===null){
+    if(/valoriz/.test(t)) return {id:'melhor_pior_ativo', ordem:'melhor', criterio:'valorizacao'};
+    if(/dividend|renda/.test(t)) return {id:'melhor_pior_ativo', ordem:'melhor', criterio:'dividendos'};
+    if(/contribui/.test(t)) return {id:'melhor_pior_ativo', ordem:'melhor', criterio:'contribuicao'};
+    if(/risco.*retorno|risco retorno/.test(t)) return {id:'melhor_pior_ativo', ordem:'melhor', criterio:'valorizacao'};
+  }
+
+  // ---- Projeção de investimento pendente (RF/RV/combinação ou taxa que
+  // faltava) — tem prioridade sobre QUALQUER outra leitura da mensagem,
+  // porque o utilizador está respondendo a uma pergunta específica que o
+  // próprio Assistente acabou de fazer (ex.: "Renda fixa."). Nunca deixa
+  // essa resposta curta ser sequestrada por outro classificador.
+  if(assistantProjecaoPendente){
+    const r = assistIniciarOuContinuarProjecao(textoOriginal, t, ctx);
+    if(r) return r;
+  }
+  // "E se eu aumentar para R$ 5 mil?" — ajusta a última projeção já
+  // calculada (troca o valor mensal se a simulação anterior era mensal,
+  // senão troca o valor inicial), mantendo prazo/tipo/taxa como estavam.
+  if(assistantUltimaMetrica==='projecao_investimento' && assistantUltimoIntentObj && assistantUltimoIntentObj.params && /\d/.test(t) && /aument|em vez de|e se for|mudar para|trocar para|no lugar de/.test(t)){
+    const novoValor = assistExtrairValor(textoOriginal);
+    if(novoValor){
+      const p = Object.assign({}, assistantUltimoIntentObj.params);
+      if(p.aporteMensal!==undefined) p.aporteMensal = novoValor; else p.valorInicial = novoValor;
+      return { id:'projecao_investimento', params:p, pronto:true };
+    }
+  }
+  // ---- Período de resultado ("quanto ganhei X") — continuações curtas
+  // tipo "E no mês passado?" / "E ontem?" reaproveitam a MESMA pergunta
+  // (resultado do período), só trocando o período.
+  if(assistantUltimaMetrica==='resultado_periodo'){
+    const per = assistParsePeriodo(textoOriginal);
+    if(per) return { id:'resultado_periodo', periodo:per };
+  }
+  // "Qual foi a diferença?" — entre os dois últimos períodos consultados.
+  if(curto && assistantUltimosPeriodos.length===2 && /diferenc|quanto a mais|quanto a menos|variou|mudou/.test(t)){
+    return { id:'diferenca_periodos' };
+  }
+
   // "Qual é melhor?" — depende do que foi comparado por último: dois
   // ativos, ou TWR × XIRR (checado ANTES do caso genérico de ativos, para
   // nunca sequestrar essa pergunta quando o assunto real era TWR/XIRR).
@@ -10824,6 +10893,16 @@ function resolverContinuacao(textoOriginal, ctx){
     return { id:'risco_se_comprar', ticker:assistantUltimoTicker };
   }
 
+  // "Se eu investir R$4.000 por 5 anos, quanto vou ter?" / "quanto tempo
+  // para chegar a R$1 milhão?" — projeção de longo prazo (juros compostos),
+  // checada ANTES da simulação pontual por ativo logo abaixo: aqui o
+  // assunto é PROJEÇÃO NO TEMPO (anos, taxa, valor-alvo), não o impacto de
+  // colocar dinheiro num ativo específico.
+  if(/anos?\b|meses\b|quanto (eu )?vou ter|quanto (eu )?teria|onde posso chegar|quanto tempo (para|pra) chegar|quanto preciso investir/.test(t) && /\d/.test(t)){
+    const r = assistIniciarOuContinuarProjecao(textoOriginal, t, ctx);
+    if(r) return r;
+  }
+
   // "E se eu colocar/investir só R$ X (reais)?" — simulação pontual ou mensal.
   if(/^(e )?se (eu )?/.test(t) && /\d/.test(t)){
     const valor = assistExtrairValor(textoOriginal);
@@ -10832,11 +10911,19 @@ function resolverContinuacao(textoOriginal, ctx){
       return { id:'simulacao_valor', valor, ticker:assistantUltimoTicker };
     }
   }
-  // "Quanto tempo?" — reaproveita a última simulação de aporte mensal.
+  // "Quanto tempo?" — reaproveita a última simulação de aporte mensal, ou a
+  // última projeção de longo prazo (usando o valor de meta já mencionado).
   if(curto && /quanto tempo|em quanto tempo/.test(t)){
     if(assistantUltimaMetrica==='simulacao_aporte_mensal') return { id:'simulacao_aporte_mensal', reusarUltimoValor:true };
+    if(assistantUltimaMetrica==='projecao_investimento' && assistantUltimoIntentObj && assistantUltimoIntentObj.params){
+      const p = Object.assign({}, assistantUltimoIntentObj.params);
+      delete p.anos;
+      if(assistantUltimoValorMeta) p.meta = assistantUltimoValorMeta;
+      if(p.meta) return { id:'projecao_investimento', params:p, pronto:true };
+    }
     return { id:'pedir_esclarecimento', pergunta:'Tempo para quê? Me conta o objetivo (ex.: "quanto tempo para chegar aos 50 mil?").' };
   }
+
 
   // "Quero chegar aos X mil" — meta genérica por valor (existente ou não).
   if(/quero chegar|quero atingir|quero juntar|meu objetivo e chegar|minha meta e|estou perto d[eo]/.test(t)){
@@ -11051,9 +11138,17 @@ function classificarIntencaoAssistente(textoOriginal, ctx){
   // segunda?") — usa sempre o ranking real de computeConcentracaoAtivo().
   // "Cadê meu maior ganho?" / "qual foi meu melhor investimento?" — família
   // semântica de destaque/resultado por ativo, checada antes do ranking por
-  // peso (que é sobre TAMANHO da posição, não sobre RESULTADO).
-  if(/cade meu maior ganho|onde eu mais ganhei|o que mais me deu dinheiro|qual foi meu melhor investimento|qual foi o que mais rendeu|onde eu me sai melhor|qual foi meu destaque|o que ta puxando minha carteira|quem ta carregando minha carteira|qual ta fazendo mais dinheiro|qual ta me dando mais retorno|onde ta meu melhor resultado|me deu mais alegria|me surpreendeu positivamente|carro chefe da minha carteira|jogada mais certeira/.test(t)) return {id:'melhor_pior_ativo', ordem:'melhor'};
-  if(/qual foi meu pior investimento|onde eu mais perdi|o que mais me tirou dinheiro|me decepcionou mais|pior escolha ate agora/.test(t)) return {id:'melhor_pior_ativo', ordem:'pior'};
+  // peso (que é sobre TAMANHO da posição, não sobre RESULTADO). Quando a
+  // própria frase já diz o critério (valorização/dividendos/contribuição),
+  // calcula direto; senão ("qual o melhor ativo", genérico), pergunta —
+  // "melhor" pode significar coisas bem diferentes, nunca escolhemos por
+  // conta própria.
+  if(/qual (a )?acao valorizou mais|qual ativo valorizou mais|maior valorizacao|mais valorizou/.test(t)) return {id:'melhor_pior_ativo', ordem:'melhor', criterio:'valorizacao'};
+  if(/mais dividendos|maior dividendo|me deu mais renda|melhor pagador|mais me pagou|qual me paga mais/.test(t)) return {id:'melhor_pior_ativo', ordem:'melhor', criterio:'dividendos'};
+  if(/mais contribuiu|contribuiu mais|maior contribuicao|mais contribuiu para meu patrimonio/.test(t)) return {id:'melhor_pior_ativo', ordem:'melhor', criterio:'contribuicao'};
+  if(/cade meu maior ganho|onde eu mais ganhei|o que mais me deu dinheiro|qual foi o que mais rendeu|onde eu me sai melhor|qual foi meu destaque|o que ta puxando minha carteira|quem ta carregando minha carteira|qual ta fazendo mais dinheiro|qual ta me dando mais retorno|onde ta meu melhor resultado|me deu mais alegria|me surpreendeu positivamente|carro chefe da minha carteira|jogada mais certeira/.test(t)) return {id:'melhor_pior_ativo', ordem:'melhor', criterio:'valorizacao'};
+  if(/qual (o )?melhor ativo|melhor investimento que tenho|performando melhor|esta performando melhor|qual foi meu melhor investimento/.test(t)) return {id:'melhor_pior_ativo', ordem:'melhor', criterio:null};
+  if(/qual foi meu pior investimento|onde eu mais perdi|o que mais me tirou dinheiro|me decepcionou mais|pior escolha ate agora/.test(t)) return {id:'melhor_pior_ativo', ordem:'pior', criterio:'valorizacao'};
 
   // Perguntas sobre a capacidade/confiabilidade do próprio Assistente
   // (não são perguntas de investimento).
@@ -11089,6 +11184,16 @@ function classificarIntencaoAssistente(textoOriginal, ctx){
   if(testa(['renda variavel','acoes','ações','bolsa','fiis','etf','bdr',' rv ']) || t==='rv' || /tenho muito risco\??$/.test(t) || /assumindo risco demais/.test(t) || /pesado nas acoes|muita bolsa|exposto a bolsa|arriscando muito nas acoes|pouca renda variavel|deveria ter mais bolsa|acoes.*indo bem|parte mais arriscada|quanto.*na bolsa|me arriscando demais|muito agressivo|(ta|esta) perigoso|tranquilo demais|jogando muito pesado|dinheiro demais em coisa arriscada|isso pode dar ruim|to protegido|quanto (eu )?posso perder|aguenta uma queda|se der uma queda|limite do risco|me dar mal|bomba relogio|mercado despencar|sendo imprudente|sob controle.*risco|perder num dia ruim|risco.*pequena|acoes suficientes/.test(t)) return {id:'rv'};
   if(testa(['retirei','retirad','saquei','saque'])) return {id:'retiradas'};
   if(testa(['aportei','aportes','aporte','coloquei','ja investi','quanto investi']) || /aportando (pouco|demais|o suficiente|todo mes)/.test(t) || /coloc(ando|ei) dinheiro/.test(t) || /quant(os|o).*(mes|meses).*(investi|aportei)/.test(t) || /venho investindo|invisto por mes|apliquei na carteira|investi nos ultimos meses/.test(t) || /colocando dinheiro suficiente|ritmo (ta |esta )?bom|conseguindo aportar|colocando cada vez mais|diminuindo (meus )?aportes|aportes (tao|estao) crescendo|mantendo o ritmo|meu ritmo|devo aportar mais|deveria aportar mais|invisto o suficiente|contribuindo (direito |bem )?pra carteira|habito de investir|colocando uma grana|guardar dinheiro/.test(t)) return {id:'aportes'};
+  // "Quanto ganhei esse mês?" / "resultado de ontem" / "quanto rendi este
+  // ano" — resultado de um PERÍODO específico, checado ANTES do catch-all
+  // genérico de performance logo abaixo (que sempre respondia com o total
+  // histórico, ignorando o período pedido — nunca mais fazer isso).
+  {
+    const perMencionado = assistParsePeriodo(textoOriginal);
+    if(perMencionado && /ganh|perd|rend|resultado|lucr|fechou|performou|saldo do periodo/.test(t)){
+      return {id:'resultado_periodo', periodo:perMencionado};
+    }
+  }
   if(testaFuzzy(['rentabilidade'],3) || testa(['rendiment','rentabil','ganhei','perdi','resultado','performance','desempenho','meus investimentos','estou ganhando']) || /carteira rendeu|meu retorno|dando lucro|bom retorno|retorno real|positivo ou negativo|qual metrica|minha carteira caiu/.test(t)) return {id:'performance'};
   if(testaFuzzy(['patrimonio'],2) || testa(['patrim']) || /quanto (eu )?(ja )?(tenho|acumulei|construi|possuo)\b(?! em)/.test(t) || /(valor|total) da minha carteira/.test(t) || /minha carteira esta crescendo/.test(t) || /(como|to|tô) estou indo/.test(t) || /financeiramente|minhas financas/.test(t) || /estou bem financeiramente/.test(t) || /quanto dinheiro (eu )?tenho/.test(t) || /^qual (e |é )?meu total/.test(t) || /quanto vale minha carteira/.test(t)) return {id:'patrimonio'};
   if(testa(['ola','opa','eae','bom dia','boa tarde','boa noite','tudo bem','me ajuda','pode me ajudar','vamos analisar','quero conversar']) || /\boi\b/.test(t)) return {id:'saudacao'};
@@ -11519,6 +11624,24 @@ const ASSIST_RESPOSTAS = {
   },
   melhor_pior_ativo(ctx, i){
     if(ctx.positions.length===0) return 'Você ainda não tem ativos de Renda Variável para eu comparar resultados.';
+    // "Melhor" genérico, sem critério — nunca escolhemos por conta própria
+    // qual definição usar, cada uma pode apontar para um ativo diferente.
+    if(i.ordem==='melhor' && !i.criterio){
+      return 'Quando você diz "melhor", quer dizer maior valorização, maior geração de renda (dividendos), ou maior contribuição para o resultado da sua carteira?';
+    }
+    if(i.criterio==='dividendos'){
+      if(!ctx.divYields || ctx.divYields.length===0) return 'Você ainda não recebeu dividendos registados no Patrium para eu comparar.';
+      const alvo = ctx.divYields[0];
+      return `Quem mais te pagou em dividendos até agora é **${alvo.ticker}**, com ${fmtMoney(alvo.dividendos)} recebidos${alvo.dyCusto!==null?` (${fmtNum(alvo.dyCusto.toFixed(1))}% de dividend yield sobre o custo)`:''}. Isso é histórico, não uma garantia de pagamentos futuros.`;
+    }
+    if(i.criterio==='contribuicao'){
+      const comResultado = ctx.positions.filter(p=>p.hasRealPrice);
+      if(comResultado.length===0) return ASSIST_DISCLAIMER_SEM_DADOS+' (preços não atualizados para calcular contribuição por ativo).';
+      const ordenados = [...comResultado].sort((a,b)=> b.unrealizedPL-a.unrealizedPL);
+      const alvo = ordenados[0];
+      return `O ativo que mais contribuiu em valor absoluto para o seu resultado é **${alvo.ticker}**, com ${fmtMoneySigned(alvo.unrealizedPL)} de resultado não realizado. Isso considera o valor em reais, não o percentual de valorização.`;
+    }
+    // criterio==='valorizacao' (padrão) — % de resultado desde o preço médio.
     const comResultado = ctx.positions.filter(p=>p.hasRealPrice);
     if(comResultado.length===0) return ASSIST_DISCLAIMER_SEM_DADOS+' (preços não atualizados para calcular resultado por ativo).';
     const ordenados = [...comResultado].sort((a,b)=> i.ordem==='pior' ? a.totalResultPct-b.totalResultPct : b.totalResultPct-a.totalResultPct);
@@ -11746,6 +11869,91 @@ const ASSIST_RESPOSTAS = {
   ajuda_pdf(){ return 'Use o ícone 📄 no cabeçalho para gerar relatórios em PDF: o mensal traz o resumo do patrimônio, aportes e retiradas do mês, rendimento e rentabilidade (TWR), dividendos e o progresso das metas; o anual consolida o ano inteiro, com evolução mês a mês, investimentos, aportes, dividendos e metas. Ambos usam exatamente os mesmos dados e cálculos do aplicativo.'; },
   ajuda_backup(){ return 'Use o ícone ⇅ no cabeçalho para exportar ou importar os seus dados em backup (JSON).'; },
   ajuda_central_ajuda(){ return 'A Central de Ajuda (ícone ❓ no cabeçalho) é uma base de perguntas frequentes organizada por assunto (Começando, Renda Fixa, Ações, Metas, Backup, Alertas, e outros), com busca por palavra-chave. Ela existe ao lado de mim: eu respondo sobre os seus dados e converso naturalmente, ela é ótima para consultar uma explicação escrita e fixa sempre que precisar.'; },
+  // ---- Resultado de um período específico (item do pedido de evolução) —
+  // nunca responde com o total histórico quando o utilizador pediu um
+  // período. Reaproveita computeResultadoIntervalo(), a mesma função já
+  // auditada usada no Histórico, Análises e nos relatórios PDF.
+  resultado_periodo(ctx, i){
+    const per = i.periodo;
+    if(!per) return 'Para qual período? (ex.: hoje, esta semana, este mês, mês passado, este ano, últimos 30 dias, ou "entre 01/03/2026 e 30/04/2026")';
+    const r = computeResultadoIntervalo(per.start, per.end);
+    const semMovimento = r.patrInicial===0 && r.patrFinal===0 && r.aportesPeriodo===0 && r.divsPeriodo===0;
+    if(semMovimento) return `Não encontrei nenhuma movimentação no Patrium em **${per.label}**.`;
+    const partes = [`**${per.label}:** resultado de ${fmtMoneySigned(r.ganhosPeriodo)}`];
+    const detalhes = [];
+    if(r.aportesPeriodo) detalhes.push(`aportes de ${fmtMoney(r.aportesPeriodo)}`);
+    if(r.divsPeriodo) detalhes.push(`${fmtMoney(r.divsPeriodo)} em dividendos`);
+    if(r.valorizacaoPeriodo) detalhes.push(`valorização de ${fmtMoneySigned(r.valorizacaoPeriodo)}`);
+    if(detalhes.length) partes.push('(' + detalhes.join(', ') + ')');
+    let resp = partes.join(' ')+'.';
+    if(r.rentabSuficiente && r.rentabTWR!==null) resp += `\nRentabilidade (TWR) no período: ${fmtNum(r.rentabTWR.toFixed(2))}%.`;
+    // Insight proativo — só quando fizer sentido (período com peso de
+    // verdade, não um único dia) e só quando a concentração for alta.
+    if(ctx.conc.length && ctx.conc[0].peso>=45 && per.chave!=='hoje' && per.chave!=='ontem'){
+      resp += `\n\nAlém disso, ${ctx.conc[0].ticker} representa ${fmtNum(ctx.conc[0].peso.toFixed(0))}% da sua Renda Variável hoje, então boa parte desse resultado tende a vir dele.`;
+    }
+    return resp;
+  },
+  diferenca_periodos(){
+    if(assistantUltimosPeriodos.length<2) return 'Preciso de dois períodos para comparar. Me pergunte, por exemplo, "quanto ganhei este mês" e depois "e no mês passado?".';
+    const [a,b] = assistantUltimosPeriodos; // a = consultado primeiro, b = mais recente
+    const diff = round2(b.dados.ganhosPeriodo - a.dados.ganhosPeriodo);
+    const melhorLabel = diff>=0 ? b.label : a.label;
+    return `A diferença entre **${a.label}** (${fmtMoneySigned(a.dados.ganhosPeriodo)}) e **${b.label}** (${fmtMoneySigned(b.dados.ganhosPeriodo)}) é de ${fmtMoneySigned(diff)}. ${melhorLabel} teve o resultado melhor.`;
+  },
+  // ---- Projeção de investimento de longo prazo (item do pedido de
+  // evolução) — reaproveita projectScenario(), o mesmo motor já usado na
+  // aba Projeções, nunca uma segunda matemática paralela.
+  projecao_investimento(ctx, i){
+    const p = i.params;
+    if(i.falta==='prazo') return 'Por quantos anos você pensa em investir? Ou, se preferir, me diga até qual valor quer chegar (ex.: "até eu juntar R$ 100 mil").';
+    if(i.falta==='tipo') return 'Você quer considerar renda fixa, renda variável ou uma combinação das duas?';
+    if(i.falta==='taxa'){
+      return 'Ainda não tenho histórico suficiente da sua carteira para estimar uma rentabilidade real de Renda Variável. Que taxa anual você quer considerar na simulação? (ex.: "10% ao ano")';
+    }
+    // Resolve a taxa: a que o utilizador informou > a rentabilidade REAL
+    // dele (XIRR, só para RV) > a taxa de referência explícita (só RF, ou
+    // a parte de RF dentro de uma combinação) — nunca inventa um número
+    // sem dizer de onde veio.
+    let taxaAnual = p.taxaAnualPct;
+    if(taxaAnual===undefined && p.taxaMensalPct!==undefined) taxaAnual = (Math.pow(1+p.taxaMensalPct/100,12)-1)*100;
+    let origemTaxa = '';
+    if(taxaAnual===undefined){
+      if(p.tipo==='rv' && ctx.xirr!==null && ctx.xirr!==undefined){
+        taxaAnual = ctx.xirr;
+        origemTaxa = ` (usando a sua rentabilidade real até agora, XIRR de ${fmtNum(taxaAnual.toFixed(1))}% a.a. — o futuro pode ser bem diferente)`;
+      } else if(p.tipo==='rf'){
+        taxaAnual = ASSIST_TAXA_REF_RF;
+        origemTaxa = ` (usando uma taxa de referência de ${fmtNum(taxaAnual.toFixed(1))}% a.a., próxima do CDI atual — não é uma cotação ao vivo, me diga outro número se preferir)`;
+      } else if(p.tipo==='combinacao'){
+        const rfFrac = (ctx.alloc && ctx.alloc.total>0) ? ctx.alloc.rfPct/100 : 0.5;
+        const taxaRv = (ctx.xirr!==null && ctx.xirr!==undefined) ? ctx.xirr : ASSIST_TAXA_REF_RF;
+        taxaAnual = rfFrac*ASSIST_TAXA_REF_RF + (1-rfFrac)*taxaRv;
+        origemTaxa = ` (combinando a taxa de referência de Renda Fixa com ${(ctx.xirr!==null&&ctx.xirr!==undefined)?'a sua rentabilidade real':'a mesma referência'} de Renda Variável, ponderadas pela sua alocação atual — uma estimativa, não uma garantia)`;
+      }
+    }
+    if(taxaAnual===undefined) return 'Preciso de uma taxa anual para simular. Me diga, por exemplo, "considerando 10% ao ano".';
+    const valorInicial = p.valorInicial||0;
+    const aporteMensal = p.aporteMensal||0;
+    const baseFrase = `partindo de ${fmtMoney(valorInicial)}${aporteMensal?` com aportes de ${fmtMoney(aporteMensal)} por mês`:''}`;
+
+    if(p.meta && !p.anos){
+      const monthlyRate = Math.pow(1+taxaAnual/100,1/12)-1;
+      let saldo = valorInicial, meses = 0;
+      const limite = 1200; // teto de segurança de 100 anos
+      while(saldo<p.meta && meses<limite){ saldo = saldo*(1+monthlyRate)+aporteMensal; meses++; }
+      if(meses>=limite) return `Com esses parâmetros${origemTaxa}, ${baseFrase} não chegaria a ${fmtMoney(p.meta)} num prazo razoável (testei até 100 anos). Vale reconsiderar o aporte ou a taxa.`;
+      const anos = meses/12;
+      const prazoTexto = anos<1 ? `${meses} mese(s)` : `${fmtNum(anos.toFixed(1))} ano(s)`;
+      return `**Simulação${origemTaxa}:** ${baseFrase}, a ${fmtNum(taxaAnual.toFixed(1))}% a.a., você levaria aproximadamente **${prazoTexto}** para chegar a ${fmtMoney(p.meta)}.\n\nÉ uma projeção matemática com a taxa informada, mantida constante — o retorno real varia e nunca é garantido.`;
+    }
+
+    const res = projectScenario(aporteMensal, p.anos, taxaAnual, valorInicial);
+    let r = `**Simulação${origemTaxa}:** ${baseFrase}, em ${fmtNum(p.anos)} ano(s) a ${fmtNum(taxaAnual.toFixed(1))}% a.a., você teria aproximadamente **${fmtMoney(res.final)}**.`;
+    r += `\n\nDisso, ${fmtMoney(res.aportado)} seria dinheiro colocado por você e ${fmtMoneySigned(res.rendimento)} seria rendimento.`;
+    r += '\n\nÉ uma projeção matemática com a taxa informada, mantida constante — o retorno real varia e nunca é garantido.';
+    return r;
+  },
   desconhecido(){
     return 'Não tenho certeza do que você quis dizer. Pode me contar de outro jeito? Por exemplo, me diga o nome do ativo, ou do que da sua carteira você está falando.';
   },
@@ -11788,6 +11996,9 @@ const ASSIST_NAVEGACAO = {
   considerar_compra:{ label:'Abrir Ações', tab:'acoes' },
   ranking_posicao:{ label:'Abrir Ações', tab:'acoes' },
   melhor_pior_ativo:{ label:'Abrir Ações', tab:'acoes' },
+  resultado_periodo:{ label:'Ver Histórico', tab:'historico' },
+  diferenca_periodos:{ label:'Ver Histórico', tab:'historico' },
+  projecao_investimento:{ label:'Ver Projeções', tab:'projecoes' },
 };
 // Detecta o nível de profundidade pedido pelo utilizador, tolerante a
 // acento/digitação (reaproveita normalizarTexto()), nunca obriga o
@@ -11827,12 +12038,24 @@ let assistantUltimaRespostaTexto = null;
 let assistantUltimoValorMeta = null;    // último valor numérico de meta mencionado (ex.: 50000)
 let assistantUltimoValorSimulacaoMensal = null; // último valor de aporte mensal simulado (hipotético)
 let assistantUltimoConceito = null;     // último termo de CONCEITOS_FINANCEIROS explicado de forma genérica, para "e no meu caso?"
+let assistantUltimoPeriodo = null;      // {start,end,label,chave} do último período de resultado consultado (ex.: "este mês")
+let assistantUltimosPeriodos = [];      // rolling, máx. 2, para "qual foi a diferença?" entre dois períodos consultados
+let assistantProjecaoPendente = null;   // {valorInicial, aporteMensal, anos, meta, tipo, taxaAnualPct, ...} — simulação de longo prazo aguardando um dado que falta (ex.: RF/RV/combinação)
+// Taxa de REFERÊNCIA (não é uma cotação ao vivo, nunca é apresentada como
+// fato) usada só quando o utilizador escolhe Renda Fixa numa simulação de
+// longo prazo e não informa uma taxa própria — mesma lógica de "cenário
+// base" que a aba Projeções já usa (lá, o padrão do campo é 10% a.a.).
+// Sempre citada explicitamente na resposta, e sempre substituível pelo
+// utilizador dizendo "considerando X% ao ano".
+const ASSIST_TAXA_REF_RF = 10.5;
 // Extrai o primeiro valor em reais mencionado na frase ("500 reais", "4.500", "R$ 50 mil").
 function assistExtrairValor(texto){
   // Trabalha sobre o texto ORIGINAL (não normalizado), porque normalizarTexto()
   // troca pontos/vírgulas por espaço, o que quebraria "4.500" em "4" e "500".
   const bruto = texto.toLowerCase();
-  const mMil = bruto.match(/(\d+(?:[.,]\d+)?)\s*mil/);
+  const mMilhao = bruto.match(/(\d+(?:[.,]\d+)?)\s*milh(?:ao|ão|oes|ões)/);
+  if(mMilhao) return parseFloat(mMilhao[1].replace(',','.'))*1000000;
+  const mMil = bruto.match(/(\d+(?:[.,]\d+)?)\s*mil\b/);
   if(mMil) return parseFloat(mMil[1].replace(',','.'))*1000;
   // Número com separador de milhar (1.234,56 ou 1,234.56 ou 4.500) ou simples (500).
   const mNum = bruto.match(/(\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?|\d+(?:[.,]\d+)?)\s*(?:reais|r\$)?/);
@@ -11878,6 +12101,156 @@ function assistParseData(texto){
   return null;
 }
 function assistCancelarPendente(){ assistantPendingAction = null; return 'Tudo bem, cancelei. Não registrei nada. Se quiser, é só começar de novo quando quiser.'; }
+
+/* ===================== COMPREENSÃO DE PERÍODOS (item do pedido de evolução) =====================
+   Traduz uma frase em linguagem natural para {start,end,label,chave}, sempre
+   usando os MESMOS limites de data que getPeriodRange()/computeResultadoIntervalo()
+   já usam em todo o resto do produto (Histórico, Análises, PDF) — nunca uma
+   segunda lógica de datas paralela. Cobre: hoje, ontem, esta semana, este mês,
+   mês passado, este ano, ano passado, últimos 7/30/90 dias, desde o início,
+   desde um mês específico, e um intervalo explícito "entre X e Y". Devolve
+   null quando a mensagem não menciona nenhum período reconhecível. */
+function assistParsePeriodo(textoOriginal){
+  const t = normalizarTexto(textoOriginal);
+  const hojeStr = todayISO();
+  const mk = (start,end,label,chave)=> ({start,end,label,chave});
+  if(/\bhoje\b/.test(t)) return mk(hojeStr, hojeStr, 'Hoje', 'hoje');
+  if(/\bontem\b/.test(t)){
+    const d = new Date(); d.setDate(d.getDate()-1);
+    const iso = d.toISOString().slice(0,10);
+    return mk(iso, iso, 'Ontem', 'ontem');
+  }
+  if(/esta semana|essa semana|nesta semana/.test(t)){
+    const d = new Date(hojeStr+'T12:00:00');
+    const diaSemana = (d.getDay()+6)%7; // 0=segunda-feira
+    const seg = new Date(d); seg.setDate(d.getDate()-diaSemana);
+    return mk(seg.toISOString().slice(0,10), hojeStr, 'Esta semana', 'semana');
+  }
+  if(/mes passado|mes anterior/.test(t)){
+    const r = getPeriodRange('mes_anterior'); return mk(r.start, r.end, 'Mês passado', 'mes_anterior');
+  }
+  if(/este mes|esse mes|mes atual|mes corrente/.test(t)){
+    const r = getPeriodRange('mes'); return mk(r.start, r.end, 'Este mês', 'mes');
+  }
+  if(/ano passado|ano anterior/.test(t)){
+    const r = getPeriodRange('ano_anterior'); return mk(r.start, r.end, 'Ano passado', 'ano_anterior');
+  }
+  if(/este ano|esse ano|ano atual|ano corrente/.test(t)){
+    const r = getPeriodRange('ano'); return mk(r.start, r.end, 'Este ano', 'ano');
+  }
+  if(/ultimos 7 dias|7 dias/.test(t)){
+    const d = new Date(hojeStr+'T12:00:00'); d.setDate(d.getDate()-7);
+    return mk(d.toISOString().slice(0,10), hojeStr, 'Últimos 7 dias', '7d');
+  }
+  if(/ultimos 90 dias|90 dias/.test(t)){
+    const d = new Date(hojeStr+'T12:00:00'); d.setDate(d.getDate()-90);
+    return mk(d.toISOString().slice(0,10), hojeStr, 'Últimos 90 dias', '90d');
+  }
+  if(/ultimos 30 dias|30 dias/.test(t)){
+    const d = new Date(hojeStr+'T12:00:00'); d.setDate(d.getDate()-30);
+    return mk(d.toISOString().slice(0,10), hojeStr, 'Últimos 30 dias', '30d');
+  }
+  if(/desde o inicio|desde sempre|periodo total|todo o periodo|historico completo/.test(t)){
+    return mk(null, hojeStr, 'Desde o início', 'tudo');
+  }
+  const MESES = ['janeiro','fevereiro','marco','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  const mDesde = t.match(/desde (janeiro|fevereiro|marco|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)/);
+  if(mDesde){
+    const nomeMes = mDesde[1].replace('março','marco');
+    const idx = MESES.indexOf(nomeMes);
+    if(idx>=0){
+      let ano = parseInt(hojeStr.slice(0,4),10);
+      if(idx+1 > parseInt(hojeStr.slice(5,7),10)) ano -= 1; // mês ainda não chegou este ano → assume o ano passado
+      const start = `${ano}-${String(idx+1).padStart(2,'0')}-01`;
+      return mk(start, hojeStr, `Desde ${mDesde[1]} de ${ano}`, 'desde_mes');
+    }
+  }
+  // "entre 01/03/2026 e 30/04/2026" ou "entre 2026-03-01 e 2026-04-30".
+  const mEntre = textoOriginal.match(/entre\s+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}|\d{4}-\d{2}-\d{2})\s+e\s+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}|\d{4}-\d{2}-\d{2})/i);
+  if(mEntre){
+    const d1 = assistParseData(mEntre[1]), d2 = assistParseData(mEntre[2]);
+    if(d1 && d2) return mk(d1<d2?d1:d2, d1<d2?d2:d1, `Entre ${mEntre[1]} e ${mEntre[2]}`, 'intervalo');
+  }
+  return null;
+}
+
+/* ===================== PROJEÇÃO DE INVESTIMENTO DE LONGO PRAZO (item do pedido de evolução) =====================
+   "Se eu investir R$ 4.000 por 5 anos, quanto vou ter?" — reaproveita
+   projectScenario() (motor já usado na aba Projeções), nunca duplica a
+   matemática. Extrai os parâmetros presentes NA MENSAGEM (não mistura com o
+   que já estava pendente, isso é feito por quem chama), e nunca confunde
+   "investir R$ 4.000" com "investir R$ 4.000 por mês": só marca aporteMensal
+   quando existe, perto do número, uma palavra de recorrência mensal. */
+function assistExtrairParamsProjecao(textoOriginal, t){
+  const p = {};
+  // Taxa: "10% ao ano" / "10% a.a." / "12% ao mês" / "1% ao mês".
+  let m = t.match(/(\d+(?:[.,]\d+)?)\s*%\s*(ao mes|a\.?m\.?\b|mensal)/);
+  if(m){ p.taxaMensalPct = parseFloat(m[1].replace(',','.')); }
+  else {
+    m = t.match(/(\d+(?:[.,]\d+)?)\s*%/);
+    if(m) p.taxaAnualPct = parseFloat(m[1].replace(',','.'));
+  }
+  // Prazo: "5 anos" / "60 meses".
+  m = t.match(/(\d+)\s*anos?\b/);
+  if(m) p.anos = parseInt(m[1],10);
+  else { m = t.match(/(\d+)\s*meses\b/); if(m) p.anos = parseInt(m[1],10)/12; }
+  // Tipo (RF/RV/combinação).
+  if(/renda fixa|\brf\b/.test(t)) p.tipo = 'rf';
+  else if(/renda variavel|\brv\b|acoes|bolsa/.test(t)) p.tipo = 'rv';
+  else if(/combinaç|combinacao|mix|as duas|misto|mesclad/.test(t)) p.tipo = 'combinacao';
+  // Meta (valor-alvo, ex.: "chegar a R$ 1 milhão").
+  const mMeta = textoOriginal.match(/(chegar a|atingir|juntar|acumular)\s+(?:r\$\s*)?([\d.,]+\s*(?:milh(?:ao|ão|oes|ões)|mil)?)/i);
+  const valorMeta = mMeta ? assistExtrairValor(mMeta[2]) : null;
+  if(valorMeta) p.meta = valorMeta;
+  // Valores monetários (inicial / mensal) — olha os arredores de cada número
+  // para decidir o papel, sem contar de novo o valor já usado como meta.
+  // Nunca confunde "5 anos"/"12 meses" (contagem de prazo) com dinheiro —
+  // são excluídos aqui, o prazo já foi extraído separadamente acima.
+  const valores = [...textoOriginal.matchAll(/r?\$?\s*[\d.,]+\s*(?:milh(?:ao|ão|oes|ões)|mil)?/gi)].filter(v=>{
+    const depois = textoOriginal.slice(v.index+v[0].length, v.index+v[0].length+10).trim();
+    return !/^anos?\b/i.test(depois) && !/^meses?\b/i.test(depois);
+  });
+  valores.forEach(v=>{
+    const val = assistExtrairValor(v[0]);
+    if(!val || val===valorMeta) return;
+    // Janela curta e só PARA A FRENTE do número (é assim que "R$ 4.000 por
+    // mês" aparece na fala) — nunca olha para trás o suficiente para pegar
+    // o "por mês" de um número anterior por engano.
+    const janela = normalizarTexto(textoOriginal.slice(v.index, v.index+v[0].length+14));
+    if(/por mes|mensal|mensalmente|todo mes/.test(janela)) p.aporteMensal = val;
+    else if(p.valorInicial===undefined) p.valorInicial = val;
+  });
+  return p;
+}
+// Início ou continuação de uma simulação de projeção — junta o que já
+// estava pendente com o que a mensagem atual acrescenta, e decide o que
+// ainda falta perguntar (nunca mais de uma pergunta por vez, nunca chuta um
+// dado que falta). Devolve null quando a mensagem não tem nada a ver com
+// uma projeção (nem há nada pendente), para o chamador seguir outro fluxo.
+function assistIniciarOuContinuarProjecao(textoOriginal, t, ctx){
+  const novo = assistExtrairParamsProjecao(textoOriginal, t);
+  const p = Object.assign({}, assistantProjecaoPendente||{}, novo);
+  if(!assistantProjecaoPendente && p.anos===undefined && p.meta===undefined) return null;
+  if(!assistantProjecaoPendente && p.valorInicial===undefined && p.aporteMensal===undefined) return null;
+  if(p.anos===undefined && p.meta===undefined){
+    assistantProjecaoPendente = p;
+    return { id:'projecao_investimento', params:p, falta:'prazo' };
+  }
+  if(p.tipo===undefined && p.taxaAnualPct===undefined && p.taxaMensalPct===undefined){
+    assistantProjecaoPendente = p;
+    return { id:'projecao_investimento', params:p, falta:'tipo' };
+  }
+  // RV sem taxa própria e sem histórico real (XIRR) suficiente — única
+  // combinação em que ainda precisamos perguntar a taxa, porque não existe
+  // nenhuma referência segura para "assumir" um retorno de ações.
+  if(p.tipo==='rv' && p.taxaAnualPct===undefined && p.taxaMensalPct===undefined && !(ctx && ctx.xirr!==null && ctx.xirr!==undefined)){
+    assistantProjecaoPendente = p;
+    return { id:'projecao_investimento', params:p, falta:'taxa' };
+  }
+  assistantProjecaoPendente = null;
+  return { id:'projecao_investimento', params:p, pronto:true };
+}
+
 
 // Detecta o início de um dos fluxos de cadastro guiado. Verificado ANTES
 // do classificador normal (só quando não há já uma ação pendente), e só
@@ -12167,6 +12540,17 @@ function responderAssistente(textoOriginal){
   if(intent.id==='ativo' && intent.ticker){
     assistantUltimosTickers = [...assistantUltimosTickers.filter(tk=>tk!==intent.ticker), intent.ticker].slice(-2);
   }
+  if(intent.id==='resultado_periodo' && intent.periodo){
+    // Recalcula com a mesma função já usada na resposta (barato, sem
+    // efeitos colaterais) só para guardar os números no histórico da
+    // conversa, permitindo "qual foi a diferença?" no turno seguinte.
+    const dadosPeriodo = computeResultadoIntervalo(intent.periodo.start, intent.periodo.end);
+    assistantUltimoPeriodo = intent.periodo;
+    assistantUltimosPeriodos = [...assistantUltimosPeriodos.slice(-1), { label: intent.periodo.label, dados: dadosPeriodo }];
+  }
+  if(intent.id==='projecao_investimento' && intent.params && intent.params.meta){
+    assistantUltimoValorMeta = intent.params.meta;
+  }
   return { texto, acoes };
 }
 
@@ -12362,6 +12746,19 @@ document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && document.getE
 document.getElementById('assistBtnLimpar').addEventListener('click', ()=>{
   assistantHistory = [];
   assistantUltimoTicker = null;
+  assistantUltimosTickers = [];
+  assistantUltimaMetrica = null;
+  assistantUltimoIntentObj = null;
+  assistantUltimoRanking = null;
+  assistantUltimosComparados = null;
+  assistantUltimaRespostaTexto = null;
+  assistantUltimoValorMeta = null;
+  assistantUltimoValorSimulacaoMensal = null;
+  assistantUltimoConceito = null;
+  assistantUltimoPeriodo = null;
+  assistantUltimosPeriodos = [];
+  assistantProjecaoPendente = null;
+  assistantPendingAction = null;
   document.getElementById('assistFab').classList.remove('has-context');
   document.getElementById('assistBody').innerHTML = `<div class="assist-empty">
     <div class="assist-empty-icon">✦</div>
