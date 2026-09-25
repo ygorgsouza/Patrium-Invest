@@ -2546,7 +2546,7 @@ a:focus-visible, [tabindex]:focus-visible, .help-cat-filter:focus-visible, .faq-
           <option value="interno">Transferência interna (já estava dentro do Patrium, ex.: veio de uma venda, ou o resgate foi para o caixa)</option>
         </select>
       </div>
-      <div class="field"><label>Saldo real na data (R$)</label><input type="number" step="0.01" id="saldoRfValor"></div>
+      <div class="field"><label>Saldo real após esta movimentação (R$), opcional</label><input type="number" step="0.01" id="saldoRfValor" placeholder="opcional"></div>
       <p class="helper">Preencha só um dos dois, aporte OU resgate. Deixe ambos em 0 se estiver apenas a atualizar o saldo. A origem só importa para XIRR/TWR: transferências internas nunca contam como dinheiro novo.</p>
     </div>
     <div class="modal-foot">
@@ -3179,7 +3179,29 @@ function migrateData(data){
       snaps.push({date: todayISO(), price:p.price, source:p.source||'manual', timestamp:p.updatedAt||new Date().toISOString()});
     }
   });
+  repararResgatesRfComSaldoAnterior(data);
   return data;
+}
+// Reparo idempotente: resgates de RF gravados com o saldo de ANTES do resgate
+// no mesmo lançamento (o saldo não baixou face ao saldo anterior do produto).
+// Esses lançamentos faziam o resgate não abater o saldo e virar rendimento.
+// Separa em dois: primeiro o saldo, depois o resgate (sem saldo). Depois de
+// reparado, o resgate fica com saldo=null, então nunca é reprocessado.
+function repararResgatesRfComSaldoAnterior(data){
+  if(!data.rf || !Array.isArray(data.rf.entries)) return;
+  const entries = data.rf.entries;
+  const alvos = entries.filter(e=>e.aporte<0 && e.saldo!==null && e.saldo!==undefined);
+  alvos.forEach(e=>{
+    const doProduto = entries.filter(x=>x.productId===e.productId).sort((a,b)=>a.date.localeCompare(b.date));
+    const idx = doProduto.indexOf(e);
+    const antes = rfSaldoAtDate(doProduto.slice(0, idx), null);
+    if(!antes) return;
+    if(e.saldo >= antes.saldo - 0.01){
+      const saldoEntry = { id:uid(), date:e.date, productId:e.productId, aporte:0, saldo:e.saldo, note:'' };
+      entries.splice(entries.indexOf(e), 0, saldoEntry);
+      e.saldo = null;
+    }
+  });
 }
 
 function emptyData(){
@@ -3467,11 +3489,18 @@ function rfSaldoAtDate(entries, cutoffDate){
   const upTo = cutoffDate ? entries.filter(e=>e.date<=cutoffDate) : entries;
   if(!upTo.length) return null;
   const totalAportado = upTo.reduce((s,e)=>s+(e.aporte||0),0);
-  const saldoEntries = upTo.filter(e=>e.saldo!==null && e.saldo!==undefined);
-  const last = saldoEntries.length ? saldoEntries[saldoEntries.length-1] : null;
-  const aportesApos = last ? upTo.filter(e=>e.date>last.date).reduce((s,e)=>s+(e.aporte||0),0) : totalAportado;
+  // Posição (não data) do último saldo informado: um aporte/resgate lançado
+  // DEPOIS de um saldo, mesmo que no MESMO dia, tem de mexer no saldo. Antes a
+  // comparação era por data (e.date>last.date), então um resgate registado no
+  // mesmo dia de uma atualização de saldo era ignorado no saldo e contado
+  // como rendimento (+R$ do resgate). Entries chegam ordenadas por data com
+  // sort estável, logo a ordem de lançamento é preservada dentro do dia.
+  let lastIdx = -1;
+  for(let i=upTo.length-1;i>=0;i--){ const e=upTo[i]; if(e.saldo!==null && e.saldo!==undefined){ lastIdx=i; break; } }
+  const last = lastIdx>=0 ? upTo[lastIdx] : null;
+  const aportesApos = last ? upTo.slice(lastIdx+1).reduce((s,e)=>s+(e.aporte||0),0) : totalAportado;
   const saldo = last ? last.saldo+aportesApos : totalAportado;
-  const aportesAteSaldo = last ? upTo.filter(e=>e.date<=last.date).reduce((s,e)=>s+(e.aporte||0),0) : 0;
+  const aportesAteSaldo = last ? upTo.slice(0,lastIdx+1).reduce((s,e)=>s+(e.aporte||0),0) : 0;
   const rendimento = last ? (last.saldo - aportesAteSaldo) : 0;
   return { saldo, totalAportado, rendimento, lastSaldoDate: last?last.date:null };
 }
@@ -3479,7 +3508,6 @@ function computeRfProducts(){
   return DATA.rf.products.map(prod=>{
     const entries = DATA.rf.entries.filter(e=>e.productId===prod.id).sort((a,b)=>a.date.localeCompare(b.date));
     const r = rfSaldoAtDate(entries, null) || {saldo:0, totalAportado:0, rendimento:0, lastSaldoDate:null};
-    const aportesAteSaldo = r.lastSaldoDate ? entries.filter(e=>e.date<=r.lastSaldoDate).reduce((s,e)=>s+(e.aporte||0),0) : 0;
     // Rentabilidade histórica: SEMPRE sobre o total efetivamente aportado
     // (aportesBrutos, só valores positivos) — nunca sobre o capital líquido
     // (aportesAteSaldo, que pode zerar ou ficar negativo depois de um
@@ -8637,7 +8665,7 @@ const RF_TIPOS = [
 ];
 const RV_CATALOG = {
   acao: ['PETR4','VALE3','ITUB4','BBAS3','BBDC4','ABEV3','WEGE3','ITSA4','RENT3','MGLU3','B3SA3','SUZB3','JBSS3','RADL3','PRIO3','GGBR4','EQTL3','LREN3','RAIL3','CSAN3','ELET3','CPLE6','TOTS3','HAPV3','CMIG4','CYRE3','EGIE3','SBSP3','UGPA3','VIVT3','TIMS3','BRFS3','NTCO3','CSNA3','CCRO3','ENEV3','MULT3','AZUL4','GOAU4','BEEF3','SLCE3','ASAI3','CRFB3'],
-  fii: ['MXRF11','HGLG11','KNRI11','XPML11','VISC11','BCFF11','KNCR11','HGRU11','VILG11','XPLG11','BTLG11','HGRE11','RECT11','VGIP11','HGBS11','IRDM11','RBRR11','VRTA11','ALZR11','VINO11','TGAR11','HFOF11','PVBI11','BRCO11','GGRC11','XPCI11','CPTS11','HSML11','TRXF11','JSRE11','KNIP11','RECR11','MALL11'],
+  fii: ['MXRF11','HGLG11','KNRI11','XPML11','VISC11','BCFF11','KNCR11','HGRU11','VILG11','XPLG11','BTLG11','HGRE11','RECT11','VGIP11','HGBS11','IRDM11','RBRR11','VRTA11','ALZR11','VINO11','TGAR11','HFOF11','PVBI11','BRCO11','GGRC11','XPCI11','CPTS11','HSML11','TRXF11','JSRE11','KNIP11','RECR11','MALL11','BTHF11','GARE11','KNSC11'],
   etf: ['BOVA11','IVVB11','SMAL11','SPXI11','HASH11','GOLD11','ECOO11','DIVO11','BBSD11','FIND11','MATB11','ISUS11','XINA11','NASD11','EURP11','WRLD11','BRAX11','BOVV11','PIBB11'],
   bdr: ['AAPL34','MSFT34','GOGL34','AMZO34','TSLA34','NVDC34','META34','DISB34','NFLX34','JPMC34','KOOO34','MCDC34','NIKE34','WALM34','BOAC34','PYPL34','ADBE34','INTC34','CSCO34','VISA34','MSCD34','PFIZ34','JNJB34','BABA34','UBER34','SBUB34','IBMB34','ORCL34','QCOM34'],
   fundo: ['Fundo Multimercado','Fundo de Ações','Fundo Cambial','Fundo Imobiliário Fechado','Fundo de Renda Fixa Crédito Privado','Fundo de Renda Fixa Simples','Fundo de Investimento em Participações (FIP)','Fundo de Investimento no Exterior (BDR/ações globais)','Fundo Long & Short','Fundo Quantitativo','Fundo de Índice Ativo','Fundo Previdenciário Multimercado'],
@@ -8673,6 +8701,8 @@ const ASSET_DESC = {
   GGRC11:'FII de galpões logísticos (contratos atípicos)', XPCI11:'FII de papel (CRIs)', CPTS11:'FII de papel (crédito estruturado)',
   HSML11:'FII de shopping centers', TRXF11:'FII de logística e renda urbana', JSRE11:'FII de lajes corporativas',
   KNIP11:'FII de papel (CRIs) indexado ao IPCA', RECR11:'FII de papel (recebíveis high grade)', MALL11:'FII de shopping centers',
+  BTHF11:'FII multiestratégia (hedge fund imobiliário: CRIs, cotas de FIIs e imóveis)', GARE11:'FII híbrido de renda urbana (varejo e galpões com contratos atípicos)',
+  KNSC11:'FII de papel (CRIs) indexado ao CDI e IPCA',
   // ---- ETFs ----
   BOVA11:'ETF que replica o Ibovespa', IVVB11:'ETF que replica o S&P 500 (dólar)', SMAL11:'ETF de empresas de menor valor de mercado (small caps)',
   SPXI11:'ETF que replica o S&P 500', HASH11:'ETF de criptoativos', GOLD11:'ETF que replica o preço do ouro',
@@ -9221,7 +9251,24 @@ document.getElementById('btnSalvarSaldoRf').addEventListener('click', async ()=>
   if(aporte>0 && resgate>0){ addToast('Preencha só aporte OU resgate, não os dois ao mesmo tempo.'); return; }
   const aporteLiquido = aporte - resgate; // resgate vira aporte negativo, mesma regra usada em todo o Patrium
   if(!date || (aporteLiquido===0 && saldoStr==='')){ addToast('Informe pelo menos um aporte, um resgate ou um saldo.'); return; }
-  registarSaldoRealRf(productId, aporteLiquido, saldoStr, date, funding);
+  // Resgate + saldo no mesmo lançamento: o saldo informado deve ser o saldo
+  // APÓS o resgate. Se ele não baixou face ao saldo atual do produto, é quase
+  // certo que foi digitado o saldo de ANTES do resgate — nesse caso regista
+  // primeiro o saldo e depois o resgate, para o resgate abater do saldo em vez
+  // de virar rendimento.
+  if(resgate>0 && saldoStr!==''){
+    const atual = computeRfProducts().find(p=>p.id===productId);
+    const saldoInformado = parseFloat(saldoStr);
+    if(atual && saldoInformado >= atual.saldoAtual - 0.01){
+      registarSaldoRealRf(productId, 0, saldoStr, date, funding);
+      registarSaldoRealRf(productId, aporteLiquido, '', date, funding);
+      addToast('O saldo informado foi tratado como saldo antes do resgate; o resgate foi abatido dele.');
+    } else {
+      registarSaldoRealRf(productId, aporteLiquido, saldoStr, date, funding);
+    }
+  } else {
+    registarSaldoRealRf(productId, aporteLiquido, saldoStr, date, funding);
+  }
   await Store.save(DATA);
   showSaveSuccess('modalSaldoRf', 'Renda fixa atualizada!', ()=>{
     renderAll();
